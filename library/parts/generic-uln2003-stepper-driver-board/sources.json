@@ -1,0 +1,33 @@
+[
+  {
+    "id": "src_kiatronics_board",
+    "title": "Kiatronics (Welten Holdings Ltd) \"4 Phase ULN2003 Stepper Motor Driver PCB\" sheet (annotated board photo, operation notes)",
+    "url": "https://www.electronicoscaldas.com/datasheet/ULN2003A-PCB.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:05:00Z",
+    "sha256": "95f3c7fe83143454e126eb5d2f94e7cf219b72ae43dbf7ebb7af7866efd0d98e",
+    "note": "Kiatronics-branded sheet hosted by a distributor (Electrónicos Caldas); kiatronics.com is now a placeholder page. Kiatronics is a named maker/brand of this generic board, not necessarily the factory.",
+    "supports": ["board features: 4 inputs, supply connection, ON/OFF jumper, direct-connect motor header, 4 step-state LEDs", "photo labels: LEDs A B C D, motor header A B C D V+, MCU IO IN1-IN4 (= A B C D), IN5-IN7 pads, supply - + 5-12V", "Supply Volts 5-12VDC", "Maximum current per output 500 mA", "ULN2003AN IC", "4096 steps per output revolution with the 28BYJ-48", "jumper isolates power to the stepper motor"]
+  },
+  {
+    "id": "src_ti",
+    "title": "Texas Instruments ULN200x, ULQ200x High-Voltage, High-Current Darlington Transistor Arrays, SLRS027T (Dec 1976, revised Mar 2025)",
+    "url": "https://www.ti.com/lit/ds/symlink/uln2003a.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:05:00Z",
+    "sha256": "66c52f3b2343d08a706ee764af7977331b5ab1104d80ce1d621a41288a9fad73",
+    "supports": ["absolute maximum: VCE 50 V, clamp reverse 50 V, VI 30 V, peak collector 500 mA, output clamp 500 mA, total emitter -2.5 A, TA -40..70 °C (ULN200xA), TJ 150 °C", "ULN2003A: VI(on) max 2.4 V at IC 200 mA (VCE 2 V); VCE(sat) typ 1.0 V / max 1.3 V at 200 mA", "2.7 kΩ series base resistor; clamp diodes to COM for inductive loads"]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart uln2003-stepper-driver-board definition.json",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/uln2003-stepper-driver-board/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T21:30:00Z",
+    "sha256": "53bcf560fb693c125cf01390b66f50a3bbff3a238c85e59c34f8a82aef14c8eb",
+    "supports": ["starting point; values re-verified against manufacturer sources", "approximate board size 35 x 32 mm (used only as an assumption)"]
+  }
+]

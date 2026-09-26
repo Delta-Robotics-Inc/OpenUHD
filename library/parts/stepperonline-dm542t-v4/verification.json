@@ -1,0 +1,27 @@
+{
+  "partId": "stepperonline-dm542t-v4",
+  "recorded_at": "2026-09-26T22:28:22.036Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 19,
+    "confirmed": 19,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "Added overall-height source_discrepancy (25.5 mm manual vs 34 mm ProtoPart, unsourced); clarified height assumption; noted ENA lead 5 us vs 200 ms manual conflict; no CAD change",
+  "assumptions": [
+    "overall height and CAD layout",
+    "fastener diameter"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "overall height",
+    "supply current, terminal wire range, 5 V-mode input thresholds"
+  ],
+  "vocabulary_gaps": [
+    "New leaf protocol type stepper_phase (output on the driver's A+/A-/B+/B- terminals, input on motor leads). See stepperonline-17hs08-1004s gaps; proposed StepperPhases builder.",
+    "Existing composed type with no role pairing in src/matching/roles.ts (17HS19 uses role \"motor\", adafruit-1438 role \"driver\"; 17HS19 power/bidirectional leaves do not pair). Central PB-796 decision: keep bipolar_stepper_phases with role output on the driver, stepper_phase output leaves; validates against stepperonline-17hs08-1004s (4 sub-links). Integrator should converge the other parts on input/output.",
+    "New composed protocol type step_dir (role input) for a pulse/direction/enable control port with slots pul, dir, ena. No builder covers step/dir; a controller-side step_dir output (CNC controller, MCU breakout) would pair with it. Differential opto inputs (+/- terminals) are leaves; the - returns are not slots because their wiring depends on common-anode vs common-cathode control.",
+    "Non-canonical parameter ids: phase_current (A, settable RMS range 0.71-3.2 A, range-checked against the motor's rated current) and input_current (mA, opto input current 7-16 mA)."
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "artifact": "generic-uln2003-stepper-driver-board",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "2972d87ee86ae4634cd74324e6ba48df0bd7661f9387d1404846b5631b5e4640",
+  "units": "mm",
+  "features": {
+    "mount": {
+      "area_mm2": 60.319,
+      "centroid": [
+        0.0,
+        0.0,
+        0.8
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          -15.0,
+          -13.5,
+          0.8
+        ],
+        [
+          -15.0,
+          13.5,
+          0.8
+        ],
+        [
+          15.0,
+          -13.5,
+          0.8
+        ],
+        [
+          15.0,
+          13.5,
+          0.8
+        ]
+      ],
+      "diameter_mm": 3.0
+    },
+    "motor_socket": {
+      "area_mm2": 71.3,
+      "centroid": [
+        -5.0,
+        6.5,
+        8.6
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "in_header": {
+      "area_mm2": 25.4,
+      "centroid": [
+        -5.0,
+        -11.5,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "power_header": {
+      "area_mm2": 12.7,
+      "centroid": [
+        12.5,
+        -4.0,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "pwr_jumper": {
+      "area_mm2": 12.7,
+      "centroid": [
+        12.5,
+        3.0,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  }
+}

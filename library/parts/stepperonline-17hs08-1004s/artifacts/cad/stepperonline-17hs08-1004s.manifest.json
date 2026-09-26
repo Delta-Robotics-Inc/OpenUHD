@@ -1,0 +1,86 @@
+{
+  "artifact": "stepperonline-17hs08-1004s",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "040523ef339fabeceeed884998b9fc746314e76ec335be627575b29b3b231420",
+  "units": "mm",
+  "features": {
+    "front_mount": {
+      "area_mm2": 94.248,
+      "centroid": [
+        0.0,
+        0.0,
+        -1.25
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          -15.5,
+          -15.5,
+          -1.25
+        ],
+        [
+          -15.5,
+          15.5,
+          -1.25
+        ],
+        [
+          15.5,
+          -15.5,
+          -1.25
+        ],
+        [
+          15.5,
+          15.5,
+          -1.25
+        ]
+      ],
+      "diameter_mm": 3.0
+    },
+    "front_face": {
+      "area_mm2": 1729.016,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "shaft": {
+      "area_mm2": 261.07,
+      "centroid": [
+        0.0,
+        -0.474,
+        9.644
+      ],
+      "faces": 1,
+      "centres": [
+        [
+          0.0,
+          0.0,
+          9.644
+        ]
+      ],
+      "diameter_mm": 5.0
+    },
+    "leads": {
+      "area_mm2": 12.566,
+      "centroid": [
+        0.0,
+        -45.15,
+        -10.25
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        -1.0,
+        0.0
+      ]
+    }
+  }
+}

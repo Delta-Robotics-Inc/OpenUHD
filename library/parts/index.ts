@@ -16,10 +16,13 @@ export { CNHL_BLACK_SERIES_1100MAH_6S_100C } from "./cnhl-black-series-1100mah-6
 export { DJI_O4_AIR_UNIT } from "./dji-o4-air-unit.js";
 export { DOLPHINRC_AM32_60A_4IN1_ESC } from "./dolphinrc-am32-60a-4in1-esc.js";
 export { DOLPHINRC_F405_V3_FLIGHT_CONTROLLER } from "./dolphinrc-f405-v3-flight-controller.js";
+export { DSSERVO_DS3225MG_180 } from "./dsservo-ds3225mg-180.js";
 export { ESP32D0WDQ6 } from "./esp32-d0wdq6.js";
 export { ESP32_DEVKITC_V4 } from "./esp32-devkitc-v4.js";
 export { ETTINGER_005_83_060_M3_NYLON_SPACER_6MM } from "./ettinger-005-83-060-m3-nylon-spacer-6mm.js";
 export { FRC_PNEUMATIC_PISTON } from "./frc-pneumatic-piston.js";
+export { GENERIC_28BYJ_48_5V } from "./generic-28byj-48-5v.js";
+export { GENERIC_ULN2003_STEPPER_DRIVER_BOARD } from "./generic-uln2003-stepper-driver-board.js";
 export { HAKRC_BLS_35A_4IN1_ESC } from "./hakrc-bls-35a-4in1-esc.js";
 export { HCSR04_ULTRASONIC_SENSOR } from "./hcsr04-ultrasonic-sensor.js";
 export { HGLRC_KEVLAR_BATTERY_STRAP_20X250MM } from "./hglrc-kevlar-battery-strap-20x250mm.js";
@@ -39,7 +42,9 @@ export { REV_21_1652_NEO_VORTEX } from "./rev-21-1652-neo-vortex-brushless-motor
 export { RP2040 } from "./rp2040.js";
 export { SEEED_XIAO_ESP32C3 } from "./seeed-xiao-esp32c3.js";
 export { ST_LSM6DS3TR_C } from "./st-lsm6ds3tr-c.js";
+export { STEPPERONLINE_17HS08_1004S } from "./stepperonline-17hs08-1004s.js";
 export { STEPPERONLINE_17HS19_2004S1 } from "./stepperonline-17hs19-2004s1.js";
+export { STEPPERONLINE_DM542T_V4 } from "./stepperonline-dm542t-v4.js";
 export { TI_DRV8871 } from "./ti-drv8871.js";
 export { TI_L293DNE } from "./ti-l293dne.js";
 export { TI_TPS63020DSJR } from "./ti-tps63020dsjr.js";
