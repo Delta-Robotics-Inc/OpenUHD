@@ -12,7 +12,8 @@ author the part.
 ## Stage 1: automated checks (the author runs these)
 
 ```bash
-npx tsx scripts/verify-part.ts <id>                      # structure, vocabulary, sources
+.venv-cad/bin/python library/cad/py/build_all.py <id>    # regenerate the part's CAD + manifest
+npx tsx scripts/verify-part.ts <id>                      # structure, vocabulary, sources, CAD
 npx tsx scripts/verify-part.ts <id> --mate <other-id>    # plus pair DRC against a mating part
 npx tsc --noEmit                                         # type-check
 ```
@@ -35,6 +36,19 @@ npx tsc --noEmit                                         # type-check
 - **Traits:** part-specific trait types trigger a warning to use the
   canonical set. Assumption traits are counted in the report.
 - **Hygiene:** the file contains no `TODO` or `TBD`.
+- **CAD** (`library/cad/checks.ts`):
+  - the part has a body artifact (vendor or generated);
+  - `checkGeometryBindings`: every ref's artifact is on the module, every
+    feature is in its manifest, and every stored signature still matches
+    (a missing manifest is a warning);
+  - every bolt pattern and shaft has a frame with a unit normal and an
+    x-axis perpendicular to it;
+  - frames are plausible against the CAD: each hole the bolt pattern's
+    parameters place through the frame lands within 0.5 mm of a hole axis
+    in the manifest, and a shaft frame sits on the shaft axis;
+  - vendor CAD is in `sources.json` as `type: "cad"` with a sha256 and a
+    `licence`; generated geometry carries a `data_gap` trait for
+    "manufacturer CAD".
 - **Mates:** `--mate` runs `validatePair` and lists each connection with its
   state, sub-links, and unresolved slots.
 
@@ -55,6 +69,14 @@ A fresh agent with no authoring context:
    exist as a leaf, or be explicitly omitted in the modelling notes.
 5. Checks that every `assumption` trait really is unstated in the sources and
    is reasonable.
+6. Checks the CAD (at least 3 facts, counted in the 12): the mounting-hole
+   positions and diameter in the manifest (`centres`, `diameter_mm`) and
+   the overall size (`bbox`) against the datasheet drawing; that the
+   frame normals point out of the mounting face and connector refs sit on
+   the right connector; that the `licence` in `sources.json` matches the
+   download page, and that a committed vendor file really is
+   redistributable. For generated geometry, it checks the generator's
+   dimensions against the drawing instead.
 
 It writes `.research/audit.json` and returns the failures.
 
@@ -79,6 +101,7 @@ On pass, write `.research/acceptance.json`:
   "iterations": 1,
   "automated": { "errors": 0, "warnings": 2 },
   "audit": { "checked": 14, "confirmed": 14, "wrong": 0, "unsupported": 0 },
+  "cad": { "status": "vendor", "bindings": "0 errors", "licence": "not stated; not redistributed" },
   "mates": ["<other-id>: bldc_3phase valid"],
   "gaps": ["vocabulary: video link"],
   "checked_at": "ISO-8601"

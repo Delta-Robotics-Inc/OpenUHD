@@ -1,0 +1,167 @@
+{
+  "artifact": "adafruit-1411-16ch-pwm-servo-shield",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "437a06184e822c8381bad2d57099e893af9c43becaf348e27e80479a71691f39",
+  "units": "mm",
+  "features": {
+    "mount": {
+      "area_mm2": 64.34,
+      "centroid": [
+        40.323,
+        24.13,
+        0.8
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          13.97,
+          2.54,
+          0.8
+        ],
+        [
+          15.24,
+          50.8,
+          0.8
+        ],
+        [
+          66.04,
+          7.62,
+          0.8
+        ],
+        [
+          66.04,
+          35.56,
+          0.8
+        ]
+      ],
+      "diameter_mm": 3.2
+    },
+    "servo_header_0_3": {
+      "area_mm2": 77.419,
+      "centroid": [
+        15.24,
+        12.827,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "servo_header_4_7": {
+      "area_mm2": 77.419,
+      "centroid": [
+        27.94,
+        12.827,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "servo_header_8_11": {
+      "area_mm2": 77.419,
+      "centroid": [
+        43.18,
+        12.827,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "servo_header_12_15": {
+      "area_mm2": 77.419,
+      "centroid": [
+        55.88,
+        12.827,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "arduino_header_power": {
+      "area_mm2": 51.613,
+      "centroid": [
+        36.83,
+        2.54,
+        -2.54
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "arduino_header_analog": {
+      "area_mm2": 38.71,
+      "centroid": [
+        57.15,
+        2.54,
+        -2.54
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "arduino_header_digital_hi": {
+      "area_mm2": 64.516,
+      "centroid": [
+        30.226,
+        50.8,
+        -2.54
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "arduino_header_digital_lo": {
+      "area_mm2": 51.613,
+      "centroid": [
+        54.61,
+        50.8,
+        -2.54
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "terminal_block_j1": {
+      "area_mm2": 59.5,
+      "centroid": [
+        0.083,
+        25.681,
+        5.85
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "partId": "raspberry-pi-5",
+  "recorded_at": "2026-09-26T22:30:39.879Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 20,
+    "confirmed": 20,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "Header designator J2 -> J8 (pins J8-n, group j8_header); PoE and J2 RUN headers listed as omitted",
+  "assumptions": [
+    "fastener"
+  ],
+  "data_gaps": [
+    "GPIO electrical specs for Pi 5 (RP1)",
+    "3V3 / 5V header pin current budget",
+    "USB 3.0 vs USB 2.0 stack position",
+    "MIPI / PCIe / fan / UART / RTC battery connector pinouts"
+  ],
+  "vocabulary_gaps": [
+    "No builder or protocol type; modelled as custom with a usage_note."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "artifact": "ovonic-4s-1300",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "ab6e2ca60a9bd6e2551e8c591e48be206924cb9b9243888b2abd30a0cd607a8c",
+  "units": "mm",
+  "features": {
+    "lead_exit": {
+      "area_mm2": 1050.0,
+      "centroid": [
+        38.0,
+        0.0,
+        15.0
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -6,7 +6,9 @@ description: Write a UHD library part (library/parts/<id>.ts) from researched ev
 # UHD part author
 
 Turn `library/parts/<id>/.research/` into `library/parts/<id>.ts`, a single
-exported `ModuleDef` wrapped in `defineModule`.
+exported `ModuleDef` wrapped in `defineModule` (and `withGeometry`, see
+[Geometry](#geometry-cad)), plus the part's CAD script
+`library/cad/py/catalog/<id>.py`.
 
 ## Before writing
 
@@ -94,15 +96,112 @@ Add a `domains[]` entry for each relevant domain, using the fields that exist
 (`dimensions_mm`, `weight_g`, `power_domains`) and `metadata` for the rest.
 Thermal is present whenever a source gives an operating temperature.
 
+## Geometry (CAD)
+
+Every part binds its physical interfaces to 3D geometry
+([docs/geometry-artifacts.md](../../docs/geometry-artifacts.md)). There are
+two paths, and both are a per-part script in `library/cad/py/catalog/<id>.py`
+with a `build()` function, run with
+`.venv-cad/bin/python library/cad/py/build_all.py <id>`:
+
+- **Vendor CAD** (research found a STEP): configure
+  `library/cad/py/vendor_step.py`. It converts the STEP to GLB under
+  `artifacts/cad/vendor/` (gitignored) and writes the committed manifest
+  `artifacts/cad/<id>-vendor.manifest.json`. Select features by the
+  vendor's own component names (`label("J1")`) or by geometry
+  (`holes(3.2)`, `planar((0, 0, 1))`, `within_box(...)`), because vendor
+  names are often generic.
+- **Generated** (no usable CAD): model the outline, holes, shaft and
+  connector bodies from the drawing dimensions with `library/cad/py/partkit.py`
+  (`GeneratedPart`, `board`, `block`, `cylinders`), committed under
+  `artifacts/cad/`. Add a `data_gap` trait for field "manufacturer CAD" that
+  says where research looked, and an `assumption` trait for any dimension
+  the drawing doesn't give.
+
+Pass `axis=` for holes and shafts (vendor `holes(...)` does this itself):
+the manifest then records each hole axis, and verify checks the frame
+against it.
+
+Then, in the part file, wrap the base definition with `withGeometry`:
+
+| Interface | Geometry |
+| --- | --- |
+| Mounting holes (`BoltPattern`) | `frame` required: `origin` = pattern centre on the mounting face, `normal` = outward from that face (the direction the mating part comes from), `xAxis` = pattern x (hole 1 for a circle), `symmetryDeg` only if the whole part may rotate (90 for a square pattern, unless a sensor axis or connector makes the orientation matter). Refs: the hole feature, then `procedural("bolt_pattern")`. |
+| Shaft (`Shaft`) | `frame` on the shaft axis at the mounting face, `normal` along the shaft outward. Refs: the shaft feature, then `procedural("shaft")`. |
+| Connector-borne bus or supply | Refs to the connector body (a `frame` on its mating face if a cable plugs in). Every interface carried by the connector points at the same feature; two identical connectors give two refs. |
+| Solder pads, pins, headers | The header or pad-row feature, or no geometry. |
+| Electrical-only (a pin function, an internal rail) | Nothing, or `logical: true` when there is deliberately no physical form. |
+
+Frames are in the CAD file's own coordinates (mm, Z up after any vendor
+`transform`). Take the numbers from the manifest, not by eye:
+
+For example, `raspberry-pi-5` (vendor CAD). The catalog script selects
+features by geometry, because the vendor's component labels are generic:
+
+```python
+build_vendor(VendorStep(
+    part_id="raspberry-pi-5", step="rpi-5b_no_graphics.step", archive="RaspberryPi5-step.zip",
+    name="raspberry-pi-5", url="https://datasheets.raspberrypi.com/rpi5/RaspberryPi5-step.zip", licence=LICENCE,
+    features={
+        # 4 x Φ2.7 mounting holes on 58 x 49 (the box excludes the Ethernet jack's Φ2.7 pegs)
+        "mount": within_box(holes(2.7, tol=0.05), (0, 0, -5), (65, 56, 5)),
+        "usb_c": front((0, -1, 0), (5, -3, 0), (17, 3, 6)),  # connector mating face
+        ...
+    },
+    interfaces=["mount", "gpio_header", "usb_c"],
+))
+```
+
+and the part binds the interfaces to the manifest's features:
+
+```ts
+export const RASPBERRY_PI_5: ModuleDef = withGeometry(
+  RASPBERRY_PI_5_BASE,
+  {
+    // board bottom onto standoffs: pattern centre (32.5, 28), normal out of the bottom face
+    mount: {
+      frame: { origin: [32.5, 28, 0.03], normal: [0, 0, -1], xAxis: [1, 0, 0] },
+      refs: [vendorFeature("mount", { area_mm2: 43.294, centroid: [32.5, 28.0, 0.668] }), vendorOwn("mount"), procedural("bolt_pattern")],
+    },
+    // a cable plugs in here: frame on the mating face
+    usb_c_power: {
+      frame: { origin: [11.2, -1.2, 3.016], normal: [0, -1, 0], xAxis: [1, 0, 0] },
+      refs: [vendorFeature("usb_c", { area_mm2: 6.344, centroid: [11.2, -1.2, 3.016], normal: [0.0, -1.0, 0.0] }), vendorOwn("usb_c")],
+    },
+    i2c1: { refs: [HDR] },     // electrical interface on the 40-pin header feature
+    wifi: { logical: true },   // no physical form
+  },
+  vendorCadArtifacts({
+    partId: "raspberry-pi-5", name: "raspberry-pi-5", url: SRC.cad, stepFile: "rpi-5b_no_graphics.step",
+    sha256: "6841637b…", licence: "MIT (LICENSE.txt in the archive); not committed: 77.6 MB",
+    interfaces: ["mount", "gpio_header", "usb_c"],
+  }),
+);
+```
+
+No `symmetryDeg` on the Pi mount: the rectangle repeats every 180°, but the
+connectors don't. Generated examples: `ti-drv8871` (a package from the
+drawing), `emax-rs2205-2300kv` (a motor with shaft and base holes).
+
+For generated geometry use `cadArtifacts({ dir, name, generator:
+"library/cad/py/catalog/<id>.py", tool: "build123d" })` and `feature(...)`
+instead of the vendor helpers. Copy signatures from the
+manifest with `python library/cad/rebind.py library/parts/<id>.ts <manifest>`
+rather than by hand. Commit a vendor STEP (as `committedStep`) only when its
+licence clearly permits redistribution and it is under 5 MB (larger files
+stay in `.research/cad/`).
+
 ## Hard rules
 
 1. No value without a source unless it's in an `assumption` trait.
 2. No new protocol type or role without an entry in `.research/gaps.json`
    (`type: "vocabulary"`) explaining why no existing one fits. Prefer
    `custom` plus a trait over inventing vocabulary.
-3. Don't edit `src/`, `library/parts/index.ts`, or other parts. Vocabulary
+3. Don't edit `src/`, `library/parts/index.ts`, shared CAD code, or other parts. Vocabulary
    changes are escalated to the integrator.
 4. In repair mode, change only what verify flagged and keep everything else.
+5. No part without geometry: every bolt pattern and shaft has a frame and a
+   ref, and `checkGeometryBindings` reports no errors.
 
 ## Handoff
 

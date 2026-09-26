@@ -1,0 +1,65 @@
+{
+  "artifact": "esp32-c3-devkitm-1",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "6138005a4b47352a0954541e1e0e09a456f8b13cfd1cd3d6a912ce5a0d4e7337",
+  "units": "mm",
+  "features": {
+    "usb": {
+      "area_mm2": 19.5,
+      "centroid": [
+        0.0,
+        -20.256,
+        2.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        -1.0,
+        0.0
+      ]
+    },
+    "header_j1": {
+      "area_mm2": 96.774,
+      "centroid": [
+        -11.43,
+        -0.386,
+        -2.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "header_j3": {
+      "area_mm2": 96.774,
+      "centroid": [
+        11.43,
+        -0.386,
+        -2.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pcb_bottom": {
+      "area_mm2": 988.314,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    }
+  }
+}

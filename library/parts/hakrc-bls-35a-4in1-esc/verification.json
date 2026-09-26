@@ -1,0 +1,28 @@
+{
+  "partId": "hakrc-bls-35a-4in1-esc",
+  "recorded_at": "2026-09-26T22:21:52.457Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 18,
+    "confirmed": 18,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "Added identity caveat (possible different ProtoPart revision/SKU) and photo measurements to mounting/size and 5V/telemetry source_discrepancy traits; noted page MCU spelling EMF8BB21F16G; no CAD change",
+  "assumptions": [
+    "current rating scope",
+    "CAD geometry",
+    "voltage range",
+    "connector family and pin 1"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "hole diameter",
+    "pad and connector positions",
+    "connector family and pin 1",
+    "operating temperature",
+    "total battery current, burst duration, current sensor scale, signal logic level",
+    "identity (MCU/firmware)"
+  ],
+  "vocabulary_gaps": []
+}

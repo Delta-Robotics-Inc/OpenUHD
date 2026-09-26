@@ -1,0 +1,95 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "Arduino UNO R3 datasheet (A000066, modified 22/09/2026)",
+    "url": "https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "2eee8467ca449d79490d56c2d7109f2fb073c991c9e6e86e171ae830d6831950",
+    "supports": [
+      "JANALOG / JDIGITAL connector pin tables",
+      "VIN max 6-20 V, USB max 5.5 V",
+      "operating temperature -40 to 85 C",
+      "board topology (X1 power jack 2.1x5.5 mm, X2 USB-B, regulator, 16U2, ICSP headers)",
+      "board outline and 4 x 3.20 mm mounting holes (5.4)"
+    ]
+  },
+  {
+    "id": "src_pinout",
+    "title": "Arduino UNO R3 full pinout (A000066, CC BY-SA 4.0)",
+    "url": "https://docs.arduino.cc/resources/pinouts/A000066-full-pinout.pdf",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "088b4d7d776abf443cb050c31875221aa5fc7f0533470b33e035c249cf240007",
+    "supports": [
+      "PWM on D3, D5, D6, D9, D10, D11",
+      "INT0 D2, INT1 D3, PCINT on all header I/O",
+      "UART RXD D0, TXD D1",
+      "I2C SDA A4/D18, SCL A5/D19 (duplicated near AREF)",
+      "SPI SS D10, COPI D11, CIPO D12, SCK D13",
+      "LED_BUILTIN on D13",
+      "max 20 mA per I/O pin, 50 mA on 3.3 V pin",
+      "VIN 6-20 V input"
+    ]
+  },
+  {
+    "id": "src_schematic",
+    "title": "Arduino UNO R3 schematic (A000066)",
+    "url": "https://docs.arduino.cc/resources/schematics/A000066-schematics.pdf",
+    "type": "schematic",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "2c1041200352485393108e03c5117a07d4ea03954654485526c2c56cd01f7a42",
+    "supports": [
+      "NCP1117ST50T3G 5 V regulator",
+      "MF-MSMF050-2 500 mA USB polyfuse",
+      "LMV358 + FDN340P automatic USB/VIN power switch",
+      "ATmega328P-PU, ATmega16U2 USB bridge, 16 MHz resonator"
+    ]
+  },
+  {
+    "id": "src_product",
+    "title": "Arduino UNO R3 documentation page (docs.arduino.cc)",
+    "url": "https://docs.arduino.cc/hardware/uno-rev3/",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "f86ab9844ea81173099c00806e642c99709d78c2bbc6ae1045e3f26cbfe447ff",
+    "supports": [
+      "14 digital I/O (6 PWM), 6 analog inputs, 16 MHz ceramic resonator, USB, power jack, ICSP header, reset button",
+      "ATmega328P replaceable (socketed)",
+      "links to datasheet, pinout, schematic and CAD files"
+    ]
+  },
+  {
+    "id": "src_cad",
+    "title": "Arduino UNO R3 CAD files (Eagle UNO-TH_Rev3e .brd/.sch)",
+    "url": "https://docs.arduino.cc/static/6bb7a3ca51ebee82a252f60c0b418787/A000066-cad-files.zip",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "532b306cb153846eafc0ca9fe991d7a4dfa0c52dcefafa2efeaebf4b845ec820",
+    "licence": "License.txt in the archive: \"This project's hardware is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.\" Redistributable (CC BY-SA 4.0); it is an Eagle board file, not a STEP, so it is used as the dimension source for generated geometry rather than committed.",
+    "supports": [
+      "board outline 68.58 x 53.34 mm (layer 20)",
+      "mounting holes 3.2 mm at (13.97, 2.54), (15.24, 50.8), (66.04, 7.62), (66.04, 35.56)",
+      "header positions IOL/IOH at y 50.8, POWER/AD at y 2.54, female 8.5 mm (H8.5)",
+      "USB-B X2 at (3.81, 38.1), DC jack X1 at (5.334, 8.382)",
+      "ICSP positions"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart arduino-uno-rev3 definition",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/arduino-uno-rev3/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T23:05:00Z",
+    "sha256": "d8e5c679eb4435a73399a4ca03b2728fc75ba15ac5322b9ed48857959ab30e1f",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

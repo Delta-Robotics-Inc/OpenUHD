@@ -1,0 +1,25 @@
+{
+  "partId": "st-lsm6ds3tr-c",
+  "recorded_at": "2026-09-26T22:21:32.750Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 17,
+    "confirmed": 17,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "sensor-hub I2C master clock 400 kHz assumption -> 116.3 kHz (Table 8); abs-max control-pin Vin now quotes printed '0.3 to Vdd_IO +0.3' with -0.3 V as assumption",
+  "assumptions": [
+    "absolute_maximum control_pin_V lower bound",
+    "CAD pad geometry"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "top/bottom pad edge distance and pad thickness",
+    "datasheet revision",
+    "absolute maximum control-pin Vin lower bound"
+  ],
+  "vocabulary_gaps": [
+    "SPI builder requires MISO; 3-wire recorded as usage note."
+  ]
+}

@@ -1,0 +1,73 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "TI TPS6302x datasheet SLVS916I (rev. I, Oct 2019; addendum pages dated 2025-2026), with DSJ mechanical data pp.31-33",
+    "url": "https://www.ti.com/lit/ds/symlink/tps63020.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:10:00Z",
+    "sha256": "d117773bb7370fd79377bc70ce987eec3469ea5979547a09df52fca5f95b2e69",
+    "supports": [
+      "section 5 pin configuration and functions (14 pins + exposed thermal pad = PGND)",
+      "6.1 absolute maximum (7 V pins, TJ 150 C, Tstg -65..150 C), 6.2 ESD, 6.3 recommended operating (VIN/VINA 1.8-5.5 V, TA -40..85 C, TJ -40..125 C)",
+      "6.4 thermal information (RthJA 41.8 C/W etc.)",
+      "6.5 electrical characteristics (VOUT 1.2-5.5 V, VFB 500 mV, 2.4 MHz, switch current limit 3.5/4.0/4.5 A, Iq 25 uA, EN/PS thresholds, PG open-drain, OVP, OTP 140 C)",
+      "features: 2 A output for VIN > 2.5 V at VOUT 3.3 V; 2 A boost / 4 A buck (8.2)",
+      "8.2.2-8.2.3: 1.5 uH inductor, 3x22 uF output, 10 uF input, 0.1 uF VINA, R2 ~200 kOhm divider",
+      "p.32 exposed thermal pad 2.85 x 1.58 mm (drawing 4208549-3/G)",
+      "package option addendum: TPS63020DSJR, VSON (DSJ) 14, 3000 T&R, MSL Level-1-260C-UNLIM"
+    ]
+  },
+  {
+    "id": "src_package_drawing",
+    "title": "TI MPSS014A: DSJ (R-PVSON-N14) mechanical data, drawing 4208212-3/C",
+    "url": "https://www.ti.com/lit/pdf/MPSS014A",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:14:00Z",
+    "sha256": "da8f24ae5302ec8b394f3ace6d4bcab52626e25a242106ab96c0ba5837c70b12",
+    "supports": [
+      "body 3.85-4.15 x 2.85-3.15 mm, height 0.80-1.00 mm",
+      "14 leads pitch 0.50, span 3.00, width 0.18-0.30, length 0.30-0.50",
+      "pin 1..7 / 8..14 placement (bottom view)"
+    ]
+  },
+  {
+    "id": "src_product",
+    "title": "TI TPS63020DSJR part details page",
+    "url": "https://www.ti.com/product/TPS63020/part-details/TPS63020DSJR",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T18:00:00Z",
+    "sha256": "117cce7e7051023f9e3bfef500442b082fd9452f3032b36c6a4aa7e4efc102cc",
+    "supports": [
+      "orderable part TPS63020DSJR (ACTIVE), VSON (DSJ) 14, 3000 LARGE T&R; DSJT = 250 small T&R carrier option",
+      "NiPdAu lead finish, MSL Level-1-260C-UNLIM",
+      "features: VIN 1.8-5.5 V, VOUT 1.2-5.5 V, 2 A at VIN > 2.5 V / VOUT 3.3 V"
+    ]
+  },
+  {
+    "id": "src_product_folder",
+    "title": "TI TPS63020 product folder ('CAD symbols, footprints & 3D models' tab)",
+    "url": "https://www.ti.com/product/TPS63020",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T18:00:00Z",
+    "sha256": "ea8f35a847468ba1b252ba83b287bff45bbb04c2ea44b4597faf4791bd8a3eb5",
+    "supports": [
+      "CAD symbols, footprints & 3D models for VSON (DSJ) 14 offered only via Ultra Librarian (vendor.ultralibrarian.com/TI/embedded/?gpn=TPS63020&package=DSJ&pin=14); download needs acceptance of Ultra Librarian terms as a registered user, so no vendor CAD is committed"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition tps63020dsjr",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/tps63020dsjr/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:10:00Z",
+    "sha256": "8c1afe1560c87b9faf01fedbc4efe38c4a3c85fdbf0c8f15817595d0ba392069",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

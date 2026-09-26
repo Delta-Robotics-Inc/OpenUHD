@@ -1,0 +1,139 @@
+{
+  "artifact": "hakrc-bls-35a-4in1",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "76b7b9bb9c3127a1d84d96e467b813142d4ccdd4871d9c60b7be12799c18ab23",
+  "units": "mm",
+  "features": {
+    "stack_mount": {
+      "area_mm2": 64.34,
+      "centroid": [
+        0.0,
+        0.0,
+        0.8
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          -10.0,
+          -10.0,
+          0.8
+        ],
+        [
+          -10.0,
+          10.0,
+          0.8
+        ],
+        [
+          10.0,
+          -10.0,
+          0.8
+        ],
+        [
+          10.0,
+          10.0,
+          0.8
+        ]
+      ],
+      "diameter_mm": 3.2
+    },
+    "motor_1": {
+      "area_mm2": 15.0,
+      "centroid": [
+        -13.75,
+        -6.0,
+        1.9
+      ],
+      "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_2": {
+      "area_mm2": 15.0,
+      "centroid": [
+        -13.75,
+        6.0,
+        1.9
+      ],
+      "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_3": {
+      "area_mm2": 15.0,
+      "centroid": [
+        13.75,
+        -6.0,
+        1.9
+      ],
+      "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_4": {
+      "area_mm2": 15.0,
+      "centroid": [
+        13.75,
+        6.0,
+        1.9
+      ],
+      "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "bat_in": {
+      "area_mm2": 9.0,
+      "centroid": [
+        3.0,
+        -14.0,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "bat_neg": {
+      "area_mm2": 9.0,
+      "centroid": [
+        -3.0,
+        -14.0,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "fc_port": {
+      "area_mm2": 29.0,
+      "centroid": [
+        -1.2,
+        15.125,
+        3.05
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    }
+  }
+}

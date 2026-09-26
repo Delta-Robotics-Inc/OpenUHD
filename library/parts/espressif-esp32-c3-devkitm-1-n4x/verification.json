@@ -1,0 +1,24 @@
+{
+  "partId": "espressif-esp32-c3-devkitm-1-n4x",
+  "recorded_at": "2026-09-26T22:30:47.777Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 21,
+    "confirmed": 21,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "none",
+  "assumptions": [
+    "generated geometry"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "PCB thickness, header height, Micro-USB body size",
+    "mounting holes",
+    "board supply current budget"
+  ],
+  "vocabulary_gaps": [
+    "No USB builder; Micro-USB modelled as a 'usb' device interface like other library parts."
+  ]
+}

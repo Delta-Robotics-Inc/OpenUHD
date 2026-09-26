@@ -1,0 +1,42 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "TI L293x Quadruple Half-H Drivers datasheet, SLRS008D (Sept 1986, revised Jan 2016), with package option addendum (10-Nov-2025)",
+    "url": "https://www.ti.com/lit/ds/symlink/l293d.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "ee1e8923495a2c0d0e8c0184de344b424b4e665cc68c7e5e882c6fd2eed55158",
+    "supports": ["identity L293DNE, PDIP (NE) 16, body 19.80 x 6.35 mm (Device Information)", "pin configuration and functions (section 5)", "absolute maximum ratings (6.1)", "recommended operating conditions VCC1 4.5-7 V, VCC2 VCC1-36 V, VIH 2.3 V, VIL 1.5 V, TA 0-70 C (6.3)", "thermal information RθJA 36.4 C/W (6.4)", "electrical characteristics VOH, VOL, clamp voltages, IIH/IIL, ICC1, ICC2 (6.5)", "switching characteristics L293DNE (6.6)", "function table (Table 1)", "600 mA continuous / 1.2 A peak (t <= 100 us) per channel", "integrated output clamp diodes (L293D)", "0.1 uF bypass on VCC1 and VCC2; no sequencing (section 10)", "orderable L293DNE, lead finish NIPDAU, 25/tube (addendum)"]
+  },
+  {
+    "id": "src_package",
+    "title": "TI mechanical data MPDI003 — NE (R-PDIP-T**) plastic dual-in-line package (Oct 1994, drawing 4040054/B)",
+    "url": "https://www.ti.com/lit/pdf/MPDI003",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "5414037e29f83cf65560c0c17d2ed0b0bcfe004ac73808ce7ea468274e798f9a",
+    "supports": ["16-pin body length A max 19.80 mm", "body width C 6.10-6.60 mm", "pitch 2.54 mm", "row spacing 7.37-7.87 mm", "seating plane to top max 5.08 mm, standoff min 0.51 mm", "lead length below seating plane 3.17-3.94 mm", "lead width 0.381-0.533 mm, lead thickness 0.25 mm nom", "end-lead shoulder width max 1.78 mm"]
+  },
+  {
+    "id": "src_product",
+    "title": "TI L293D product folder (ordering and package links)",
+    "url": "https://www.ti.com/product/L293D",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "03c20dab51374dd109a59e55c38a13b1f1c1ff7fb06d80f373d5186a446bd62d",
+    "supports": ["L293DNE status ACTIVE: 'available for existing designs. However, for new designs, we recommend considering an alternate.'", "L293DNE package PDIP (NE), 16 pins, package drawing /lit/pdf/MPDI003"]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition l293d-motor-driver-ic (v1.2)",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/l293d-motor-driver-ic/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "0cf4aa91cda7e3ad7f5a6e56c856b3f1a451197e818d46b366c48c553604a807",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]

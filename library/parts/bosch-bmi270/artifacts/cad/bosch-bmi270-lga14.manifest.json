@@ -1,0 +1,23 @@
+{
+  "artifact": "bosch-bmi270-lga14",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "cb00ff9a1778c09963ed797c48c879272ca72ec13194fce0aa2810fa050eb808",
+  "units": "mm",
+  "features": {
+    "pcb_mount": {
+      "area_mm2": 1.662,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 14,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    }
+  }
+}

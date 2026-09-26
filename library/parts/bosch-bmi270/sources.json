@@ -1,0 +1,46 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "Bosch Sensortec BMI270 datasheet, BST-BMI270-DS000-08, revision 1.6",
+    "url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:01:00Z",
+    "sha256": "f68ce3c74f011a80bbe4b0279c4abe9609a71a5dcda75a951381d77112e005fb",
+    "supports": [
+      "Table 1: VDD 1.71-3.6 V, VDDIO 1.2-3.6 V, logic levels, IDD 685/970 uA, operating temperature -40..+85 C",
+      "Table 5: absolute maximum ratings (supply -0.3..4 V, storage -50..+150 C, ESD)",
+      "Section 6.4 Table 19: SPI 10 MHz (VDDIO >= 1.62 V), 7 MHz (VDDIO < 1.62 V)",
+      "Section 6.5: I2C address 0x68 (SDO to GND) / 0x69 (SDO to VDDIO), standard/fast/fast-plus up to 1 MHz",
+      "Section 6.6.1 and Table 21: AUX I2C master follows fast-mode plus (1 MHz); key features: 10 MHz OIS slave SPI (4/3-wire)",
+      "Section 7.1 pin-out drawing and Table 22 pin-out and pin connections (14 pads)",
+      "Section 8.1 package outline: D 3.00, E 2.50, A 0.83 mm, pad sizes, pitch 0.5 mm",
+      "Key features: ranges, ODR, 2 KB FIFO"
+    ]
+  },
+  {
+    "id": "src_product",
+    "title": "Bosch Sensortec BMI270 product page (downloads list; no 3D model offered)",
+    "url": "https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi270/",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "ae65be05740f0e28fee94f626b1aeefb28fc1f9551e3ae2baae899c0c3eef3e2",
+    "supports": [
+      "document list (datasheet, application notes, handling/soldering instructions)",
+      "no CAD / 3D model download listed"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition bosch-bmi270",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/bosch-bmi270/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:00:00Z",
+    "sha256": "0bd570260f63220065d291638e1f53b90381e94399e1925b9d8587670eae249b",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

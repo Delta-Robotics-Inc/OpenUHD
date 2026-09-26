@@ -1,9 +1,26 @@
 {
   "artifact": "matek-m9n-5883-vendor",
-  "tool": "manufacturer STEP (Matek), converted with build123d",
+  "tool": "manufacturer STEP, converted with build123d (library/cad/py/vendor_step.py)",
   "toolVersion": "0.13.0",
   "sourceDigest": "0b3cb5cd696a2982639e4c7bc7bd24bb720b7a4fc0e2f60d088e5903134e5272",
+  "source": {
+    "file": "M9N-5883_step.zip",
+    "url": "https://www.mateksys.com/Downloads/other/M9N-5883_step.zip",
+    "licence": "not stated by Matek (not redistributed)"
+  },
   "units": "mm",
+  "bbox": {
+    "min": [
+      -16.0,
+      -16.0,
+      -5.125
+    ],
+    "max": [
+      16.0,
+      16.0,
+      4.35
+    ]
+  },
   "features": {
     "GH6P-1": {
       "area_mm2": 333.419,
@@ -57,7 +74,30 @@
         0.0,
         -0.312
       ],
-      "faces": 4
+      "faces": 4,
+      "centres": [
+        [
+          -13.0,
+          -13.0,
+          -0.312
+        ],
+        [
+          -13.0,
+          13.0,
+          -0.312
+        ],
+        [
+          13.0,
+          -13.0,
+          -0.312
+        ],
+        [
+          13.0,
+          13.0,
+          -0.312
+        ]
+      ],
+      "diameter_mm": 2.1
     },
     "component_side": {
       "area_mm2": 1001.464,
@@ -88,17 +128,25 @@
     "C28",
     "C3",
     "C4",
+    "CGGBP_25_4_A_02_RGB15987699",
+    "Cylinder",
     "D1",
     "D2",
     "D3",
+    "Extruded",
     "GH6P-1",
     "GH6P-2",
     "GPS",
     "LDO",
     "LED-G",
     "LED-R",
+    "LED0603_G_",
+    "LED0603_R_",
     "MAG",
+    "Open_CASCADE_STEP_translator_6_8_2_1_1",
+    "PCB",
     "Q1",
+    "QFN16_3x3",
     "R20",
     "R21",
     "R23",
@@ -108,12 +156,36 @@
     "R27",
     "R28",
     "R29",
-    "R30"
+    "R30",
+    "SM06B-GHS-TB_RGB14474460",
+    "SOD123",
+    "SOT23",
+    "SOT23-5R",
+    "User_Library-QFN-16_3x3_1",
+    "User_Library-QFN-16_3x3_10",
+    "User_Library-QFN-16_3x3_11",
+    "User_Library-QFN-16_3x3_12",
+    "User_Library-QFN-16_3x3_13",
+    "User_Library-QFN-16_3x3_14",
+    "User_Library-QFN-16_3x3_15",
+    "User_Library-QFN-16_3x3_16",
+    "User_Library-QFN-16_3x3_17",
+    "User_Library-QFN-16_3x3_18",
+    "User_Library-QFN-16_3x3_2",
+    "User_Library-QFN-16_3x3_3",
+    "User_Library-QFN-16_3x3_4",
+    "User_Library-QFN-16_3x3_5",
+    "User_Library-QFN-16_3x3_6",
+    "User_Library-QFN-16_3x3_7",
+    "User_Library-QFN-16_3x3_8",
+    "User_Library-QFN-16_3x3_9",
+    "User_Library-RES_1609-0603",
+    "neo-m9n"
   ],
   "notes": [
     "Board is 32 x 32 x 0.62 mm, top face at z = 0, components on +Z.",
-    "Mount holes: 4 x \u03a62.1 on a 26 x 26 mm square centred on the board (\u00b113, \u00b113).",
-    "The patch antenna is on -Z (z -5.12 \u2026 1.03): the module mounts component side toward the frame, antenna up.",
-    "GH6P connectors reach z = 4.35 on the component side: the frame mount needs \u2265 4.5 mm standoffs."
+    "Mount holes: 4 x Φ2.1 on a 26 x 26 mm square centred on the board (±13, ±13).",
+    "The patch antenna is on -Z (z -5.12 … 1.03): the module mounts component side toward the frame, antenna up.",
+    "GH6P connectors reach z = 4.35 on the component side: the frame mount needs ≥ 4.5 mm standoffs."
   ]
 }

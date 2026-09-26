@@ -1,0 +1,29 @@
+{
+  "partId": "adafruit-1411-16ch-pwm-servo-shield",
+  "recorded_at": "2026-09-26T22:15:01.801Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 19,
+    "confirmed": 19,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "mount changed from right-edge pair (27.94 x 0) to UNO R3 shield convention diagonal pair (13.97,2.54)-(66.04,35.56), rectangle 61.657 x 0, matching the 1438",
+  "assumptions": [
+    "CAD heights",
+    "V+ voltage range lower bound",
+    "bolt pattern subset",
+    "fastener"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "V+ maximum current",
+    "V+ side breakout pads",
+    "component heights",
+    "board operating temperature"
+  ],
+  "vocabulary_gaps": [
+    "No builder for an RC servo 3-pin output; hand-rolled protocol pwm role host with slots power/ground/signal (capabilities power_out, ground, rc_pwm_out) as the counterpart of towerpro-sg90 rc_servo_3wire (pwm device, rc_pwm_in). Pairs cleanly at protocol level; 16 identical ports make auto-connect ambiguous (potentials).",
+    "No interface type for an Arduino R3 shield-to-board header mate; modelled as header pin leaves plus a 2-hole BoltPattern (irregular UNO holes)."
+  ]
+}

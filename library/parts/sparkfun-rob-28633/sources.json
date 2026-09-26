@@ -1,0 +1,65 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "SparkFun ROB-28633 datasheet: BJ-N20-12-1000 encoder motor specification",
+    "url": "https://cdn.sparkfun.com/assets/a/3/9/9/9/28633_datasheet_N20_Motor_With_Encoder_and_Cable_pair.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:20:00Z",
+    "sha256": "8351f061a91ad905bbad5f2923115fd4137f4c7effe39888dfec16394963348a",
+    "supports": [
+      "cable pinout (1 Blue GND, 2 Green Enc A, 3 White Enc B, 4 Yellow 3.3V, 5 Black Motor-, 6 Red Motor+)",
+      "SH1.0-6P connector, cable 10 cm",
+      "motor voltage range 3.7-12 VDC",
+      "encoder voltage 3.3/5 V",
+      "7 PPR AB square wave",
+      "D-axis 10 mm",
+      "weight 15 g",
+      "1:30 at 12 V: no-load 0.06 A 1000 rpm, rated 0.3 A 681 rpm 0.16 kg*cm, stall 0.7 A 0.43 kg*cm",
+      "noise <= 60 dB(A)"
+    ]
+  },
+  {
+    "id": "src_product",
+    "title": "SparkFun N20 Motor With Encoder and Cable (Pair), ROB-28633 product page",
+    "url": "https://www.sparkfun.com/n20-motor-with-encoder-and-cable-pair.html",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:20:00Z",
+    "sha256": "82c30134f9eee61dc799b50265737316937a5dcbd817945f2b87955e7cae4db4",
+    "supports": [
+      "sold as a pair",
+      "dimensions 10 x 12 x 41.5 mm",
+      "gear ratio 31.5:1",
+      "3 mm D-shaft 10 mm long",
+      "14-pole magnetic disc, 2 Hall sensors, 882 counts per output revolution",
+      "rated up to 12 V, 1000 rpm at 0.06 A",
+      "6 V: no-load 500 rpm 0.03 A, stall 0.5 kg*cm 0.45 A",
+      "100 mm pre-soldered cable, 6-pin JST-SH, plugs into the XRP Controller"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart sparkfun-rob-28633 definition",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/sparkfun-rob-28633/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T22:20:00Z",
+    "sha256": "f2f39c14eedcb504c7249b16589c86ff55fdfb40605915fba5978e6c2bec5d92",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  },
+  {
+    "id": "src_cad_search",
+    "title": "GitHub search of the sparkfun organisation for N20 repositories (0 results)",
+    "url": "https://api.github.com/search/repositories?q=org:sparkfun+N20",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:20:00Z",
+    "sha256": "08c082fdf7ca87ba911a2aabb0f0cf2d3e482a6feeaac9713e4578c20b2600b2",
+    "supports": [
+      "no SparkFun CAD / product repo for ROB-28633"
+    ]
+  }
+]

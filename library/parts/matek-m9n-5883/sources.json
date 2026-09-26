@@ -127,6 +127,7 @@
     "authority": "manufacturer",
     "fetched_at": "2026-09-26T00:00:00Z",
     "sha256": "0b3cb5cd696a2982639e4c7bc7bd24bb720b7a4fc0e2f60d088e5903134e5272",
+    "licence": "Not stated by Matek (download linked from the product page; no licence file in the zip). Not redistributed: kept in .research/cad.",
     "supports": ["26 x 26 mm square hole pattern centred on the board (holes at ±13, ±13 mm)", "hole diameter 2.1 mm", "board 32 x 32 x 0.62 mm, R3 corners", "patch antenna on the underside, components and JST-GH-6P sockets on top (4.35 mm)", "named components GH6P-1, GH6P-2, MAG, ANTENNA, GPS, Board"]
   }
 ]

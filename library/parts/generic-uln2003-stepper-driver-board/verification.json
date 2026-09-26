@@ -1,0 +1,30 @@
+{
+  "partId": "generic-uln2003-stepper-driver-board",
+  "recorded_at": "2026-09-26T22:27:49.183Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 21,
+    "confirmed": 21,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "Split board size / hole diameter / hole spacing into separate assumption traits, added socket-series assumption, description states dimensions are representative (measure before mounting)",
+  "assumptions": [
+    "CAD component layout",
+    "board size",
+    "hole diameter",
+    "hole spacing",
+    "motor socket series"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "board dimensions and mounting holes",
+    "identity",
+    "3.3 V input drive, LED resistor values"
+  ],
+  "vocabulary_gaps": [
+    "New leaf protocol type stepper_phase (role output on the ULN2003A open-collector outputs A-D). See stepperonline-17hs08-1004s gaps.",
+    "New composed protocol type unipolar_stepper (role output on the 5-pin motor socket) with slots coil_1..coil_4 and common (power output). Pairs with generic-28byj-48-5v (role input).",
+    "Non-canonical parameter id phase_current (A): 0-0.5 A per output here, range-checked against the motor's per-coil current."
+  ]
+}

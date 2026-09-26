@@ -1,0 +1,24 @@
+{
+  "partId": "ti-l293dne",
+  "recorded_at": "2026-09-26T22:11:21.392Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 25,
+    "confirmed": 25,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "none",
+  "assumptions": [
+    "CAD body thickness and lead shape"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "total package current",
+    "mass"
+  ],
+  "vocabulary_gaps": [
+    "Brushed DC motor output has no builder; modelled as in l298n-motor-driver (PowerOut leaves with capability motor_out and a composed dc_motor_output on protocol power/output).",
+    "No builder for a DIP footprint; through_hole_mount uses the existing mechanical_connection / mounting_point type, as bme280 pcb_mount does."
+  ]
+}

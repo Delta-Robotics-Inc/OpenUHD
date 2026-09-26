@@ -1,0 +1,30 @@
+[
+  {
+    "id": "src_product",
+    "title": "Ovonic 120C 14.8V 1300mAh 4S LiPo Battery Pack for FPV Racing - XT60 Plug (ovonicshop.com product page; SKUs O-120C-1300-4S1P-XT60-2P / -4P)",
+    "url": "https://www.ovonicshop.com/products/ovonic-120c-14-8v-1300mah-4s-lipo-battery-xt60-plug",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:30:00Z",
+    "sha256": "e83b94191a4e27dcdf5d5e49701fb7c6514c2685d6372069a4df3e11a5f3baf8",
+    "supports": [
+      "specifications: Li-Polymer, 4S1P, 14.8V, 1300mAh, 120C discharge, 240C max burst",
+      "Length (dev.5mm) 76mm, Width (dev.2mm) 35mm, Height (dev.2mm) 30mm",
+      "Net weight (dev.20g) 312g (156g for one pack)",
+      "Connector Type: XT60 Plug; Charge Plug: JST-XH",
+      "Notice: stop charging at 4.2V per cell; normal cell voltage 3.7V~4.2V; use a balance charger",
+      "sold as 2-pack / 4-pack combos (variant SKUs)",
+      "no drawing or 3D model offered"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition ovonic-4s-1300mah-120c-xt60",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/ovonic-4s-1300mah-120c-xt60/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:28:00Z",
+    "sha256": "7a9ff4a31f01f3433a12a1ca75dc791dda27b495a2400b0adcc592a0a434bc79",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]

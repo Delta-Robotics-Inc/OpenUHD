@@ -25,3 +25,15 @@
 New parts start at `version: "1.0.0"`. Bump the minor version for additive
 evidence, and the major version for changes that break an interface id,
 protocol, role, or connector pinout.
+
+## Geometry
+
+| Evidence | UHD |
+| --- | --- |
+| Manufacturer STEP | `library/cad/py/catalog/<id>.py` using `vendor_step.py`; `vendorCadArtifacts(...)` on the part. |
+| No usable CAD | `catalog/<id>.py` using `partkit.py` from the drawing; `cadArtifacts(...)`; a `data_gap` trait "manufacturer CAD". |
+| Mounting holes in the CAD | `frame` at the pattern centre on the mounting face, normal outward, xAxis along the pattern; `feature`/`vendorFeature` ref to the holes plus `procedural("bolt_pattern")`. |
+| Irregular hole pattern (e.g. Arduino UNO) | The largest square/rectangle subset as the `BoltPattern`, the remaining holes in its `note`, and an `assumption` trait saying which holes were modelled. |
+| Shaft | `frame` on the axis at the mounting face, normal along the shaft; feature ref plus `procedural("shaft")`. |
+| Connector | A feature on the connector body; every interface it carries refs it. |
+| Electrical-only interface | No geometry, or `logical: true`. |

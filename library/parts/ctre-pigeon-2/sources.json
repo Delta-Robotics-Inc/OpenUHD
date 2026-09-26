@@ -1,0 +1,66 @@
+[
+  {
+    "id": "src_guide",
+    "title": "Pigeon 2.0 User's Guide, revision 1.2 (2023-02-13)",
+    "url": "https://ctre.download/files/user-manual/Pigeon2%20User's%20Guide.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "6bedcf63e783dbbb39991dfceb46800588c4a37e191679438f7e8f968c80796d",
+    "supports": [
+      "electrical/inertial specifications: -40 to +85 C ambient, 40/46 mA at 12 V, 21/23 mA at 28 V, 6.0-12.0-28.0 V, ±30 kV ESD, yaw drift, gyro ±125..±2000 dps (firmware selects ±1000), 16-bit; accel ±8 g 16-bit; magnetometer ±1150 uT, 0.3 uT",
+      "general/mechanical: 1.77 x 1.77 x 0.51 in, 30.39 g with enclosure and wires, CAN 2.0 (1 Mbps), CAN FD with CANivore, shock 10000 g / 200 us",
+      "kit: preassembled with power and CAN leads; CAN leads end in 3-pin 0.1 in connectors, one female, one male",
+      "features: reverse input power protection, one 22 AWG power lead pair, two 22 AWG CAN lead pairs",
+      "wiring table: red Vdd, black ground, yellow CANH, green CANL; the two yellow and the two green wires are electrically common",
+      "orientation convention: +X forward, +Y left, +Z up; default mount orientation matches the XYZ logo",
+      "mechanical drawing: 44.96 x 44.96 x 12.95 mm, 2 x Ø3.26 holes with Ø4.83 counterbore on diagonal corners of a 28.96 mm square"
+    ]
+  },
+  {
+    "id": "src_product",
+    "title": "CTR Electronics Pigeon 2.0 product page (SKU 21-737785)",
+    "url": "https://store.ctr-electronics.com/products/pigeon-2",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "28b085e0901f430c88b2f58f7422940184107e6853020e06d0add2df6a8ff409",
+    "supports": [
+      "SKU 21-737785",
+      "9-axis: 3-axis accelerometer, gyroscope, magnetometer",
+      "6-28 V, 12 V nominal, 40 mA typ at 12 V, 21 mA at 28 V",
+      "CAN and CAN FD",
+      "1x power lead pair, 2x CAN lead pairs (3-pin male and female connectors)",
+      "weight 30.39 g",
+      "links to the user's guide and the Device-CADs STEP zip"
+    ]
+  },
+  {
+    "id": "src_cad",
+    "title": "CTR Electronics Pigeon 2.0 STEP (Device-CADs repository, PIGEON_2_CAD/Pigeon 2.zip)",
+    "url": "https://github.com/CrossTheRoadElec/Device-CADs/raw/master/PIGEON_2_CAD/Pigeon%202.zip",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "5d5793e152ffd5ecf6e8fe339cc16cc1818af33c5391147177e633a8f7e4e9d3",
+    "licence": "Not stated. Re-checked 2026-09-26: GitHub reports no licence for CrossTheRoadElec/Device-CADs (GET /repos/.../license -> 404, repo license: null); the repository tree has no LICENSE/COPYING file; the only README (ReadMe.txt) describes the file formats and states no terms. The CTRE product page links the zip directly with no terms; the CTRE store terms of service reserve all rights in site content (non-commercial download only), which does not grant redistribution. Treated as all rights reserved: not redistributed, kept in .research/cad (gitignored).",
+    "supports": [
+      "housing 44.96 x 44.96 x 12.95 mm plus lead boss on +Y",
+      "through holes Ø3.26 with Ø4.83 top counterbore at (-14.478, 14.478) and (14.478, -14.478) mm",
+      "housing screws at the other two corners",
+      "named components Pigeon_PCB, Bot_Housing, Top_Housing, LED x2"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart ctre-pigeon-2 definition.json",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/ctre-pigeon-2/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "19c5b3480b9ece037e1725f412c8edb8624a93c37d5ca7509e90caa71faa412d",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

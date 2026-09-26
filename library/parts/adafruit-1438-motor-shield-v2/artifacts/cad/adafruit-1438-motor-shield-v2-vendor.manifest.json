@@ -1,0 +1,134 @@
+{
+  "artifact": "adafruit-1438-motor-shield-v2-vendor",
+  "tool": "manufacturer STEP, converted with build123d (library/cad/py/vendor_step.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "600a37b31421d17d8141c0bbef370992ce12716ddd24f7274d180ac75380504b",
+  "source": {
+    "file": "1438 Adafruit MotorShield.step",
+    "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/main/1438%20Adafruit%20MotorShield/1438%20Adafruit%20MotorShield.step",
+    "licence": "MIT License, Copyright (c) 2016 Adafruit Industries (Adafruit_CAD_Parts LICENSE)"
+  },
+  "units": "mm",
+  "bbox": {
+    "min": [
+      -0.0,
+      -0.0,
+      -3.0
+    ],
+    "max": [
+      68.58,
+      53.34,
+      10.14
+    ]
+  },
+  "features": {
+    "mount": {
+      "area_mm2": 49.461,
+      "centroid": [
+        31.75,
+        29.633,
+        0.82
+      ],
+      "faces": 3,
+      "centres": [
+        [
+          13.97,
+          2.54,
+          0.82
+        ],
+        [
+          15.24,
+          50.8,
+          0.82
+        ],
+        [
+          66.04,
+          35.56,
+          0.82
+        ]
+      ],
+      "diameter_mm": 3.2
+    },
+    "J1_M1_M2": {
+      "area_mm2": 647.673,
+      "centroid": [
+        3.721,
+        22.86,
+        5.698
+      ],
+      "faces": 7
+    },
+    "J2_M3_M4": {
+      "area_mm2": 647.673,
+      "centroid": [
+        63.279,
+        14.224,
+        5.698
+      ],
+      "faces": 7
+    },
+    "MPOWER": {
+      "area_mm2": 320.485,
+      "centroid": [
+        20.447,
+        3.712,
+        5.704
+      ],
+      "faces": 7
+    },
+    "HDR_POWER": {
+      "area_mm2": 267.6,
+      "centroid": [
+        37.266,
+        2.5,
+        -1.5
+      ],
+      "faces": 6
+    },
+    "HDR_ANALOG": {
+      "area_mm2": 206.4,
+      "centroid": [
+        57.09,
+        2.6,
+        -1.5
+      ],
+      "faces": 6
+    },
+    "HDR_DIGITAL_HIGH": {
+      "area_mm2": 299.35,
+      "centroid": [
+        30.215,
+        50.99,
+        -1.5
+      ],
+      "faces": 6
+    },
+    "HDR_DIGITAL_LOW": {
+      "area_mm2": 243.8,
+      "centroid": [
+        54.54,
+        50.99,
+        -1.5
+      ],
+      "faces": 6
+    },
+    "RESET_BUTTON": {
+      "area_mm2": 134.137,
+      "centroid": [
+        5.461,
+        35.941,
+        2.903
+      ],
+      "faces": 8
+    }
+  },
+  "vendorComponents": [
+    "Adafruit_MotorShield_V2_v3"
+  ],
+  "notes": [
+    "Coordinates as delivered: PCB bottom at z=0, lower-left corner at the origin (same as the Eagle v2.3 board).",
+    "The STEP has no component names; features are selected by geometry (holes(3.2), boxes around each solid).",
+    "The STEP models the PCB, 3 terminal blocks, 4 Arduino header bodies and the reset button only: no servo headers, PWM header or ICs.",
+    "Only 3 mounting holes: the shield omits the UNO hole at (66.04, 7.62)."
+  ]
+}

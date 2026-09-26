@@ -1,0 +1,158 @@
+[
+  {
+    "id": "src_product",
+    "title": "REV Power Distribution Hub (REV-11-1850) product page",
+    "url": "https://www.revrobotics.com/rev-11-1850/",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "c722592e49c73e77fd919e4c9df9d42c6bf7b7fb19533f899d2d036fbaf0106f",
+    "local": ".research/downloads/product-page.html",
+    "supports": [
+      "identity REV-11-1850",
+      "20 high-current (40 A max), 3 low-current (15 A max), 1 switchable low-current channel",
+      "ATO breakers/fuses (HC), ATM fuses (LC)",
+      "WAGO 2616 main input, 2606 HC, 2601 LC and CAN",
+      "CAN and USB-C (USB-to-CAN)",
+      "input 4.75-18 V",
+      "#10 clearance (5 mm) holes on 0.5 in pitch",
+      "8.875 x 4.375 x 1.563 in, 517 g"
+    ]
+  },
+  {
+    "id": "src_specs",
+    "title": "Power Distribution Hub Specifications (REV docs)",
+    "url": "https://docs.revrobotics.com/ion-control/pdh/specs",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "e7782d1fe3322b2bcb84f0da313a4134913077e70ec2601e528ed13853efa300",
+    "local": ".research/downloads/ion-control_pdh_specs.md",
+    "supports": [
+      "operating 4.7/12/18 V",
+      "input wire 18-4 AWG",
+      "CAN termination 120 ohm; CAN terminal wire gauges",
+      "HC: ATO/ATC, 40 A max breaker, 0-127.9 A measurement at 125 mA",
+      "LC: ATM/APM, 15 A continuous, 20 A peak (5 min), 0-31.94 A at 62.5 mA",
+      "switched channel 15 A, 10 Hz max switching",
+      "8.875 x 4.375 x 1.563 in, 1.14 lb, 0.5 in hole grid pitch, #10 clearance, ABS case"
+    ]
+  },
+  {
+    "id": "src_overview",
+    "title": "Power Distribution Hub Overview (REV docs; the ProtoPart datasheet_url's successor)",
+    "url": "https://docs.revrobotics.com/ion-control/pdh/overview",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "aed9fb4b721b15e61d80245395566246c780009e3d6a7c407da728c1ec106491",
+    "local": ".research/downloads/ion-control_pdh_overview.md",
+    "supports": [
+      "20 HC / 3 LC / 1 switchable",
+      "LC 20 A peak for approved pneumatic control devices",
+      "configurable CAN termination, firmware update over CAN",
+      "USB-to-CAN"
+    ]
+  },
+  {
+    "id": "src_wiring",
+    "title": "Wiring the Power Distribution Hub (REV docs)",
+    "url": "https://docs.revrobotics.com/ion-control/pdh/gs/wiring",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "3640c9b7eb3c8e5118eb0659260b18aa13bfff1d8da1b4649790486af1cb0295",
+    "local": ".research/downloads/ion-control_pdh_gs_wiring.md",
+    "supports": [
+      "battery input 18-4 AWG strip 0.75 in",
+      "HC 24-8 AWG strip 0.5 in",
+      "CAN and LC push-button WAGO 24-18 AWG"
+    ]
+  },
+  {
+    "id": "src_troubleshooting",
+    "title": "Power Distribution Hub Troubleshooting (REV docs)",
+    "url": "https://docs.revrobotics.com/ion-control/pdh/troubleshooting",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "6cee284b090cdf05331ccabb2e9a0401d07085bf8636636f0816e6f453a0a8b8",
+    "local": ".research/downloads/pdh-troubleshooting.md",
+    "supports": [
+      "low-current channels are numbered 20-23"
+    ]
+  },
+  {
+    "id": "src_drawing",
+    "title": "REV-11-1850 Power Distribution Hub drawing",
+    "url": "https://www.revrobotics.com/content/docs/REV-11-1850-DR.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "7a674646d0c69ed4d4267147bc79aa65bb67adb698efd253a21081c6d1ad83f4",
+    "local": ".research/downloads/REV-11-1850-DR.pdf",
+    "supports": [
+      "111.1 x 225.4 mm body, 39.7 mm height",
+      "4 x Φ5.0 holes, 101.6 x 215.9 mm, 4.8 mm from the edges",
+      "silkscreen channel numbers 0-9 (+X column, 0 at the battery end) and 10-19 (-X column, 19 at the battery end), LC block with SWITCHABLE, BATTERY INPUT + -",
+      "CAN block poles labelled H L H L; TERM ON/OFF termination switch",
+      "two 3-pin RS485 headers, USB-C, STATUS LED, MODE button",
+      "overall 112.7 x 227.1 mm incl. terminals"
+    ]
+  },
+  {
+    "id": "src_cad",
+    "title": "REV-11-1850 Power Distribution Hub STEP model",
+    "url": "https://www.revrobotics.com/content/cad/REV-11-1850.STEP",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "bb14d12b33e8b21bb49f85166f9fb55e358d3044f85580321a291e3a7b9a1fa9",
+    "local": ".research/cad/REV-11-1850.STEP",
+    "supports": [
+      "4 x Φ5.0 holes at (±50.8, ±107.95) mm",
+      "WAGO terminal positions: 20 HC pairs, 8-pole LC block, 4-pole CAN block, battery pair",
+      "USB-C position",
+      "39.72 mm height"
+    ],
+    "licence": "Not stated by REV Robotics on the product page or the download (site footer: (c) REV Robotics). Not redistributed: kept in .research/cad. The file is 69.5 MB."
+  },
+  {
+    "id": "src_gs",
+    "title": "Getting Started with the Power Distribution Hub (REV docs)",
+    "url": "https://docs.revrobotics.com/ion-control/pdh/gs",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T18:00:00Z",
+    "sha256": "d701044dce9db189b8142818b0b9c7f66304fe3d9c1a112875d91a68131cc02d",
+    "local": ".research/downloads/ion-control_pdh_gs.md",
+    "supports": [
+      "RS485 ports are not used in FRC (future use)"
+    ]
+  },
+  {
+    "id": "src_wpilib",
+    "title": "WPILib PowerDistribution Java API",
+    "url": "https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/wpilibj/PowerDistribution.html",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T18:00:00Z",
+    "sha256": "213d43e6e34f5d19e1a170eddb86a275e793fd3b7634aaa733612f0bcc386ab7",
+    "local": ".research/downloads/wpilib-PowerDistribution.html",
+    "supports": [
+      "default PowerDistribution constructor uses CAN ID 0 for CTRE and 1 for REV"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition rev-pdh",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/rev-pdh/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "caf1d0f5daafd90c69ceafd8c84aaabf8f9571c21f33f2ea554f5596071b7b38",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

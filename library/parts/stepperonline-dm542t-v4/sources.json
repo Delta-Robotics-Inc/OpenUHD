@@ -1,0 +1,44 @@
+[
+  {
+    "id": "src_manual_v4",
+    "title": "STEPPERONLINE DM542T(V4.0) 2-Phase Digital Stepper Drive user manual, Revision 4.0 (Oct 2020)",
+    "url": "https://www.omc-stepperonline.com/download/DM542T_V4.0.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:55:00Z",
+    "sha256": "5e5492778951f206cf5812b743903a508111ac2688aa8a016c2bb71f56d060a7",
+    "retrieved_via": "https://web.archive.org/web/20251015144300id_/https://www.omc-stepperonline.com/download/DM542T_V4.0.pdf (direct download returned 403 Access denied from this environment)",
+    "supports": ["features list", "electrical specifications: 1.0 (0.7 RMS)-4.5 (3.2 RMS) A, 18 / 24-48 / 50 VDC, logic 7/10/16 mA, 0-200 kHz, 2.5 µs pulse, 5.0 µs direction setup, 500 MΩ", "environment 0-40 °C, 40-90 %RH, 10-50 Hz/0.15 mm, storage -20-65 °C, 230 g", "Figure 1 mechanical: 118, 112, 75.5, 47.8, 25.3, 25.5, 14, 4.5, 4-Φ3.5", "Figure 2 connectors P1/P2/P3, S1 DIP, S2 5V/24V selector, LEDs", "P1/P2/P3 pin tables", "control wiring figures 4-5", "DIP SW1-3 current table, SW4 idle current, SW5-8 microstep table", "sequence chart t1-t4", "protection functions and LED codes", "wiring notes"]
+  },
+  {
+    "id": "src_product",
+    "title": "STEPPERONLINE product page: Digital Stepper Driver 1.0-4.5A 18-50VDC for Nema 17, 23, 24 Stepper Motor - DM542T (UK store)",
+    "url": "https://www.stepperonline.co.uk/digital-stepper-driver-1-0-4-2a-20-50vdc-for-nema-17-23-24-stepper-motor-dm542t.html",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "19526e5308656a9c1c94d1c940c08454bb02e47f8e2a8d7eead81c171f643eca",
+    "supports": ["\"Currently, DM542T shipped from all warehouses is the newest version V4.0\"", "Input Voltage +18~50VDC (Typical 36VDC)", "Output peak current 1.0~4.5A (3.2 RMS)", "5V/24V logic voltage selector, default 24V", "Alarm output: Yes", "Weight approx. 210 g; ambient 0-65 °C; operating 0-40 °C", "Downloads: DM542T_V4.0.pdf, DM542T.pdf, DM542T(V4.0).STEP (1.98 MB)"]
+  },
+  {
+    "id": "src_manual_v1",
+    "title": "STEPPERONLINE DM542T Full Digital Stepper Drive user manual (pre-V4; 1.0-4.2 A, 20-50 VDC)",
+    "url": "https://www.omc-stepperonline.com/download/DM542T.pdf",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:45:00Z",
+    "sha256": "8d8914804b781c40fc676dbc6eb6dd663971ef5da1ab949dc18c1586ec9fb6c7",
+    "retrieved_via": "https://web.archive.org/web/20260401074042id_/https://www.omc-stepperonline.com/download/DM542T.pdf",
+    "supports": ["pre-V4 values for the discrepancy traits only: 20-50 VDC, 1.0-4.2 A, 15 microstep settings, 210 g, -10-45 °C, no ALM output", "same Figure 1 mechanical drawing as V4.0", "\"Designed by StepperOnline, Manufactured by Leadshine\""]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart stepperonline-dm542t definition.json",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/stepperonline-dm542t/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T21:30:00Z",
+    "sha256": "6b5e2e25dfa240f832b4b452c0561e3396f78e077d2d9a05939a41fbbd1152f1",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]
