@@ -17,4 +17,8 @@ export * from "./spi.js";
 export * from "./uart.js";
 export * from "./pwm.js";
 export * from "./analog.js";
+export * from "./connector.js";
+export * from "./motor.js";
+export * from "./rc.js";
+export * from "./mechanical.js";
 export * from "./define-module.js";

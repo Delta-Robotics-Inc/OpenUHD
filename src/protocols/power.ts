@@ -17,6 +17,8 @@ export interface PowerConfig {
   nominalV?: number;
   /** Max continuous current in amps. */
   maxCurrentA?: number;
+  /** Extra typed parameters (e.g. cellCount for battery packs and battery inputs). */
+  parameters?: Parameter[];
   exposed?: boolean;
   defaultActive?: boolean;
 }
@@ -28,6 +30,7 @@ function power(config: PowerConfig, role: "input" | "output"): InterfaceDef {
       : voltageV(config.voltageV),
   ];
   if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
+  if (config.parameters) parameters.push(...config.parameters);
 
   return {
     id: config.id,

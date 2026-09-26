@@ -58,3 +58,54 @@ export function maxFrequencyHz(value: number | [number, number]): Parameter {
 export function resolutionBits(value: number): Parameter {
   return { id: "resolution", unit: "dimensionless", value };
 }
+
+/** Additional burst (peak) current in amps, with the rated duration noted on the part. */
+export function burstCurrentA(value: number): Parameter {
+  return { id: "burst_current", unit: "A", value };
+}
+
+/** Battery series cell count (e.g. 6 for 6S) — fixed, or [min, max] accepted by an input. */
+export function cellCount(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "cell_count", unit: "dimensionless", range: value }
+    : { id: "cell_count", unit: "dimensionless", value };
+}
+
+/** Battery capacity in milliamp-hours. */
+export function capacitymAh(value: number): Parameter {
+  return { id: "capacity", unit: "mAh", value };
+}
+
+/**
+ * Hole-to-hole spacing of a bolt pattern in mm (square side, rectangle axis,
+ * or bolt-circle diameter). A range models slotted holes that accept any
+ * spacing within it.
+ */
+export function holeSpacingMm(value: number | [number, number], axis?: "y"): Parameter {
+  const id = axis === "y" ? "hole_spacing_y" : "hole_spacing";
+  return Array.isArray(value) ? { id, unit: "mm", range: value } : { id, unit: "mm", value };
+}
+
+/** Number of holes in a bolt pattern. */
+export function holeCount(value: number): Parameter {
+  return { id: "hole_count", unit: "dimensionless", value };
+}
+
+/** Nominal fastener diameter in mm (M3 → 3). */
+export function fastenerDiameterMm(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "fastener_diameter", unit: "mm", range: value }
+    : { id: "fastener_diameter", unit: "mm", value };
+}
+
+/** Shaft (or mating bore) diameter in mm. */
+export function shaftDiameterMm(value: number): Parameter {
+  return { id: "shaft_diameter", unit: "mm", value };
+}
+
+/** ESC command-signal bit rate in kbit/s (e.g. DShot150..DShot600 → [150, 600]). */
+export function escSignalRateKbps(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "esc_signal_rate", unit: "kbit/s", range: value }
+    : { id: "esc_signal_rate", unit: "kbit/s", value };
+}

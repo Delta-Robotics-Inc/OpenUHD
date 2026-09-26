@@ -58,6 +58,10 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
     output: ["input"],
     ground: ["ground"],
   },
+  bolt_pattern: {
+    structure: ["component"],
+    component: ["structure"],
+  },
   motor_control: {
     controller: ["target"],
     target: ["controller"],
