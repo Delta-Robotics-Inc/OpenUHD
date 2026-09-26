@@ -10,6 +10,8 @@ import type { Diagnostic } from "./types.js";
  */
 export const CAPACITY_PARAM_IDS = new Set([
   "max_current",
+  "burst_current",
+  "drive_current",
   "current_draw",
   "max_flow",
   "flow_rate",

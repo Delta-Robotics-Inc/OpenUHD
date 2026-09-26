@@ -1,0 +1,89 @@
+[
+  {
+    "id": "src_product",
+    "title": "Matek Systems \u2014 (EOL) GNSS & Compass, M10Q-5883 product page (Specifications, Wiring and settings, Tips and Notes)",
+    "url": "https://www.mateksys.com/?portfolio=m10q-5883",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:13:02Z",
+    "sha256": "4af234eb91bd3fdcdce7145ca807c59b84b954e02b071b9dcbaabdc7d452158b",
+    "supports": [
+      "identity (M10Q-5883, EOL)",
+      "u-blox M10 series GNSS, constellations",
+      "QMC5883L compass",
+      "4-9 V input on 5V pad/pin",
+      "13 mA consumption",
+      "UART 9600 default baud",
+      "UBX 5 Hz / NMEA 1 Hz",
+      "I2C DA/CL for compass",
+      "JST-GH-6P SM06B-GHS-TB",
+      "PPS LED behaviour",
+      "operating temperature -20~80 C",
+      "20x20x12.4 mm, 8 g",
+      "patch antenna 15x15x4 mm",
+      "wiring to FC",
+      "compass alignment",
+      "RST pad cold start",
+      "supercapacitor / no flash",
+      "firmware minimum versions"
+    ]
+  },
+  {
+    "id": "src_img_dims",
+    "title": "Matek M10Q-5883 gallery image 2 (bottom/side/top with dimensions and connector silkscreen)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2023/03/M10Q-5883_2.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:13:02Z",
+    "sha256": "7655a23671c941347ff722574b66744278eff0761e0956bf237468df7edc019a",
+    "supports": [
+      "two JST-GH-6P connectors silkscreened 5V RX TX CL DA G",
+      "bottom pads 3.3, G, Rst",
+      "20 mm outline, R3 mm corners, 12.4 mm height",
+      "supercapacitor present"
+    ]
+  },
+  {
+    "id": "src_img_compare",
+    "title": "Matek M10Q-5883 gallery image 4 (M10-5883 / M10Q-5883 / M8Q-5883 comparison)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2023/03/M10Q-5883_4.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:13:02Z",
+    "sha256": "7927dcd5392de173f151207ddf851112968c86c11fead2d89fbc0664b9f34f30",
+    "supports": [
+      "JST-GH-1.27-6P x2 on M10Q-5883",
+      "antenna 15*15*H4",
+      "20 mm, R3 mm, 12.4 mm",
+      "top-side arrow (forward) marking"
+    ]
+  },
+  {
+    "id": "src_img_features",
+    "title": "Matek M10Q-5883 gallery image 1 (feature summary)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2023/03/M10Q-5883_1.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:13:02Z",
+    "sha256": "e7433399243146be50faf3dd6f48d41b08a3d1a0559e8c3eb67cd390a166aea3",
+    "supports": [
+      "feature list corroborating product page",
+      "top silkscreen G DA CL TX RX 5V"
+    ]
+  },
+  {
+    "id": "src_qmc5883l",
+    "title": "QST QMC5883L 3-Axis Magnetic Sensor datasheet, QST-PD-B002-22 Rev B (component datasheet)",
+    "url": "https://www.qstcorp.com/upload/pdf/202512/13-52-04%20QMC5883L%20Datasheet%20Rev.%20B.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:13:02Z",
+    "sha256": "b68aa5e3920f92d15177d6e9cb85283732de849b68bf81308929d7c9a4dc7f81",
+    "supports": [
+      "I2C 7-bit address 0x0D (section 5.4)",
+      "I2C standard/fast 100/400 kHz (section 5.4)",
+      "compass VDD 2.16-3.6 V, VDDIO 1.65-3.6 V",
+      "external pull-ups required"
+    ]
+  }
+]

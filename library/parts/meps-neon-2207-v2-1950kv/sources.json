@@ -1,0 +1,52 @@
+[
+  {
+    "id": "src_product",
+    "title": "MEPS NEON 2207 V2 FPV brushless motor product page (MEPSKING official store)",
+    "url": "https://www.mepsking.shop/neon-2207-fpv-brushless-motor.html",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:00Z",
+    "sha256": "31d3683d3afa7f3a79b6d9d9387f18674ab16d14c57c96686c7df91225466fc7",
+    "supports": ["variant list 1950/2050/2550KV", "6S recommended for 1950/2050KV (FAQ)", "16x16mm mounting (FAQ)", "pre-tinned wires", "2207 stator size", "stainless-steel shaft, NMB bearings, N50H magnets", "recommended ESC 35-55A (FAQ) / 35A-60A (review section)", "1817 g headline thrust is 2050KV + SZ5145"]
+  },
+  {
+    "id": "src_spec",
+    "title": "MEPS NEON 2207 V2 specification table (image on product page)",
+    "url": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:30Z",
+    "sha256": "1b90a70002f667fc103b3550ea3dda0ec720e19051357cf79c8dbef4b16b0bc4",
+    "supports": ["KV 1950", "lead 150±2 mm", "weight 36±1 g incl. cable", "motor dimension Φ28.3±0.2 mm", "shaft Φ5 mm", "rated voltage 6S", "12N14P", "internal resistance 69±5 mΩ", "idle current ≤1.6 A @10 V", "peak current 42.97 A (60 s)", "max power 1036 W"]
+  },
+  {
+    "id": "src_drawing",
+    "title": "MEPS NEON 2207 V2 size chart / dimension drawing (image on product page)",
+    "url": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-size-chart-pc.jpg",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:30Z",
+    "sha256": "20099aaacd47da38871e569afe9306b08c61ac3505c3bc5dbf5d888368cccf5e",
+    "supports": ["4-M3 mounting on Ø16 bolt circle", "Ø28.3 body", "31.6 mm overall height", "19.3 mm body height", "M5 shaft thread, 8 mm dimension", "lead length 150 mm", "heat shrink 10 mm", "3 mm stripped lead end"]
+  },
+  {
+    "id": "src_test",
+    "title": "MEPS NEON 2207 V2 thrust test data table (image on product page)",
+    "url": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:30Z",
+    "sha256": "5e6a5f746200cd7ea231314c0dad7ed1a696e1b14c7635538354cb25f6a5d4e9",
+    "supports": ["KV1950 thrust table SZ4942 and SZ5145 at 25.2 V (throttle, V, A, rpm, g, W, g/W)"]
+  },
+  {
+    "id": "src_package_photo",
+    "title": "MEPS NEON 2207 V2 package contents photo (image on product page)",
+    "url": "https://img-meps.mepsking.top/material/1/meps-neon-2207-v2-motor-package.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:00Z",
+    "sha256": "0fb64d8a7856e285d699c98b2ef8c3d64229033136b75710abd6f6edca5301d5",
+    "supports": ["3 motor leads", "flanged lock nut for the prop shaft included", "M3 socket-head mounting screws included (lengths not stated)"]
+  }
+]

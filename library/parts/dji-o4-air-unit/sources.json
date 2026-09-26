@@ -1,0 +1,52 @@
+[
+  {
+    "id": "src_specs",
+    "title": "DJI O4 Air Unit Series — official specs page (DJI O4 Air Unit column)",
+    "url": "https://www.dji.com/o4-air-unit/specs",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:00Z",
+    "sha256": "87dd07b5fc597855ca72d18a26158450fae64936723240094c0c16dca704ced9",
+    "supports": ["input voltage 3.7-13.2 V", "weights (5.1 g / 8.2 g / 9.2 g with lens mount / antenna 0.75 g)", "dimensions (transmission module 30x30x6, camera 13.44x12.36x16.50, coax 50 mm, 3-in-1 50 mm, antenna 80 mm)", "operating frequency 5.170-5.250 / 5.725-5.850 GHz", "EIRP", "latency", "range", "live view 1080p", "bandwidth 60 MHz", "1 antenna 1T1R", "sensor 1/2-inch", "FOV 117.6 deg", "video resolutions", "max bitrate 100 Mbps", "operating temperature -10 to 40 C", "built-in storage 23 GB, no SD", "Betaflight 4.3.0+", "SBUS for DJI FPV RC"]
+  },
+  {
+    "id": "src_manual",
+    "title": "DJI O4 Air Unit Series User Manual v1.0 (2025.01, EN)",
+    "url": "https://dl.djicdn.com/downloads/DJI_O4_Air_Unit_Series/UM/DJI_O4_Air_Unit_Series_User_Manual_v1.0_en.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:17Z",
+    "sha256": "47453ef52f96fe06b9dc1be93b99b02b514a008c14a645487760a559f68318d6",
+    "supports": ["3-in-1 cable pinout and wire colours (p.10)", "UART 0-3.3 V levels", "VCC range per model (p.10)", "mounting drawing: 25.5x25.5 holes 4-d2.6 on 30x30 module; camera lens mount 14.00x20.00, side holes 4-d1.65 (T2.0) MAX3.10 at 16.00 (p.6)", "M2 damping balls recommendation, BEC >= 10 W, 1S >3.7 V at port (p.11)", "cooling / installation guidelines (p.8-9)", "standby 2.5 min from cold start (p.8)", "antenna >= 5 cm from modules (p.9)", "TX power levels 25-700 mW (p.16)", "Canvas Mode / MSP DisplayPort, 115200 baud (p.18-19)", "USB-C port, link button, status LED (p.5, p.12)"]
+  },
+  {
+    "id": "src_faq",
+    "title": "DJI O4 Air Unit Series — official FAQ page",
+    "url": "https://www.dji.com/o4-air-unit/faq",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:14:00Z",
+    "sha256": "c00e69cf9b5154f8b29e991bf227a03ca58a2ae6a6544470df76b593518fc1e6",
+    "supports": ["replaceable accessories (transmission module, camera module, antenna)", "non-shared accessories", "3-in-1 wiring sequence same as O3", "RX->FC TX / TX->FC RX", "thermal strategy (bitrate falls to 50 Mbps)", "external cooling above 25 C", "Betaflight 4.3.0 / INAV 8.0.1", "'mounting hole distance of 30 x 30 mm' (conflicts with drawing)", "no third-party cameras"]
+  },
+  {
+    "id": "src_product_info",
+    "title": "DJI O4 Air Unit Series Product Information v1.0 (in-box leaflet PDF)",
+    "url": "https://dl.djicdn.com/downloads/DJI_O4_Air_Unit_Series/PI/20250422/DJI_O4_Air_Unit_Series_Product_Information_v1.0.pdf",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:17Z",
+    "sha256": "ce680fc8694b1d741cae69155faf4fd4a760891a244eca61106ba6cac98b6ea3",
+    "supports": ["model number DF3L2904 (standard) vs DF3P2904 (Pro)", "power input 3.7-13.2 V", "BEC >= 10 W (5 V/2 A)"]
+  },
+  {
+    "id": "src_rdq",
+    "title": "RaceDayQuads — DJI O4 Air Unit listing (distributor, corroboration only)",
+    "url": "https://www.racedayquads.com/products/dji-o4-air-unit",
+    "type": "documentation",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T16:15:00Z",
+    "sha256": "848575ded122f54732b524f66eff832ca50a1465c3ccced50ee8dc0f46462f2a",
+    "supports": ["package contents: transmission module, camera module, 3-in-1 cable, antenna", "corroborates weight, dimensions, input voltage"]
+  }
+]

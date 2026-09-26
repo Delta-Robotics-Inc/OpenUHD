@@ -1,0 +1,52 @@
+[
+  {
+    "id": "src_product",
+    "title": "CNHL Black Series 1100mAh 22.2V 6S 100C Lipo Battery with XT60 Plug (ChinaHobbyLine product page; sold as 2-pack combo, 100C variant = stock 1101006BK)",
+    "url": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:00Z",
+    "sha256": "41a68652ba58a692b3a4c4af7ea5ace46a82ff50d223fa67994233591978d70d",
+    "supports": ["stock number 1101006BK", "capacity 1100mAh", "22.2V / 6-Cell / 6S1P", "100C continual / 200C burst", "5C max charge", "39.5x35x75mm (1-5mm difference)", "211g (+/-5g)", "XT60 output connector", "JST-XH balance connector", "12 AWG wire", "charge stop at 4.2V/cell; normal cell voltage 3.7-4.2V", "100C (V1) and 130C (V2) variants on same listing"]
+  },
+  {
+    "id": "src_product_json",
+    "title": "CNHL Shopify product JSON for the same listing (variant SKUs and shipping weights)",
+    "url": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug.json",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:11:00Z",
+    "sha256": "fb98e30618a1cf12c715db963d252e9ff23ff5a234a9a042b40e1b249e669032",
+    "supports": ["variant SKUs 1101006BK (100C) vs 1101306BK (130C)", "spec table body text (same as product page)"]
+  },
+  {
+    "id": "src_c_rating_guide",
+    "title": "CNHL blog: LiPo C Rating Explained: What 30C, 100C, and 130C Really Mean",
+    "url": "https://chinahobbyline.com/blogs/news/30c-vs-100c-vs-130c-rc-battery-guide",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:00Z",
+    "sha256": "1bebb8209b12afefbf11a1adb9d08d9d581486c14decea18c176f480c668a5da",
+    "supports": ["Capacity (Ah) x C rating = theoretical max continuous current", "burst C is a short-duration ceiling"]
+  },
+  {
+    "id": "src_charge_guide",
+    "title": "CNHL blog: How to Charge a LiPo Battery Safely",
+    "url": "https://chinahobbyline.com/blogs/news/how-to-charge-a-lipo-battery-safely",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T16:12:00Z",
+    "sha256": "ca0c7a102280728904ebd03a0cd7ea0389e2d25ff55018c1d691071b4444795b",
+    "supports": ["standard LiPo 3.7V nominal / 4.20V full per cell", "6S full = 25.20V", "balance charging uses main lead plus balance plug"]
+  },
+  {
+    "id": "src_pilotshq",
+    "title": "Pilots HQ listing: CNHL Black Series 1100mAh 22.2v 6s 100c LiPo with XT60 Plug",
+    "url": "https://www.pilotshq.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug",
+    "type": "documentation",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T16:13:00Z",
+    "sha256": "35c80d8666308671617486957b1f2ddc1fc5c28ddbdc6bbda38adb74c9eac0bb",
+    "supports": ["corroborates 1101006BK spec table", "weight 211g including wire and connector"]
+  }
+]
