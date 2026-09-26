@@ -174,7 +174,7 @@ const bec5v = withTraits(
 );
 
 const bec10v = withTraits(
-  PowerOut({ id: "bec_10v", name: "10V/12V BEC", pin: "10V", voltageV: [10, 12], maxCurrentA: 2.5 }),
+  PowerOut({ id: "bec_10v", name: "10V/12V BEC", pin: "10V", voltageV: [10, 12], nominalV: 10, maxCurrentA: 2.5 }),
   [
     padFunction("10V — high-voltage BEC output (2.5 A) for VTX / DJI air unit: 10V pad, VTX socket 10V, DJI socket 10V.", [SRC.manual, SRC.product]),
     PAD,
@@ -186,7 +186,7 @@ const bec10v = withTraits(
         field: "high BEC voltage",
         values: ["12V 2.5A (manual spec table)", "12V 2.5A (Or 10V 2.5A) (product page)", "10V (silkscreen, LED label, wiring diagram)", "9V (project brief; no source)"],
         sources: [SRC.manual, SRC.product, SRC.review],
-        resolution: "voltage modelled as 10-12 V range; how the 10 V / 12 V option is selected is not documented.",
+        resolution: "Project decision (2026-09-26): nominal 10 V per the board silkscreen and wiring diagram, range 10-12 V kept because the manual/product page state 12 V and the selection mechanism is undocumented. Both ends are within the DJI O4 input (3.7-13.2 V); measure the rail on the physical unit.",
       },
     },
     {
