@@ -94,10 +94,7 @@ def holes(diameter: float, tol: float = 0.08, within: str | None = None, axis=(0
         for f in _scope(shape, within).faces():
             if f.geom_type != bd.GeomType.CYLINDER:
                 continue
-            try:
-                r = f.radius
-            except Exception:  # some vendor cylinders carry no usable radius
-                continue
+            r = radius_of(f)
             if r is None or abs(2 * r - diameter) > tol:
                 continue
             if not _parallel(f.axis_of_rotation.direction, axis):
@@ -155,6 +152,15 @@ def union(*sels: Selector) -> Selector:
 # ---------------------------------------------------------------------------
 
 
+def radius_of(f: Face) -> float | None:
+    """Cylinder radius, or None when build123d can't give one (some trimmed/boolean-cut faces)."""
+    try:
+        r = f.radius
+    except Exception:
+        return None
+    return r if r else None
+
+
 def hole_axes(faces: list[Face], axis=(0, 0, 1)) -> dict:
     """Distinct axis positions of cylindrical faces, projected on the plane normal to `axis`.
 
@@ -180,7 +186,7 @@ def hole_axes(faces: list[Face], axis=(0, 0, 1)) -> dict:
         pt = q + n * along
         centres.append([round(pt.X, 3) + 0.0, round(pt.Y, 3) + 0.0, round(pt.Z, 3) + 0.0])
     centres.sort()
-    radii = [f.radius for f in faces if f.geom_type == bd.GeomType.CYLINDER]
+    radii = [r for f in faces if f.geom_type == bd.GeomType.CYLINDER and (r := radius_of(f))]
     return {"centres": centres, "diameter_mm": round(2 * sum(radii) / len(radii), 3) if radii else None}
 
 

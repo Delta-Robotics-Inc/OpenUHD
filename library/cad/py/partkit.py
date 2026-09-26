@@ -27,7 +27,7 @@ import build123d as bd
 from build123d import Align, Box, BuildPart, Cylinder, Face, Locations, Mode, Pos, Shape
 
 from common import Artifact, part_dir
-from vendor_step import hole_axes
+from vendor_step import hole_axes, radius_of
 
 MIN = (Align.CENTER, Align.CENTER, Align.MIN)
 
@@ -61,7 +61,11 @@ class GeneratedPart(Artifact):
 
 def cylinders(shape: Shape, diameter: float, tol: float = 0.05) -> list[Face]:
     """Cylindrical faces of `shape` with the given diameter (holes or shafts)."""
-    return [f for f in shape.faces() if f.geom_type == bd.GeomType.CYLINDER and abs(2 * f.radius - diameter) <= tol]
+    return [
+        f
+        for f in shape.faces()
+        if f.geom_type == bd.GeomType.CYLINDER and (r := radius_of(f)) is not None and abs(2 * r - diameter) <= tol
+    ]
 
 
 def extreme_face(shape: Shape, normal=(0, 0, 1)) -> list[Face]:
