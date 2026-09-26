@@ -135,33 +135,61 @@ Then, in the part file, wrap the base definition with `withGeometry`:
 Frames are in the CAD file's own coordinates (mm, Z up after any vendor
 `transform`). Take the numbers from the manifest, not by eye:
 
-```ts
-import { procedural, vendorCadArtifacts, vendorFeature, withGeometry } from "../cad/artifacts.js";
+For example, `raspberry-pi-5` (vendor CAD). The catalog script selects
+features by geometry, because the vendor's component labels are generic:
 
-export const REV_SPARK_MAX: ModuleDef = withGeometry(
-  REV_SPARK_MAX_BASE,
-  {
-    // 4 x M3 threaded on 26 x 60 mm (the drawing); the CAD holes are at (±13, ±30, 0)
-    mount: {
-      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 180 },
-      refs: [vendorFeature("mount", { area_mm2: 98.2, centroid: [0, 0, 2.5] }), procedural("bolt_pattern")],
+```python
+build_vendor(VendorStep(
+    part_id="raspberry-pi-5", step="rpi-5b_no_graphics.step", archive="RaspberryPi5-step.zip",
+    name="raspberry-pi-5", url="https://datasheets.raspberrypi.com/rpi5/RaspberryPi5-step.zip", licence=LICENCE,
+    features={
+        # 4 x Φ2.7 mounting holes on 58 x 49 (the box excludes the Ethernet jack's Φ2.7 pegs)
+        "mount": within_box(holes(2.7, tol=0.05), (0, 0, -5), (65, 56, 5)),
+        "usb_c": front((0, -1, 0), (5, -3, 0), (17, 3, 6)),  # connector mating face
+        ...
     },
-    can: { refs: [vendorFeature("CAN_PORT", { area_mm2: 61.4, centroid: [-10.5, 32.1, 6.2] })] },
+    interfaces=["mount", "gpio_header", "usb_c"],
+))
+```
+
+and the part binds the interfaces to the manifest's features:
+
+```ts
+export const RASPBERRY_PI_5: ModuleDef = withGeometry(
+  RASPBERRY_PI_5_BASE,
+  {
+    // board bottom onto standoffs: pattern centre (32.5, 28), normal out of the bottom face
+    mount: {
+      frame: { origin: [32.5, 28, 0.03], normal: [0, 0, -1], xAxis: [1, 0, 0] },
+      refs: [vendorFeature("mount", { area_mm2: 43.294, centroid: [32.5, 28.0, 0.668] }), vendorOwn("mount"), procedural("bolt_pattern")],
+    },
+    // a cable plugs in here: frame on the mating face
+    usb_c_power: {
+      frame: { origin: [11.2, -1.2, 3.016], normal: [0, -1, 0], xAxis: [1, 0, 0] },
+      refs: [vendorFeature("usb_c", { area_mm2: 6.344, centroid: [11.2, -1.2, 3.016], normal: [0.0, -1.0, 0.0] }), vendorOwn("usb_c")],
+    },
+    i2c1: { refs: [HDR] },     // electrical interface on the 40-pin header feature
+    wifi: { logical: true },   // no physical form
   },
   vendorCadArtifacts({
-    partId: "rev-spark-max", name: "SPARK-MAX", url: SRC.cad, stepFile: "REV-11-2158.step",
-    sha256: "<sources.json sha256>", licence: "not stated; not redistributed", interfaces: ["mount"],
+    partId: "raspberry-pi-5", name: "raspberry-pi-5", url: SRC.cad, stepFile: "rpi-5b_no_graphics.step",
+    sha256: "6841637b…", licence: "MIT (LICENSE.txt in the archive); not committed: 77.6 MB",
+    interfaces: ["mount", "gpio_header", "usb_c"],
   }),
 );
 ```
 
-(The numbers above illustrate the shape of a binding; they are not real
-SPARK MAX data.) For generated geometry use `cadArtifacts({ dir, name,
-generator: "library/cad/py/catalog/<id>.py", tool: "build123d" })` and
-`feature(...)` instead of the vendor helpers. Copy signatures from the
+No `symmetryDeg` on the Pi mount: the rectangle repeats every 180°, but the
+connectors don't. Generated examples: `ti-drv8871` (a package from the
+drawing), `emax-rs2205-2300kv` (a motor with shaft and base holes).
+
+For generated geometry use `cadArtifacts({ dir, name, generator:
+"library/cad/py/catalog/<id>.py", tool: "build123d" })` and `feature(...)`
+instead of the vendor helpers. Copy signatures from the
 manifest with `python library/cad/rebind.py library/parts/<id>.ts <manifest>`
 rather than by hand. Commit a vendor STEP (as `committedStep`) only when its
-licence clearly permits redistribution.
+licence clearly permits redistribution and it is under 5 MB (larger files
+stay in `.research/cad/`).
 
 ## Hard rules
 
