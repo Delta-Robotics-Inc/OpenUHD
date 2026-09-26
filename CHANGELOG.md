@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Drone protocol vocabulary: `BrushlessPhases`, `EscSignal`, `FcEscPort`, `CRSF`, `SBUS`, `BoltPattern`, `Shaft`, `connectorTrait`, and parameters for cell count, capacity, hole spacing, fastener and shaft diameter, burst current, and ESC signal rate.
+- Module kinds (`module`, `group`, `harness`), `exports` (child interfaces on a parent boundary; groups export implicitly), stored `links` (`InterfaceLink` with explicit `EndpointTarget`s and optional stored `childLinks`), and `display` hints on `ModuleDef`. Harness endpoints gain topology roles; harnesses gain parameters, artifacts, and traits.
+- `src/system`: canonical paths, `primaryInterfaces`, `resolveExports`, `boundaryInterfaces`, `resolveEndpoint`, and `validateLink`/`validateLinks` (per-link DRC on sliced modules, with stored child links overriding derived ones).
+- Part pipeline skills (`skills/`) and `scripts/verify-part.ts`.
+- Eight quadcopter parts and the `library/systems/quadcopter-5in` reference system.
+
+### Changed
+
+- DRC treats `burst_current` and `drive_current` as capacity parameters (no pairwise range overlap).
+
+### Deprecated
+
+- `ChildModuleRef.exposedInterfaces` (never read); use `ModuleDef.exports`.
+
 ## [0.2.0] — 2026-09-26
 
 Pinned baseline for the ProtoBoard Stack quadcopter reference project (PB-778).

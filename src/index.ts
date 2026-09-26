@@ -46,3 +46,6 @@ export { generateVisualization } from "./visualize/cli.js";
 
 // DRC
 export * from "./drc/index.js";
+
+// Systems: canonical paths, exports, stored interface links
+export * from "./system/index.js";
