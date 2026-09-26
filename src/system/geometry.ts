@@ -146,6 +146,10 @@ export interface GeometryManifest {
   toolVersion?: string;
   sourceDigest?: string;
   units: "mm";
+  /** Solid volume of the body, feature pads excluded (PB-797): mass = volume × material density. */
+  volume_mm3?: number;
+  /** Volume of each named body in the artifact (mm³). */
+  bodies?: Record<string, number>;
   features: Record<string, GeometrySignature & { faces?: number }>;
 }
 

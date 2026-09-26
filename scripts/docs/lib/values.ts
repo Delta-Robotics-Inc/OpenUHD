@@ -241,7 +241,7 @@ export function makeResolver(ctx: Omit<DocContext, "resolve">): (q: string) => R
       if (d && call) {
         const r = d.compute(full, call[2].split(",").map((x) => x.trim()));
         const inputs = r.inputs.map(resolve);
-        const status: ValueStatus = inputs.some((i) => i.status === "standin") ? "standin" : r.value === undefined ? "gap" : "derived";
+        const status: ValueStatus = inputs.some((i) => i.status === "standin") ? "standin" : r.value === undefined ? "gap" : inputs.some((i) => i.status === "assumption") ? "assumption" : "derived";
         return { q, value: r.value, unit: r.unit ?? d.unit, status, inputs: r.inputs, formula: d.formula, note: r.note };
       }
       if (!d) return { q, value: undefined, status: "gap", note: `no derivation "${rest}"` };
@@ -251,7 +251,9 @@ export function makeResolver(ctx: Omit<DocContext, "resolve">): (q: string) => R
         ? "standin"
         : inputs.some((i) => i.status === "gap") && r.value === undefined
           ? "gap"
-          : "derived";
+          : inputs.some((i) => i.status === "assumption")
+            ? "assumption"
+            : "derived";
       return { q, value: r.value, unit: r.unit ?? d.unit, status, inputs: r.inputs, formula: d.formula, note: r.note };
     }
     if (scheme === "ver") {

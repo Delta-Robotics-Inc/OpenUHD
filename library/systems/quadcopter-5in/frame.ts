@@ -18,11 +18,24 @@
  * turns the bolt patterns into parameters, library/cad/py/frame.py (build123d)
  * and library/cad/kcl/frame.kcl build the plates, and the frames below are
  * the same numbers (test/geometry.test.ts checks them against the
- * generator's frames.json). Material and mass remain data gaps.
+ * generator's frames.json). Material is a declared design choice (CARBON_3K)
+ * and mass is CAD volume × its density (src/system/mass.ts).
  */
 import type { ModuleDef } from "../../../src/types/index.js";
 import { BoltPattern, defineModule } from "../../../src/protocols/index.js";
+import type { MaterialSpec } from "../../../src/types/index.js";
 import { cadArtifacts, feature, own, procedural, withGeometry } from "../../cad/artifacts.js";
+
+/**
+ * Plate material (design choice, PB-797). Density: DragonPlate's carbon
+ * sheet table, "Quasi-isotropic (woven) 0.055 [lb/in³] 1.52 [g/cm³]".
+ */
+export const CARBON_3K: MaterialSpec = {
+  name: "3K woven carbon fibre / epoxy laminate",
+  density_g_cm3: 1.52,
+  source: "https://dragonplate.com/carbon-fiber-sheets",
+  assumption: "DragonPlate's woven quasi-isotropic row is taken for 3K woven plate; the table does not name the tow size, and a real plate's resin content varies. The CAD body is the design geometry (no chamfers, countersinks or cutting kerf).",
+};
 
 const motorMount = (corner: string, label: string) =>
   BoltPattern({
@@ -115,6 +128,8 @@ const QUADCOPTER_5IN_FRAME_BASE: ModuleDef = defineModule({
   domains: [
     {
       domain: "mechanical",
+      // PB-797: mass = CAD volume (generator manifest) × this density
+      material: CARBON_3K,
       metadata: {
         layout: "true-X, 5-inch",
         status: "generated from its interfaces (library/cad/py/frame.py, library/cad/kcl/frame.kcl)",
@@ -127,10 +142,11 @@ const QUADCOPTER_5IN_FRAME_BASE: ModuleDef = defineModule({
 
   traits: [
     {
-      type: "data_gap",
+      type: "assumption",
       params: {
-        fields: ["material", "mass"],
-        note: "Wheelbase (225 mm), plate thickness (5 mm) and standoffs (30 mm) are design values in library/cad/params.ts; material and mass come with a real frame design (PB-774).",
+        field: "material",
+        value: "3K woven carbon fibre, 1.52 g/cm³",
+        reason: "Design choice for the custom frame; mass is computed from the generated CAD volume × this density (systemMass), so it moves with the design. Wheelbase (225 mm), plate thickness (5 mm) and standoffs (30 mm) are design values in library/cad/params.ts.",
       },
     },
   ],
@@ -245,8 +261,8 @@ const QUADCOPTER_5IN_TOP_PLATE_BASE: ModuleDef = defineModule({
       note: "Rear GPS mast pad for the Matek M9N-5883 (26 mm hole spacing, Φ2 mm); keep >= 10 cm from power wiring, ESC and motors (Matek guidance). Mirrors matek-m9n-5883 mount.",
     }),
   ],
-  domains: [{ domain: "mechanical", metadata: { plate_thickness_mm: 2, status: "generated from its interfaces (library/cad/py/frame.py)" } }],
-  traits: [{ type: "data_gap", params: { fields: ["material", "mass"], note: "Design values in library/cad/params.ts." } }],
+  domains: [{ domain: "mechanical", material: CARBON_3K, metadata: { plate_thickness_mm: 2, status: "generated from its interfaces (library/cad/py/frame.py)" } }],
+  traits: [{ type: "assumption", params: { field: "material", value: "3K woven carbon fibre, 1.52 g/cm³", reason: "Design choice; mass = generated CAD volume × density (systemMass). Plate thickness is a design value in library/cad/params.ts." } }],
   artifacts: [],
 });
 

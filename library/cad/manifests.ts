@@ -18,3 +18,12 @@ export function manifestLookup(def: ModuleDef): (artifactId: string) => Geometry
     return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as GeometryManifest) : undefined;
   };
 }
+
+/**
+ * Solid volume (mm³) of a module's generated CAD body (PB-797): the
+ * `volume_mm3` its build123d generator records in the body manifest.
+ */
+export function cadVolumeMm3(def: ModuleDef): number | undefined {
+  const manifest = manifestLookup(def)("cad_step") as GeometryManifest | undefined;
+  return manifest?.volume_mm3;
+}

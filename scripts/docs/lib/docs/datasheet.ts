@@ -10,6 +10,8 @@ import { callouts, dimension, figure, groupRow, note, sec, sub, table, leafOf, p
 import { esc, MARKERS } from "../html.js";
 import { allBodies, interfaceAnchor, renderBody, ISO } from "../figures.js";
 import { thrustTests } from "../../../../src/system/propulsion.js";
+import { massByDefinition, moduleMass, systemMass } from "../../../../src/system/mass.js";
+import { cadVolumeMm3 } from "../../../../library/cad/manifests.js";
 import { category } from "../model.js";
 import { column } from "../testdata.js";
 import { coverPage, figNum, testOf, testTag, thumbnail, type BuildEnv } from "./common.js";
@@ -122,11 +124,31 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
       ["Standoff height", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].metadata.standoff_height_mm")],
       ["Propeller diameter", doc.v("def:hqprop-ethix-s5:domains[domain=mechanical].metadata.prop_diameter_in", "u=in")],
       ["Motor diameter", doc.v("def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].metadata.diameter_mm")],
-      ["Frame mass", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].weight_g")],
-      ["Top plate mass", doc.v("def:quadcopter-5in-top-plate:domains[domain=mechanical].weight_g")],
+      ["Plate material", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].material.name", undefined, { cls: "wrap" })],
+      ["Material density", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3", "u=g/cm³")],
+      ["Frame mass", doc.v("derived:mass.module(quadcopter-5in-frame)", "d1")],
+      ["Top plate mass", doc.v("derived:mass.module(quadcopter-5in-top-plate)", "d1")],
     ], { cls: "dense" })}
-    <p class="small muted">Frame material and mass are open data gaps of the custom frame module.</p></div></div></div>`);
+    <p class="small muted">Plate masses are the generated CAD volume × the declared material density (systemMass), so they follow the design.</p></div></div></div>`);
   out.push(`<div class="block">${figure({ src: env.img(side.file), w: side.width, h: side.height, overlay: sideDims, num: figNum(env), caption: "Right side, front to the right. Plate gap is the frame's standoff height.", unit: "mm" })}</div>`);
+
+  // mass budget (systemMass): every instance by definition, and what has no mass
+  {
+    const sm = systemMass(ctx.sys.system, ctx.sys.lookup, cadVolumeMm3);
+    const groups = massByDefinition(sm);
+    const rows = groups
+      .filter((g) => g.mass)
+      .sort((a, b) => (b.totalG ?? 0) - (a.totalG ?? 0))
+      .map((g) => {
+        const unit = g.mass!.basis === "stated" ? doc.v(`def:${g.def.id}:domains[domain=mechanical].weight_g`) : doc.v(`derived:mass.module(${g.def.id})`);
+        return [esc(shortDefName(g.def)), String(g.quantity), unit, g.mass!.basis === "stated" ? "stated" : `CAD × ${esc(g.mass!.material!.name.replace(/ \(.*\)/, ""))}`];
+      });
+    const missing = groups.filter((g) => !g.mass);
+    out.push(`<div class="block keep">${sub("Mass budget")}${table([{ h: "Part" }, { h: "Qty", cls: "num" }, { h: "Each", cls: "num" }, { h: "Basis" }], rows, {
+      cls: "dense",
+      foot: `All-up weight ${doc.v("derived:mass.all_up", "d1")} (systemMass), of which ${doc.v("derived:mass.assumed", "d1")} is computed from assumed material or nominal CAD geometry. Not included, no mass in the model: ${missing.map((g) => `${esc(g.def.name)} ×${g.quantity}`).join(", ") || "none"}. Rows in order of total mass (quantity × each).`,
+    })}</div>`);
+  }
 
   // interface callouts
   const calls = (ds.mechanicalCallouts ?? []).map((s) => ({ s, a: interfaceAnchor(ctx.scene, s) })).filter((x) => x.a);
@@ -406,17 +428,18 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     const q = (k: string) => `sys:bom[line=${b.line}].${k}`;
     const def = ctx.sys.lookup(b.partId);
     const hasW = def?.domains?.some((d) => d.domain === "mechanical" && d.weight_g !== undefined);
+    const computed = def && !hasW ? moduleMass(def, cadVolumeMm3) : undefined;
     return [
       doc.v(q("line")),
       `${doc.v(q("name"), undefined, { cls: "wrap" })}<br><span class="muted small">${esc(b.partId)}</span>`,
       `${doc.v(q("manufacturer"), undefined, { cls: "wrap" })}${b.partNumber ? `<br><span class="muted small">${doc.v(q("partNumber"), undefined, { cls: "wrap" })}</span>` : ""}`,
       doc.v(q("quantity")) + (b.packQuantity ? `<br><span class="muted small">pack of ${doc.v(q("packQuantity"))}</span>` : ""),
       b.buy === "included" ? `<span class="tag">incl.</span><br><span class="muted small">${esc(b.includedWith)}</span>` : `<span class="tag ${b.buy === "fabricate" ? "warn" : ""}">${esc(b.buy)}</span>`,
-      hasW ? doc.v(`def:${b.partId}:domains[domain=mechanical].weight_g`) : '<span class="v st-gap">—</span>',
+      hasW ? doc.v(`def:${b.partId}:domains[domain=mechanical].weight_g`) : computed ? doc.v(`derived:mass.module(${b.partId})`) : '<span class="v st-gap">—</span>',
       `${doc.v(q("verification"))}<br><span class="muted small">A ${doc.v(q("assumptions"), undefined, { marker: false })} · gaps ${doc.v(q("openGaps"), undefined, { marker: false })}</span>`,
     ];
   });
-  out.push(`<div class="bom">${table([{ h: "#", cls: "num" }, { h: "Part" }, { h: "Manufacturer / P/N" }, { h: "Qty", cls: "num" }, { h: "Supply" }, { h: "Mass", cls: "num" }, { h: "Verification" }], bomRows, { split: true, caption: "Bill of materials", cls: "bomtable", foot: "Rows as generated by scripts/bom.ts (generated/bom.json). Mass is the part's stated weight; — = not in the model. A = assumption traits." })}</div>`);
+  out.push(`<div class="bom">${table([{ h: "#", cls: "num" }, { h: "Part" }, { h: "Manufacturer / P/N" }, { h: "Qty", cls: "num" }, { h: "Supply" }, { h: "Mass", cls: "num" }, { h: "Verification" }], bomRows, { split: true, caption: "Bill of materials", cls: "bomtable", foot: "Rows as generated by scripts/bom.ts (generated/bom.json). Mass per piece: the part's stated weight, else CAD volume × declared material density (derived); — = no mass in the model. A = assumption traits." })}</div>`);
 
   // ---------------------------------------------------------------- 09 evidence
   out.push(sec("09", "Evidence and assumptions", "", ' data-break="before"'));
@@ -598,3 +621,5 @@ function systemDiagram(env: BuildEnv): string {
   parts.push(`<line x1="78" x2="100" y1="${ly}" y2="${ly}" stroke="${ACCENT}" stroke-width="1.2"/><text x="106" y="${ly + 2.6}" font-size="7" fill="#1b1b1b">signal / data</text>`);
   return `<svg class="sysdiag" viewBox="-2 0 ${Wd + 4} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="inherit">${parts.join("")}</svg>`;
 }
+
+const shortDefName = (d: ModuleDef) => d.name.replace(/\s*\((included[^)]*|custom)\)/gi, "").replace(/, ISO 4762.*$/, "");

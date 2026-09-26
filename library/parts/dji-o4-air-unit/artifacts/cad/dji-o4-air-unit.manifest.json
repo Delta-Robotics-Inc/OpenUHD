@@ -2,8 +2,12 @@
   "artifact": "dji-o4-air-unit",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "a2d4f29f1604835caa745aaa6cb48d1a856c15468eb1ac86e1120cbcc843daac",
+  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
   "units": "mm",
+  "volume_mm3": 5272.577,
+  "bodies": {
+    "transmission_module": 5272.577
+  },
   "features": {
     "tx_module_mount": {
       "area_mm2": 196.035,

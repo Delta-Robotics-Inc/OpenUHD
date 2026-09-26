@@ -75,7 +75,7 @@ Query forms ([value-queries](references/value-queries.md)):
 | `def:<moduleId>:<path>` | `def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g` |
 | `inst:<instance path>:<path>` | `inst:stack/fc:interfaces[id=bec_5v].parameters[id=voltage].value` |
 | `sys:<path>` | `sys:checks.diagnostics[rule=propulsion_current].details.totalPeak`, `sys:bom[line=3].quantity` |
-| `derived:<name>` / `derived:<fn>(args)` | `derived:mass.known_total`, `derived:frameDistance(frame.motor_mount_fl,frame.motor_mount_fr)` |
+| `derived:<name>` / `derived:<fn>(args)` | `derived:mass.all_up`, `derived:frameDistance(frame.motor_mount_fl,frame.motor_mount_fr)` |
 | `ver:<partId>:<path>` | `ver:meps-neon-2207-v2-1950kv:audit.confirmed` |
 | `test:<test-id>:<path>` | `test:hover-current:summary[id=hover_current_A].value` |
 

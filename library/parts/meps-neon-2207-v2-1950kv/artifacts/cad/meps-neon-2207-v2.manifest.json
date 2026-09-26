@@ -2,8 +2,17 @@
   "artifact": "meps-neon-2207-v2",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "a2d4f29f1604835caa745aaa6cb48d1a856c15468eb1ac86e1120cbcc843daac",
+  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
   "units": "mm",
+  "volume_mm3": 12070.645,
+  "bodies": {
+    "base": 1630.487,
+    "bell": 10126.266,
+    "shaft_body": 241.51,
+    "lead_a": 24.127,
+    "lead_b": 24.127,
+    "lead_c": 24.127
+  },
   "features": {
     "base_mount": {
       "area_mm2": 524.646,

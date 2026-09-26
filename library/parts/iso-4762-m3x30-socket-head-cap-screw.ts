@@ -78,6 +78,13 @@ const ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW_BASE: ModuleDef = defineModule({
   domains: [
     {
       domain: "mechanical",
+      // PB-797: no stated weight, so mass = CAD volume x density (an assumption)
+      material: {
+        name: "A2 (304 / 1.4301) stainless steel",
+        density_g_cm3: 8.0,
+        source: "https://www.thyssenkrupp-materials.co.uk/stainless-steel-304-14301.html",
+        assumption: "The CAD body is library/cad/py/parts.py's nominal ISO 4762 shape (plain shank, no thread form), not a measured part; Westfield states no weight.",
+      },
       dimensions_mm: { length: 33, width: 5.5, height: 5.5 },
       metadata: {
         thread: "M3 x 0.5",

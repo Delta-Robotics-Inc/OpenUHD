@@ -11,7 +11,7 @@
  */
 import type { ModuleDef } from "../../../../src/types/index.js";
 import { category } from "../model.js";
-import { massBreakdown } from "../derived.js";
+import { modelMass } from "../derived.js";
 import { fullThrottle, thrustAtThrottle, thrustAtThrust, thrustTests } from "../../../../src/system/propulsion.js";
 import type { DocContext } from "../values.js";
 import type { TestData } from "../testdata.js";
@@ -61,12 +61,13 @@ export function standins(ctx: DocContext): TestData[] {
   const avionicsW = (o4W + (gnssmA / 1000) * 5 + FC_RX_W) / BEC_EFF;
   const avionicsA = avionicsW / V;
 
-  // mass: stated masses plus an assumed allowance for parts without one
-  const mb = massBreakdown(ctx);
-  const known = mb.filter((g) => g.weight !== undefined).reduce((s, g) => s + g.count * g.weight!, 0);
-  const missing = mb.filter((g) => g.weight === undefined);
-  const FRAME_ALLOWANCE_G = 125; // assumption: frame, top plate, hardware, wiring
-  const auw = known + FRAME_ALLOWANCE_G;
+  // mass: systemMass (stated weights, else CAD volume × material density), plus an
+  // assumed allowance for the parts the model has no mass for (cables, capacitor)
+  const sm = modelMass(ctx);
+  const known = sm.totalG;
+  const missing = sm.missing;
+  const UNKNOWN_ALLOWANCE_G = 20; // assumption: leads, cables and capacitor with no mass in the model
+  const auw = known + UNKNOWN_ALLOWANCE_G;
 
   // hover: the table's electrical power at thrust = AUW / motors (interpolated between rows)
   const hoverT = auw / motorCount;
@@ -85,7 +86,7 @@ export function standins(ctx: DocContext): TestData[] {
     `motor figures interpolate linearly between the ${test.rows.length} rows of the maker's table (0 at 0 % throttle); pack current = table electrical power ÷ ${V} V nominal`,
     `maker's table used the ${test.propeller} prop at ${test.supply_V} V, not the fitted propeller`,
     `avionics: DJI O4 minimum supply power ${o4W} W, GNSS ${gnssmA} mA at 5 V, FC + receiver ${FC_RX_W} W (assumed), BEC efficiency ${BEC_EFF * 100} % (assumed)`,
-    `all-up weight = ${r(known, 1)} g of stated masses + ${FRAME_ALLOWANCE_G} g assumed for the ${missing.reduce((s, g) => s + g.count, 0)} parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)`,
+    `all-up weight = ${r(known, 1)} g from systemMass (derived:mass.all_up, of which ${r(sm.assumedG, 1)} g is CAD volume × assumed material) + ${UNKNOWN_ALLOWANCE_G} g assumed for the ${missing.length} parts with no mass in the model (${missing.map((e) => e.def.name).join(", ")})`,
   ];
   const generatedAt = new Date().toISOString().slice(0, 10);
 
@@ -130,7 +131,7 @@ export function standins(ctx: DocContext): TestData[] {
       { name: "Battery nominal", value: V, unit: "V" },
       { name: "All-up weight (estimate)", value: r(auw, 0), unit: "g" },
     ],
-    provenance: { method: "Stand-in: hover thrust = AUW / motors; motor power interpolated from the maker's thrust table at that thrust; plus avionics.", derivedFrom: [...derivedFrom, "derived:mass.known_total"], assumptions, generator: GEN, generatedAt },
+    provenance: { method: "Stand-in: hover thrust = AUW / motors; motor power interpolated from the maker's thrust table at that thrust; plus avionics.", derivedFrom: [...derivedFrom, "derived:mass.all_up"], assumptions, generator: GEN, generatedAt },
     columns: [
       { id: "auw", label: "All-up weight", unit: "g" },
       { id: "thrust_motor", label: "Hover thrust per motor", unit: "g" },
@@ -191,7 +192,7 @@ export function standins(ctx: DocContext): TestData[] {
       { name: "All-up weight (estimate)", value: r(auw, 0), unit: "g" },
       { name: "Reference supply (maker's test)", value: test.supply_V, unit: "V" },
     ],
-    provenance: { method: "Stand-in: static thrust scaled with (V / test V)² (thrust ~ rpm², rpm ~ V), divided by the AUW estimate.", derivedFrom: [...derivedFrom, "derived:mass.known_total"], assumptions, generator: GEN, generatedAt },
+    provenance: { method: "Stand-in: static thrust scaled with (V / test V)² (thrust ~ rpm², rpm ~ V), divided by the AUW estimate.", derivedFrom: [...derivedFrom, "derived:mass.all_up"], assumptions, generator: GEN, generatedAt },
     columns: [
       { id: "voltage", label: "Pack voltage", unit: "V" },
       { id: "thrust_total", label: "Total static thrust", unit: "g" },
