@@ -38,6 +38,9 @@ from common import ROOT, part_dir, signature
 
 Selector = Callable[[Shape], list[Face]]
 
+#: transform of the build in progress (VendorStep.transform), applied to components found by label
+_TRANSFORM: Location | None = None
+
 
 # ---------------------------------------------------------------------------
 # Selectors
@@ -59,7 +62,9 @@ def find(shape: Shape, name: str) -> Shape:
     """First sub-shape whose label equals `name` (raises with the known labels otherwise)."""
     for s in _walk(shape):
         if s.label == name:
-            return s
+            # a moved Compound keeps its children at their original placement,
+            # so apply the build's transform to the found component explicitly
+            return s.moved(_TRANSFORM) if _TRANSFORM is not None and s is not shape else s
     raise KeyError(f"no component labelled {name!r}; labels: {labels(shape)[:40]}")
 
 
@@ -213,7 +218,9 @@ def build(v: VendorStep) -> bool:
     if not src.exists():
         print(f"  {v.part_id}: skipped, {src.relative_to(ROOT)} not present (download it: see sources.json type \"cad\")")
         return False
+    global _TRANSFORM
     shape = import_step(str(src))
+    _TRANSFORM = v.transform
     if v.transform is not None:
         shape = shape.moved(v.transform)
     out = part_dir(v.part_id) / "vendor"
