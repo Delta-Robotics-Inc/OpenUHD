@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-09-26
+
+Pinned baseline for the ProtoBoard Stack quadcopter reference project (PB-778).
+
+### Added
+
+- Standardized protocol interface builders in `src/protocols` (`Pin`, `GPIO`, `PowerIn`/`PowerOut`/`Ground`, `I2C`, `SPI`, `UART`, `PWM`, `ADC`/`DAC`) with inline signal specs, pin numbers, and multi-instance support.
+- `defineModule` validating constructor (unique interface ids, profile bindings, interface-group members).
+- Audited parts library in `library/parts` and the manifest build (`npm run build:library`, run on `prepack`).
+- DRC phases 0–2: export surface, result model, and `validatePair` at the protocol tier.
+- Validator/parts-library plan, visualizer spec, DRC plan, and pair-visualizer designs under `docs/` and `design/`.
+
 ## [0.1.0] — 2026-05-02
 
 ### Added
