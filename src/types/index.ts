@@ -8,3 +8,4 @@ export * from "./artifact.js";
 export * from "./harness.js";
 export * from "./module.js";
 export * from "./instance.js";
+export * from "./performance.js";

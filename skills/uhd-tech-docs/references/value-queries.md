@@ -26,7 +26,7 @@ Paths: `.key`, `[n]`, `[key=value]` (first element whose key equals value), `.le
 ```
 def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_5v].parameters[id=max_current].value
 def:dji-o4-air-unit:traits[type=operating_conditions].params.operating_temperature_C
-def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g
+def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].thrust_g
 sys:checks.diagnostics[id=supply_budget:stack:bec_10v].details.loadW
 sys:system.links[id=stack_mount].mate.gapMm
 test:throttle-sweep:rows[3][4]          (unit = columns[4].unit)

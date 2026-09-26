@@ -5,11 +5,11 @@
  * so they work for any system that has the parts, not just the quadcopter.
  */
 import type { ModuleDef } from "../../../src/types/index.js";
+import { fullThrottle, thrustTests } from "../../../src/system/propulsion.js";
 import { category } from "./model.js";
 import type { DerivedDef, DocContext } from "./values.js";
 
 const weightOf = (d: ModuleDef): number | undefined => d.domains?.find((x) => x.domain === "mechanical")?.weight_g;
-const perf = (d: ModuleDef) => d.traits?.find((t) => t.type === "performance")?.params as Record<string, any> | undefined;
 
 /** Leaf module instances plus placed hardware, as (instance label, def) pairs. */
 export function massItems(ctx: DocContext): { path: string; def: ModuleDef }[] {
@@ -60,29 +60,31 @@ export const DERIVED: Record<string, DerivedDef> = {
   "propulsion.thrust_full_total": {
     label: "Static thrust, all motors at full throttle",
     unit: "g",
-    formula: "motors × performance.thrust_tests[0].full_throttle.thrust_g",
+    formula: "motors × performance.thrust_tests[0].rows[throttle_pct=100].thrust_g",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;
-      const t = d && perf(d)?.thrust_tests?.[0];
+      const t = d && thrustTests(d)[0];
+      const top = t ? fullThrottle(t) : undefined;
       return {
-        value: t ? m.length * t.full_throttle.thrust_g : undefined,
-        inputs: d ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g`] : [],
-        note: t ? `manufacturer test with ${t.propeller} at ${t.supply_V} V` : "no thrust test in the motor model",
+        value: top ? m.length * top.thrust_g : undefined,
+        inputs: d && top ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=${top.throttle_pct}].thrust_g`] : [],
+        note: t ? `manufacturer table with ${t.propeller} at ${t.supply_V} V (not the fitted propeller)` : "no thrust test in the motor model",
       };
     },
   },
   "propulsion.current_full_total": {
     label: "Static current, all motors at full throttle",
     unit: "A",
-    formula: "motors × performance.thrust_tests[0].full_throttle.current_A",
+    formula: "motors × performance.thrust_tests[0].rows[throttle_pct=100].current_A",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;
-      const t = d && perf(d)?.thrust_tests?.[0];
+      const t = d && thrustTests(d)[0];
+      const top = t ? fullThrottle(t) : undefined;
       return {
-        value: t ? Number((m.length * t.full_throttle.current_A).toFixed(2)) : undefined,
-        inputs: d ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].full_throttle.current_A`] : [],
+        value: top ? Number((m.length * top.current_A).toFixed(2)) : undefined,
+        inputs: d && top ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=${top.throttle_pct}].current_A`] : [],
       };
     },
   },

@@ -9,6 +9,7 @@ import { barChart, lineChart, meterChart, ACCENT } from "../charts.js";
 import { callouts, dimension, figure, groupRow, note, sec, sub, table, leafOf, parseEnd } from "../blocks.js";
 import { esc, MARKERS } from "../html.js";
 import { allBodies, interfaceAnchor, renderBody, ISO } from "../figures.js";
+import { thrustTests } from "../../../../src/system/propulsion.js";
 import { category } from "../model.js";
 import { column } from "../testdata.js";
 import { coverPage, figNum, testOf, testTag, thumbnail, type BuildEnv } from "./common.js";
@@ -264,14 +265,33 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
   // ---------------------------------------------------------------- 06 performance
   out.push(sec("06", "Performance", "test data", ' data-break="before"'));
   const motor = ctx.scene.assembly.instances.find((i) => category(i.def) === "motor")?.def;
-  const tests = ((motor?.traits?.find((t) => t.type === "performance")?.params as any)?.thrust_tests ?? []) as any[];
+  const tests = motor ? thrustTests(motor) : [];
   const mq = (i: number, k: string) => `def:${motor!.id}:traits[type=performance].params.thrust_tests[${i}].${k}`;
+  const fitted = ctx.scene.assembly.instances.find((i) => category(i.def) === "prop")?.def.name ?? "";
   if (motor && tests.length) {
-    out.push(`<div class="block">${sub("Motor thrust test (manufacturer)")}${table(
-      [{ h: "Propeller" }, { h: "Supply", cls: "num" }, { h: "50 % thrust", cls: "num" }, { h: "50 % current", cls: "num" }, { h: "100 % thrust", cls: "num" }, { h: "100 % current", cls: "num" }, { h: "100 % power", cls: "num" }, { h: "RPM at 100 %", cls: "num" }],
-      tests.map((_, i) => [doc.v(mq(i, "propeller")), doc.v(mq(i, "supply_V")), doc.v(mq(i, "half_throttle.thrust_g"), "u=g"), doc.v(mq(i, "half_throttle.current_A"), "u=A"), doc.v(mq(i, "full_throttle.thrust_g"), "u=g"), doc.v(mq(i, "full_throttle.current_A"), "u=A|d1"), doc.v(mq(i, "full_throttle.power_W"), "u=W"), doc.v(mq(i, "full_throttle.rpm"), "u=rpm")]),
-      { cls: "dense", foot: `${esc(motor.name)}; the model holds the 50 % and 100 % rows of the maker's table. The fitted propeller (${esc(ctx.scene.assembly.instances.find((i) => category(i.def) === "prop")?.def.name ?? "")}) was not tested by the maker.` },
-    )}</div>`);
+    // the maker's full table: every printed row of every test prop, side by side by throttle
+    const throttles = [...new Set(tests.flatMap((t) => t.rows.map((r) => r.throttle_pct)))].sort((a, b) => a - b);
+    const cols = [{ h: "Throttle", cls: "num" }, ...tests.flatMap((t) => [
+      { h: `${t.propeller.replace(/^MEPS /, "")} V`, cls: "num" },
+      { h: "A", cls: "num" },
+      { h: "rpm", cls: "num" },
+      { h: "g", cls: "num" },
+      { h: "W", cls: "num" },
+    ])];
+    const rowq = (i: number, pct: number, k: string) => mq(i, `rows[throttle_pct=${pct}].${k}`);
+    const rows = throttles.map((pct) => [
+      `${pct} %`,
+      ...tests.flatMap((t, i) =>
+        t.rows.some((r) => r.throttle_pct === pct)
+          ? [doc.v(rowq(i, pct, "voltage_V"), "d1|nounit"), doc.v(rowq(i, pct, "current_A"), "d1|nounit"), doc.v(rowq(i, pct, "rpm"), "nounit"), doc.v(rowq(i, pct, "thrust_g"), "nounit"), doc.v(rowq(i, pct, "power_W"), "nounit")]
+          : ["—", "—", "—", "—", "—"],
+      ),
+    ]);
+    const heads = tests.map((_, i) => `${doc.v(mq(i, "propeller"))} at ${doc.v(mq(i, "supply_V"), "d1")}`).join("; ");
+    out.push(`<div class="block keep">${sub("Motor thrust tables (manufacturer)")}${table(cols, rows, {
+      cls: "dense",
+      foot: `${esc(motor.name)}: every row of the maker's KV table, per test propeller (${heads}); columns per propeller are measured supply voltage, current, speed, thrust and electrical power. The fitted propeller (${esc(fitted)}) is not one the maker tested, so these figures, and every figure derived from them below, are for the maker's test props.`,
+    })}</div>`);
   }
   const sweep = testOf(env, "throttle-sweep");
   const hover = testOf(env, "hover-current");
@@ -296,12 +316,12 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
       y2: { label: "Current", unit: "A", min: 0 },
       legend: true,
       series: [
-        { label: "thrust (fit)", points: thr.map((t, i) => [t, tpm[i]]) },
-        { label: "current (fit)", points: thr.map((t, i) => [t, ipm[i]]), axis: "y2", color: "#1b1b1b", dashed: true },
-        { label: "maker's test", points: [[50, tests[0].half_throttle.thrust_g], [100, tests[0].full_throttle.thrust_g]], markersOnly: true, color: ACCENT },
-        { label: "", points: [[50, tests[0].half_throttle.current_A], [100, tests[0].full_throttle.current_A]], markersOnly: true, axis: "y2", color: "#1b1b1b", endLabel: false },
+        { label: "thrust", points: thr.map((t, i) => [t, tpm[i]]) },
+        { label: "current", points: thr.map((t, i) => [t, ipm[i]]), axis: "y2", color: "#1b1b1b", dashed: true },
+        { label: "maker's rows", points: tests[0].rows.map((r) => [r.throttle_pct, r.thrust_g]), markersOnly: true, color: ACCENT },
+        { label: "", points: tests[0].rows.map((r) => [r.throttle_pct, r.current_A]), markersOnly: true, axis: "y2", color: "#1b1b1b", endLabel: false },
       ],
-    })}<div class="cap"><b>Figure ${figNum(env)}</b><span>Circles: maker's test points (${esc(tests[0].propeller)}). Lines: ${esc(sweep.provenance.method)}</span></div></div>`);
+    })}<div class="cap"><b>Figure ${figNum(env)}</b><span>Circles: every row of the maker's table (${esc(tests[0].propeller)} at ${tests[0].supply_V} V, not the fitted prop). Lines: ${esc(sweep.provenance.method)}</span></div></div>`);
   }
   if (flight) {
     const names = flight.rows.map((r) => String(r[0]));

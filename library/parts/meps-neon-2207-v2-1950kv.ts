@@ -35,7 +35,7 @@
  *     records it).
  *   - No SKU is published; part_number is the manufacturer's variant label.
  */
-import type { ModuleDef } from "../../src/types/index.js";
+import type { ModuleDef, ThrustTest, ThrustTestRow } from "../../src/types/index.js";
 import {
   BoltPattern,
   BrushlessPhases,
@@ -53,6 +53,17 @@ const SRC = {
   test: "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg",
   package: "https://img-meps.mepsking.top/material/1/meps-neon-2207-v2-motor-package.jpg",
 } as const;
+
+/** One printed row of the maker's thrust table (src_test), in column order. */
+const row = (throttle_pct: number, voltage_V: number, current_A: number, rpm: number, thrust_g: number, power_W: number, efficiency_g_per_W: number): ThrustTestRow => ({
+  throttle_pct,
+  voltage_V,
+  current_A,
+  rpm,
+  thrust_g,
+  power_W,
+  efficiency_g_per_W,
+});
 
 // ---------------------------------------------------------------------------
 // Electrical: three motor phase leads
@@ -222,21 +233,46 @@ const MEPS_NEON_2207_V2_1950KV_BASE: ModuleDef = defineModule({
         peak_current_A: 42.97,
         peak_current_duration_s: 60,
         max_power_W: 1036,
+        // The maker's KV1950 table, every row as printed (src_test), in the
+        // source's order: SZ4942 first. Neither test prop is the fitted HQProp
+        // Ethix S5 (5 x 4 x 3), and the source gives no size for the SZ props.
         thrust_tests: [
-          {
-            propeller: "MEPS SZ5145",
-            supply_V: 25.2,
-            full_throttle: { thrust_g: 1699, current_A: 43.0, power_W: 1036, rpm: 30342, voltage_V: 24.1 },
-            half_throttle: { thrust_g: 763, current_A: 10.4, power_W: 260, rpm: 20457 },
-          },
           {
             propeller: "MEPS SZ4942",
             supply_V: 25.2,
-            full_throttle: { thrust_g: 1584, current_A: 41.8, power_W: 1009, rpm: 31973, voltage_V: 24.2 },
-            half_throttle: { thrust_g: 648, current_A: 9.5, power_W: 237, rpm: 20929 },
+            rows: [
+              row(10, 25.2, 0.3, 4888, 28, 9, 3.3),
+              row(20, 25.2, 1.3, 9570, 119, 33, 3.6),
+              row(30, 25.1, 3.3, 14157, 277, 83, 3.4),
+              row(40, 25.1, 5.8, 17710, 452, 145, 3.1),
+              row(50, 25.0, 9.5, 20929, 648, 237, 2.7),
+              row(60, 24.9, 14.3, 23893, 865, 355, 2.4),
+              row(70, 24.7, 20.0, 26534, 1083, 494, 2.2),
+              row(80, 24.5, 27.3, 28890, 1298, 668, 1.9),
+              row(90, 24.3, 35.2, 30766, 1470, 855, 1.7),
+              row(100, 24.2, 41.8, 31973, 1584, 1009, 1.6),
+            ],
+            source: SRC.test,
           },
-        ],
-        note: "KV, configuration, resistance, currents and power from the 1950 column of the spec table; stator size from the page text; thrust from the KV1950 test table (10%-step table in the source).",
+          {
+            propeller: "MEPS SZ5145",
+            supply_V: 25.2,
+            rows: [
+              row(10, 25.2, 0.4, 4854, 33, 9, 3.7),
+              row(20, 25.2, 1.4, 9465, 143, 35, 4.1),
+              row(30, 25.1, 3.6, 13911, 334, 90, 3.7),
+              row(40, 25.0, 6.4, 17304, 533, 159, 3.4),
+              row(50, 24.9, 10.4, 20457, 763, 260, 2.9),
+              row(60, 24.8, 15.5, 23263, 1000, 384, 2.6),
+              row(70, 24.7, 21.5, 25704, 1233, 531, 2.3),
+              row(80, 24.5, 28.7, 27751, 1446, 701, 2.1),
+              row(90, 24.3, 36.8, 29199, 1580, 893, 1.8),
+              row(100, 24.1, 43.0, 30342, 1699, 1036, 1.6),
+            ],
+            source: SRC.test,
+          },
+        ] satisfies ThrustTest[],
+        note: "KV, configuration, resistance, currents and power from the 1950 column of the spec table; stator size from the page text; thrust tables: all ten rows (10-100 %) of both KV1950 tables. The test props are MEPS SZ4942 and SZ5145, not the fitted HQProp Ethix S5; the source does not give their size.",
         source: [SRC.spec, SRC.test, SRC.product],
       },
     },
