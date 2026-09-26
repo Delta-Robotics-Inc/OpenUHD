@@ -1,0 +1,24 @@
+{
+  "partId": "matek-m10q-5883",
+  "recorded_at": "2026-09-26T19:42:40.119Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 21,
+    "confirmed": 21,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": null,
+  "assumptions": [],
+  "data_gaps": [
+    "GNSS sensitivity, TTFF, horizontal accuracy",
+    "UART / I2C logic level on the connector",
+    "on-board I2C pull-ups",
+    "'3.3' bottom pad function",
+    "JST-GH pin 1 position",
+    "supercapacitor capacity / backup duration"
+  ],
+  "vocabulary_gaps": [
+    "{\"type\":\"vocabulary\",\"field\":\"GNSS PPS LED / reset strap\",\"reason\":\"No builder for an indicator LED; the reset pad is modelled as a digital input Pin. The LED is recorded as a usage_note only.\"}"
+  ]
+}

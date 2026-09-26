@@ -65,12 +65,23 @@ export const SCENARIOS: Scenario[] = [
     lookup: lookupQuadcopterModule,
   },
   {
-    id: "two-compasses",
-    label: "Two compasses at 0x0D",
-    description: "A second GNSS/compass module is added on the same I2C bus.",
+    id: "legacy-m10q",
+    label: "Legacy GNSS (M10Q-5883, EOL)",
+    description: "The EOL Matek M10Q-5883 in place of the M9N-5883: same interface ids, so only the part changes (the frame's 26 mm GPS mount no longer has a matching part).",
     system: {
       ...QUADCOPTER_5IN,
-      children: [...(QUADCOPTER_5IN.children ?? []), { id: "gnss_2", moduleDefId: "matek-m10q-5883", name: "Second GNSS" }],
+      children: (QUADCOPTER_5IN.children ?? []).map((c) => (c.id === "gnss" ? { ...c, moduleDefId: "matek-m10q-5883" } : c)),
+      links: (QUADCOPTER_5IN.links ?? []).filter((l) => l.id !== "gps_mount"),
+    },
+    lookup: lookupQuadcopterModule,
+  },
+  {
+    id: "two-compasses",
+    label: "Two compasses on one I2C bus",
+    description: "A second M9N-5883 (compass at 0x2C) is added on the same I2C bus.",
+    system: {
+      ...QUADCOPTER_5IN,
+      children: [...(QUADCOPTER_5IN.children ?? []), { id: "gnss_2", moduleDefId: "matek-m9n-5883", name: "Second GNSS" }],
       links: [
         ...(QUADCOPTER_5IN.links ?? []),
         { id: "gnss2_i2c", name: "Compass 2", a: { child: "stack", interfaceId: "i2c1" }, b: { child: "gnss_2", interfaceId: "i2c_compass" } },

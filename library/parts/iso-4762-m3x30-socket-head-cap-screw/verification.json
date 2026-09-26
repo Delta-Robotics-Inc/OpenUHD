@@ -1,0 +1,22 @@
+{
+  "partId": "iso-4762-m3x30-socket-head-cap-screw",
+  "recorded_at": "2026-09-26T19:47:24.334Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 12,
+    "confirmed": 12,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "manufacturer recorded as generic standard part; grommet threshold corrected",
+  "assumptions": [
+    "stack-up inputs"
+  ],
+  "data_gaps": [
+    "mass",
+    "operating temperature"
+  ],
+  "vocabulary_gaps": [
+    "{\"type\":\"vocabulary\",\"field\":\"fastener / threaded joint protocol\",\"detail\":\"No builder or protocol type models a discrete fastener (screw, nut, spacer) or a threaded joint between them. BoltPattern describes hole patterns on plates/boards, not a single fastener. Modelled as protocol 'custom' role 'peer' with fastener_diameter and length parameters and a connector trait carrying the thread; a 'fastener' protocol (e.g. roles male_thread/female_thread/clearance) pairing with bolt_pattern hole diameters and stack length would let DRC check thread and grip length.\",\"escalate\":true}"
+  ]
+}

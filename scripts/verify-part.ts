@@ -117,8 +117,10 @@ function check(def: ModuleDef, id: string): Finding[] {
           err("citation", `sources.json[${i}] type "${row.type}" is not an ArtifactType`);
         }
       });
+      const standardPart = def.tags?.includes("standard-part");
       if (!rows.some((r) => r.authority === "manufacturer")) {
-        err("citation", "no manufacturer-authority source in sources.json");
+        // standard parts (ISO/DIN fasteners) are defined by the standard; a supplier drawing suffices
+        (standardPart ? warn : err)("citation", "no manufacturer-authority source in sources.json" + (standardPart ? " (standard part: supplier drawing of the cited standard accepted)" : ""));
       }
       sourceUrls = new Set(rows.map((r) => String(r.url)));
     } catch (e) {

@@ -51,10 +51,16 @@ describe("fault scenarios", () => {
     expect(d?.severity).toBe("error");
   });
 
-  it("two compasses at 0x0D on I2C1 is an address conflict", () => {
+  it("two compasses at the same address on I2C1 is an address conflict", () => {
     const d = run("two-compasses").find((x) => x.rule === "bus_address");
-    expect(d?.message).toMatch(/0x0D/);
+    expect(d?.message).toMatch(/0x2C/);
     expect(d?.severity).toBe("error");
+  });
+});
+
+describe("interchangeable GNSS", () => {
+  it("the legacy M10Q swaps in with no errors", () => {
+    expect(run("legacy-m10q").filter((d) => d.severity === "error")).toEqual([]);
   });
 });
 

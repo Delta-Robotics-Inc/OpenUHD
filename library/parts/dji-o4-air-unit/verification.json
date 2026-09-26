@@ -1,0 +1,27 @@
+{
+  "partId": "dji-o4-air-unit",
+  "recorded_at": "2026-09-26T19:42:38.312Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 34,
+    "confirmed": 32,
+    "wrong": 1,
+    "unsupported": 1
+  },
+  "repairs": "audit-recommended text fixes applied",
+  "assumptions": [
+    "camera_mount fastener"
+  ],
+  "data_gaps": [
+    "antenna connector family",
+    "FC-side 3-in-1 cable connector family",
+    "power consumption / max input current",
+    "storage temperature",
+    "lens mount in box"
+  ],
+  "vocabulary_gaps": [
+    "No video-link protocol exists. The factory-attached camera coax is internal to this one-module kit, so it is not exposed as an interface; if the camera and transmission module are ever split into separate modules it needs a 'video_link' protocol (or custom + trait). The goggles downlink is modelled as generic 'rf' transceiver with band/latency in a performance trait; DRC cannot check DJI O4 vs O3/analog goggle compatibility.",
+    "Antenna port uses 'rf' transceiver + connectorTrait; there is no RF-connector protocol/params (connector family, band) for DRC to match antennas.",
+    "BoltPattern assumes coplanar holes. The camera lens mount has 2 side holes per side (16.00 mm apart) on faces 14.00 mm apart; modelled as a 16.00 x 14.00 rectangle with a note. A 'side_mount' shape or camera-width parameter would let frames check micro/nano camera bay width."
+  ]
+}

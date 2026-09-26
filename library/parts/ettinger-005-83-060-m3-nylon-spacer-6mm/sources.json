@@ -1,0 +1,50 @@
+[
+  {
+    "id": "src_product",
+    "title": "ETTINGER Round Spacer Ø3.4/6.0 x 6.0 PA/GF black, article 005.83.060 (product page)",
+    "url": "https://www.ettinger.de/en/p/round-spacer-oe3.4-6.0-x-6.0-pa-gf-black/005.83.060",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "19b63fd72f5eb84a8e7169c0001d4add23955c7599a458a819454489975467e0",
+    "supports": [
+      "article 005.83.060",
+      "for thread size M3",
+      "inner diameter 3.4 mm",
+      "outer diameter 6 mm",
+      "length 6 mm",
+      "material PA 6.0 25% GF",
+      "UL94-HB",
+      "black",
+      "smooth ends (category Round Spacers Smooth Ends)",
+      "RoHS / REACh conformities"
+    ]
+  },
+  {
+    "id": "src_datasheet",
+    "title": "ETTINGER article datasheet 005.83.060 (generated PDF)",
+    "url": "https://www.ettinger.de/en/product-datasheet/ee1a856488fea31e9380d958040040b8/create",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "5a61f95a5e58e9caf28ee36f33ec2fec46b27a8ae81ee46309621c4a92396b40",
+    "supports": [
+      "weight 0.15 g",
+      "ID 3.4, OD 6, length 6",
+      "PA 6.0 25% GF",
+      "UL94-HB"
+    ]
+  },
+  {
+    "id": "src_drawing",
+    "title": "ETTINGER technical sketch 005.83.060",
+    "url": "https://www.ettinger.de/media/26/33/c4/1747222703/Z00583060_8fa8bd.JPG",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "9f24a0e40621ce60275f14dccfc5bf2b9d1a3669dba721b9b9491ef82511d957",
+    "supports": [
+      "drawing: length 6,0, Ø6,0 outer, Ø3,4 bore, plain cylinder"
+    ]
+  }
+]

@@ -190,8 +190,11 @@ function propulsionRule(links: LinkResult[]): SystemDiagnostic[] {
     }
   }
 
-  const batteries = powerEdges(links).filter((e) => param(e.source.iface, "cell_count"));
-  for (const { source, link } of batteries) {
+  const batteries = new Map<string, PowerEdge>();
+  for (const e of powerEdges(links)) {
+    if (param(e.source.iface, "cell_count") && !batteries.has(e.source.path)) batteries.set(e.source.path, e);
+  }
+  for (const { source, link } of batteries.values()) {
     const cont = toAmps(param(source.iface, "max_current"));
     const burst = toAmps(param(source.iface, "burst_current"));
     const refs = [source.path, `link:${link.link.id}`, ...phaseLinks.map((r) => `link:${r.link.id}`)];

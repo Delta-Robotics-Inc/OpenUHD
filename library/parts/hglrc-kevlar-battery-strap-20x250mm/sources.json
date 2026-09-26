@@ -1,0 +1,32 @@
+[
+  {
+    "id": "src_product",
+    "title": "HGLRC Kevlar battery strap - 15x250mm /20x250mm (HGLRC product page; 20*250mm variant SKU F.ZD.02.00010)",
+    "url": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T19:38:04Z",
+    "sha256": "14e2b04500f9a9bf7ee0cd80e74c6df92ddbca9bbcf4069c47ceed70351cae26",
+    "supports": ["size 20x250mm", "material: aramid fiber (Kevlar)", "weight 8.3g (single) for 20x250mm", "high-strength metal buckle", "anti-slip adhesive", "reusable hook and loop"]
+  },
+  {
+    "id": "src_product_json",
+    "title": "HGLRC Shopify product JSON for the same listing (variant titles and SKUs)",
+    "url": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm.json",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T19:38:04Z",
+    "sha256": "75858ad30c44b7558f66581e984197159c40f06488d413a5d60112f16a001f01",
+    "supports": ["variant 20*250mm = SKU F.ZD.02.00010", "variant 15*250mm = SKU F.ZD.02.00009 (not modelled)", "spec body text identical to product page"]
+  },
+  {
+    "id": "src_epicfpv",
+    "title": "EpicFPV listing: HGLRC Kevlar Battery Strap (20x250mm) (Shopify product JSON)",
+    "url": "https://epicfpv.ca/products/hglrc-kevlar-battery-strap-20x250mm",
+    "type": "documentation",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "f88be55c20aaaf644e0289b4863e100b4e8e47874b858d7abc38f81579eb2204",
+    "supports": ["Package Includes: 1x HGLRC Kevlar Battery Strap (20x250mm)", "corroborates metal buckle, anti-slip adhesive backing, hook-and-loop"]
+  }
+]

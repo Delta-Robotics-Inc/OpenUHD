@@ -1,0 +1,34 @@
+[
+  {
+    "id": "src_product",
+    "title": "M3 Nyloc Nut Type T (Thin) in A2 Stainless - ISO 10511 (DIN 985) (WF1288), Westfield Fasteners",
+    "url": "https://www.westfieldfasteners.co.uk/Metric-Nuts/Nyloc-Nut-Type-T-Thin-M3-A2-Stainless.html",
+    "type": "documentation",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "0c9f0620a59ff43193f5ae416394ac9a3503b12c7e880fa75f1c9849f19475ae",
+    "supports": [
+      "part code WF1288",
+      "M3",
+      "A2 stainless",
+      "standard ISO 10511 (DIN 985)",
+      "prevailing-torque nylon insert, Type T (thin)"
+    ],
+    "note": "Westfield Fasteners is the supplier of record (the module's manufacturer field) and publishes this product specification under its own name; it is a stockist of the standard part, not the mill. Standard part: dimensions per the cited ISO/DIN standard; Westfield Fasteners is the supplier (part number kept as the supplier SKU)."
+  },
+  {
+    "id": "src_spec",
+    "title": "Westfield Fasteners product specification: DIN 985 Nyloc Nuts, Low or Thin Type (Type T)",
+    "url": "https://www.westfieldfasteners.co.uk/Standards/Nut-HexNy-M.pdf",
+    "type": "datasheet",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T19:40:00Z",
+    "sha256": "e699b99c1f5944f287d33cda9185d7ed06bd47693ce597e0c3ab94abdb05a51a",
+    "supports": [
+      "M3 column: p 0.5, h max 4 / min 3.7, m min 2.4, s max 5.5 (printed '5.') / min 5.32, e min 6.01, dw min 4.6, da 3-3.45",
+      "DIN 985 superseded by ISO 10511, interchangeable",
+      "stainless made with reference to DIN 985 dimensions"
+    ],
+    "note": "Westfield Fasteners is the supplier of record (the module's manufacturer field) and publishes this product specification under its own name; it is a stockist of the standard part, not the mill. Standard part: dimensions per the cited ISO/DIN standard; Westfield Fasteners is the supplier (part number kept as the supplier SKU)."
+  }
+]

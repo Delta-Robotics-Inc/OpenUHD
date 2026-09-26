@@ -9,6 +9,7 @@
  *   - motor_mount_*: the MEPS NEON 2207 V2 base pattern — meps-neon-2207-v2-1950kv
  *   - camera_mount: DJI O4 camera lens-mount side holes — dji-o4-air-unit
  *   - vtx_mount: DJI O4 transmission module 25.5 x 25.5 mm M2 — dji-o4-air-unit
+ *   - gps_mount: Matek M9N-5883 26 mm, Φ2 mm holes — matek-m9n-5883
  * Sources: the mating parts' sources.json files; see
  * library/systems/quadcopter-5in/README.md for the brief.
  *
@@ -72,6 +73,17 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = defineModule({
       fastener: "M2",
       fastenerDiameterMm: 2,
       note: "Side plates for the 14 mm-wide DJI O4 camera; mirrors dji-o4-air-unit camera_mount.",
+    }),
+    BoltPattern({
+      id: "gps_mount",
+      name: "GPS mount",
+      role: "structure",
+      shape: "square",
+      spacingMm: 26,
+      holeCount: 4,
+      fastener: "M2",
+      fastenerDiameterMm: 2,
+      note: "Rear GPS mast pad for the Matek M9N-5883 (26 mm hole spacing, Φ2 mm); keep >= 10 cm from power wiring, ESC and motors (Matek guidance). Mirrors matek-m9n-5883 mount.",
     }),
     BoltPattern({
       id: "vtx_mount",

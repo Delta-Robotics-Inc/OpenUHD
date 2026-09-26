@@ -1,0 +1,23 @@
+{
+  "partId": "dolphinrc-am32-60a-4in1-esc",
+  "recorded_at": "2026-09-26T19:42:37.916Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 18,
+    "confirmed": 18,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "audit-recommended text fixes applied",
+  "assumptions": [
+    "connector pin 1"
+  ],
+  "data_gaps": [
+    "{\"type\":\"data\",\"item\":\"pin 1 orientation of 8-pin SH connector\",\"reason\":\"silkscreen order only\"}",
+    "{\"type\":\"data\",\"item\":\"burst current duration (5 s vs 10 s)\",\"reason\":\"sources conflict\"}",
+    "{\"type\":\"data\",\"item\":\"operating temperature\",\"reason\":\"not stated\"}",
+    "{\"type\":\"data\",\"item\":\"VBAT passthrough current limit on connector V pin\",\"reason\":\"not stated\"}",
+    "{\"type\":\"data\",\"item\":\"current sensor output voltage range\",\"reason\":\"only Betaflight scale/offset given\"}"
+  ],
+  "vocabulary_gaps": []
+}

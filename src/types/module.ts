@@ -11,6 +11,11 @@ export interface ChildModuleRef {
   /** Instance label, e.g. "Front-left motor". Defaults to the definition name. */
   name?: string;
   /**
+   * Identical units represented by this one child (e.g. 4 screws). Defaults
+   * to 1. Use separate children when units connect differently.
+   */
+  quantity?: number;
+  /**
    * @deprecated Never read by the engine. Use `ModuleDef.exports` to surface
    * child interfaces on the parent boundary.
    */

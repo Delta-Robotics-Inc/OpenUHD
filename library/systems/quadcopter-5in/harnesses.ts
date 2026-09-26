@@ -88,9 +88,14 @@ export const QUADCOPTER_5IN_STACK_HARDWARE: ModuleDef = {
   name: "Stack hardware (M3)",
   kind: "harness",
   topology: "bus",
-  description: "Four M3 bolts through the frame's 30.5 mm stack holes, the ESC and the FC grommets, with spacing hardware between the boards.",
+  description: "Four M3 x 30 bolts through the frame's 30.5 mm stack holes, a 6 mm spacer, the ESC grommet, a 6 mm spacer and the FC grommet, closed by nyloc nuts.",
   tags: ["harness", "mechanical", "fasteners"],
   display: { icon: "wrench" },
+  children: [
+    { id: "screws", moduleDefId: "iso-4762-m3x30-socket-head-cap-screw", name: "M3 x 30 screw", quantity: 4 },
+    { id: "spacers", moduleDefId: "ettinger-005-83-060-m3-nylon-spacer-6mm", name: "6 mm nylon spacer", quantity: 8 },
+    { id: "nuts", moduleDefId: "iso-10511-m3-nyloc-nut", name: "M3 nyloc nut", quantity: 4 },
+  ],
   interfaces: [
     {
       id: "bolts",
@@ -105,7 +110,7 @@ export const QUADCOPTER_5IN_STACK_HARDWARE: ModuleDef = {
     },
   ],
   traits: [
-    { type: "usage_note", params: { note: "Boards use the M3 x 8 rubber grommets included with the DolphinRC stack (manual)." } },
+    { type: "usage_note", params: { note: "Per post, bottom to top: screw head under the 5 mm bottom plate, 6 mm spacer, ESC in its grommet (4 mm), 6 mm spacer, FC in its grommet (4 mm), nyloc nut; 1 mm of thread protrudes. Boards use the M3 x 8 grommets included with the DolphinRC stack. Stack-up worked out in the fastener parts' usage notes (assumes a 5 mm plate and 4 mm grommet clamp)." } },
   ],
 };
 

@@ -31,6 +31,7 @@ part from `library/parts/index.ts`, run `npm test`, `npm run type-check`, and
 | --- | --- | --- |
 | `library/parts/<id>.ts` | yes | The `ModuleDef`, with a citation header. |
 | `library/parts/<id>/sources.json` | yes | Every source used: URL, type, what it supported, fetch time, sha256 of downloaded bytes. |
+| `library/parts/<id>/verification.json` | yes | Committed evidence record: audit counts, repairs, assumptions, open data and vocabulary gaps (`npx tsx scripts/record-verification.ts <id>`). |
 | `library/parts/<id>/artifacts/thumbnail.png` | optional | Product thumbnail, if its licence allows redistribution. |
 | `library/parts/<id>/.research/` | no (gitignored) | Downloads, extracted notes, gaps, acceptance report. Working memory. |
 

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "src_product",
+    "title": "Matek Systems — GNSS & Compass M9N-5883 product page (Specifications, Wiring and settings, Tips and Notes)",
+    "url": "https://www.mateksys.com/?portfolio=m9n-5883",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "d1bdf942993c527fae1d8538a849fc5c74c690c8e984afe428047c969240e72f",
+    "supports": ["identity (M9N-5883, active product)", "u-blox NEO-M9N, GPS/GLONASS/Galileo/BeiDou", "compass QMC5883L/QMC5883P; QMC5883P from January 2026", "patch antenna 25x25x4 mm (Taoglas replaced by Cirocomm PA025AZ0009)", "4~5.5 V input on 5V pad/pin", "50 mA consumption", "UART 38400 default baud", "UART TX/RX for GNSS, I2C DA/CL for compass", "JST-GH-6P connector", "3.3V power LED red, PPS LED green", "operating temperature -20~80 C", "32x32x10 mm, 14.5 g", "wiring to FC", "compass alignment INAV/Betaflight/ArduPilot", "firmware minimum versions", "RST pad cold start", "supercapacitor / no flash", "M9N-5883_step.zip"]
+  },
+  {
+    "id": "src_img_features",
+    "title": "Matek M9N-5883 gallery image 1 (feature summary, edge pad silkscreen)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2020/10/M9N-5883_1.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "dec14f948bbbfbcdc152ac736236e0543492a91a46709a646f391e2021c6b386",
+    "supports": ["compass QMC5883L or QMC5883P", "32*32*10 mm, 14.5 g", "edge pads VBus D- D+ G Bt G DA CL TX RX 5V"]
+  },
+  {
+    "id": "src_img_dims",
+    "title": "Matek M9N-5883 gallery image 2 (top/bottom silkscreen, dimensions)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2020/10/M9N-5883_2.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "908003b8799f7bfb3cab22b84224c4608aac8e91fe621e712009c0abae7f7bea",
+    "supports": ["two JST-GH-6P connectors silkscreened 5V RX TX CL DA G", "RST pad, V-USB jumper pads", "32 mm board, 26 mm hole spacing, 2 mm hole diameter, R3 mm corners", "14.5 g", "NEO-M9N-00B-00 module marking", "forward arrow on antenna side", "edge pads VBus D- D+ G Bt G DA CL TX RX 5V"]
+  },
+  {
+    "id": "src_img_cable",
+    "title": "Matek M9N-5883 gallery image 3 (connector with JST-GH-6P lead fitted)",
+    "url": "https://www.mateksys.com/wp-content/uploads/2020/10/M9N-5883_3.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "9b61525e9f3db6145202a0130cfe89d3077eac31440467e40a42fcc096f64f91",
+    "supports": ["connector silkscreen corroboration", "supercapacitor visible"]
+  },
+  {
+    "id": "src_matek_gnss_list",
+    "title": "Matek Systems GNSS product category page (active products)",
+    "url": "https://www.mateksys.com/?page_id=2849",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "63c3afc54afd21898ded06dd36fb9ada091ffe8b21f1c388506bdf9f635daa9f",
+    "supports": ["M9N-5883 is listed as an active GNSS product (with M9N-G4-3100 CAN and CAN-L4-3100)"]
+  },
+  {
+    "id": "src_matek_discontinued",
+    "title": "Matek Systems Discontinued Items page",
+    "url": "https://www.mateksys.com/?page_id=2853",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "379c6b35a9e0ab6f578176b612231edc88e523b900a355e08f1e37e0eeea1173",
+    "supports": ["M10Q-5883, M10-5883, M10Q-3100, M10-L4-3100, SAM-M10Q all EOL; no successor named"]
+  },
+  {
+    "id": "src_m10q_eol",
+    "title": "Matek (EOL) GNSS & Compass M10Q-5883 product page",
+    "url": "https://www.mateksys.com/?portfolio=m10q-5883",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "4af234eb91bd3fdcdce7145ca807c59b84b954e02b071b9dcbaabdc7d452158b",
+    "supports": ["predecessor marked EOL; page names no successor"]
+  },
+  {
+    "id": "src_qmc5883l",
+    "title": "QST QMC5883L 3-Axis Magnetic Sensor datasheet, Rev B (component datasheet)",
+    "url": "https://www.qstcorp.com/upload/pdf/202512/13-52-04%20QMC5883L%20Datasheet%20Rev.%20B.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "b68aa5e3920f92d15177d6e9cb85283732de849b68bf81308929d7c9a4dc7f81",
+    "supports": ["I2C 7-bit default address 0x0D (section 5.4)", "I2C 100/400 kHz", "external pull-ups required"]
+  },
+  {
+    "id": "src_qmc5883p",
+    "title": "QST QMC5883P 3-Axis Magnetic Sensor datasheet, QST-PD-B002-22 Rev E (component datasheet)",
+    "url": "https://www.qstcorp.com/upload/pdf/202512/2C939E5AA0704285BC3BE71132B8629B.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "fb2dc97702927301479598ef88b47764acf4113a96d0b94c0f0fb6a2677e9296",
+    "supports": ["I2C 7-bit default address 0x2C (section 5.4)", "I2C 100/400 kHz", "external pull-ups required", "VDD 2.5-3.6 V"]
+  },
+  {
+    "id": "src_bf_qmc5883",
+    "title": "Betaflight master src/main/drivers/compass/compass_qmc5883.c (unified QMC5883L/P driver)",
+    "url": "https://github.com/betaflight/betaflight/blob/master/src/main/drivers/compass/compass_qmc5883.c",
+    "type": "firmware",
+    "authority": "community",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "5cf394fc551c314b13d7c218da6cebd9531e5881f234542ede1f5bef75404a50",
+    "supports": ["Betaflight master driver handles QMC5883L (0x0D) and QMC5883P (0x2C)"]
+  },
+  {
+    "id": "src_inav_qmc5883p",
+    "title": "INAV PR #10994 'Add QMC5883P driver' (merged 2025-10-16 to master)",
+    "url": "https://github.com/iNavFlight/inav/pull/10994",
+    "type": "firmware",
+    "authority": "community",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": "58a3cfc43d4ab5985de097eaf10cb43290a9a9ad0c7b981b6dffb1e0ca4f4460",
+    "supports": ["INAV QMC5883P driver merged to master 2025-10-16"]
+  },
+  {
+    "id": "src_holybro_micro_m10",
+    "title": "Holybro Micro M10/M9N GPS overview (alternative considered)",
+    "url": "https://docs.holybro.com/gps-and-rtk-system/m8n-m9n-m10-gps/micro-m10-m9n-gps/overview",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T21:40:00Z",
+    "sha256": null,
+    "supports": ["alternative rejected: input 4.7-5.2 V is outside the FC 4.5 V rail minimum; IST8310; 32x26x9 mm, 14 g"]
+  }
+]

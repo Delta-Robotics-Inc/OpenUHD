@@ -1,0 +1,23 @@
+{
+  "partId": "radiomaster-rp1-v2-elrs-2g4",
+  "recorded_at": "2026-09-26T19:42:39.723Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 21,
+    "confirmed": 21,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": null,
+  "assumptions": [],
+  "data_gaps": [
+    "supply current",
+    "operating temperature",
+    "logic level of TX/RX pads",
+    "receiver sensitivity (RP1-specific)"
+  ],
+  "vocabulary_gaps": [
+    "{\"type\":\"vocabulary\",\"field\":\"rf antenna connector\",\"detail\":\"No dedicated antenna-connector protocol (U.FL mate between receiver and antenna). Modelled as protocol 'rf' (existing, role transceiver) with connectorTrait('u_fl'); the included T antenna is not a separate part.\"}",
+    "{\"type\":\"vocabulary\",\"field\":\"non-bolted mounting\",\"detail\":\"No vocabulary for heat-shrink / foam-tape / zip-tie mounting; recorded as usage_note, no mechanical interface.\"}"
+  ]
+}

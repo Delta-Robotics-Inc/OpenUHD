@@ -1,0 +1,30 @@
+{
+  "partId": "dolphinrc-f405-v3-flight-controller",
+  "recorded_at": "2026-09-26T19:42:37.553Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 30,
+    "confirmed": 28,
+    "wrong": 1,
+    "unsupported": 1
+  },
+  "repairs": "audit-recommended text fixes applied",
+  "assumptions": [
+    "connector pin 1"
+  ],
+  "data_gaps": [
+    "{\"type\":\"data\",\"item\":\"pin 1 orientation of all SH connectors\",\"reason\":\"Manual shows silkscreen order only.\"}",
+    "{\"type\":\"data\",\"item\":\"which UART the SBUS pad / DJI Sbus pin feeds, and inversion\",\"reason\":\"Not stated; Betaflight target defaults serial RX to UART2.\"}",
+    "{\"type\":\"data\",\"item\":\"'ppm' silkscreen near RX3 pad\",\"reason\":\"Low-res photo; target puts PPM on UART2 RX (PA3). Not claimed.\"}",
+    "{\"type\":\"data\",\"item\":\"S1/S2 pad function\",\"reason\":\"Product page says 10x PWM outputs (8 DShot), target defines SERVO1-3; S1/S2 modelled as PWM outputs only.\"}",
+    "{\"type\":\"data\",\"item\":\"RSSI/Airspeed ADC pads\",\"reason\":\"Listed as ADC channels but no pad labelled RSSI/Airspeed in drawings; omitted.\"}",
+    "{\"type\":\"data\",\"item\":\"current limit of 4.5V connector rail; 3.3V rail has no exposed pad\",\"reason\":\"not stated\"}",
+    "{\"type\":\"data\",\"item\":\"operating temperature\",\"reason\":\"not stated\"}",
+    "{\"type\":\"data\",\"item\":\"DShot150 / bidirectional DShot explicit support statement from manual\",\"reason\":\"only the review blog lists DShot300/600 and bidir advice\"}"
+  ],
+  "vocabulary_gaps": [
+    "{\"type\":\"vocabulary\",\"item\":\"analog composite video (camera C1/C2 inputs, VTX video out)\",\"reason\":\"No video protocol in src/protocols; modelled as protocol 'custom' with usage_note (skills vocabulary 'video transmission links').\"}",
+    "{\"type\":\"vocabulary\",\"item\":\"usb\",\"reason\":\"USB-C port modelled as type 'usb' role 'device' as used by existing library parts (seeed-xiao-esp32c3); no USB builder.\"}",
+    "{\"type\":\"vocabulary\",\"item\":\"buzzer output (BZ+/BZ-)\",\"reason\":\"No buzzer/beeper builder; modelled as 'custom' pair with usage_note.\"}"
+  ]
+}

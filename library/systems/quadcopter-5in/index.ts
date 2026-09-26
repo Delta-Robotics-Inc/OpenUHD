@@ -44,7 +44,7 @@ export const QUADCOPTER_5IN: ModuleDef = {
   kind: "module",
   version: "0.1.0",
   description:
-    "Reference 5-inch 6S freestyle quadcopter: DolphinRC F405 V3 + AM32 60A stack, four MEPS NEON 2207 V2 1950KV motors with HQProp Ethix S5 props, CNHL 1100 mAh 6S pack, RadioMaster RP1 V2 ELRS receiver, DJI O4 Air Unit, Matek M10Q-5883 GNSS/compass, custom frame.",
+    "Reference 5-inch 6S freestyle quadcopter: DolphinRC F405 V3 + AM32 60A stack, four MEPS NEON 2207 V2 1950KV motors with HQProp Ethix S5 props, CNHL 1100 mAh 6S pack, RadioMaster RP1 V2 ELRS receiver, DJI O4 Air Unit, Matek M9N-5883 GNSS/compass, custom frame.",
   tags: ["quadcopter", "reference-project", "5-inch", "6s"],
   display: { icon: "plane" },
   interfaces: [],
@@ -55,7 +55,9 @@ export const QUADCOPTER_5IN: ModuleDef = {
     { id: "battery", moduleDefId: "cnhl-black-series-1100mah-6s-100c", name: "6S battery" },
     { id: "receiver", moduleDefId: "radiomaster-rp1-v2-elrs-2g4", name: "ELRS receiver" },
     { id: "video", moduleDefId: "dji-o4-air-unit", name: "DJI O4 Air Unit" },
-    { id: "gnss", moduleDefId: "matek-m10q-5883", name: "GNSS + compass" },
+    { id: "gnss", moduleDefId: "matek-m9n-5883", name: "GNSS + compass" },
+    { id: "strap", moduleDefId: "hglrc-kevlar-battery-strap-20x250mm", name: "Battery strap" },
+    { id: "bulk_cap", moduleDefId: "panasonic-eeu-fr1v471", name: "Bulk capacitor 470 µF" },
     // harnesses carrying links
     { id: "xt60_lead", moduleDefId: "dolphinrc-xt60-battery-lead", name: "XT60 battery lead" },
     { id: "dji_cable", moduleDefId: "dji-o4-3in1-cable", name: "DJI 3-in-1 cable" },
@@ -65,6 +67,9 @@ export const QUADCOPTER_5IN: ModuleDef = {
     // Power
     link("battery_pos", "VBAT", ["battery", "battery_out"], ["stack", "bat_in"], { harness: "xt60_lead" }),
     link("battery_neg", "Battery GND", ["battery", "battery_gnd"], ["stack", "bat_neg"], { harness: "xt60_lead" }),
+    // soldered across the ESC battery pads: electrically on the pack's net
+    link("bulk_cap_pos", "Bulk cap +", ["battery", "battery_out"], ["bulk_cap", "pos"]),
+    link("bulk_cap_neg", "Bulk cap −", ["battery", "battery_gnd"], ["bulk_cap", "neg"]),
 
     // Propulsion: ESC channel -> arm (exports motor phases), arm -> frame
     ...ARMS.flatMap((arm) => [
@@ -93,6 +98,7 @@ export const QUADCOPTER_5IN: ModuleDef = {
     link("gnss_i2c", "Compass", ["stack", "i2c1"], ["gnss", "i2c_compass"]),
     link("gnss_power", "GPS 4.5V", ["stack", "rail_4v5"], ["gnss", "vin_5v"]),
     link("gnss_gnd", "GPS GND", ["stack", "gnd"], ["gnss", "gnd"]),
+    link("gps_mount", "GPS mount", ["gnss", "mount"], ["frame", "gps_mount"]),
   ],
 };
 
@@ -104,5 +110,9 @@ const BY_ID = new Map<string, ModuleDef>(
 
 /** Resolves every module definition the quadcopter system references. */
 export const lookupQuadcopterModule: ModuleLookup = (id) => BY_ID.get(id);
+
+/** Library-system convention (scripts/bom.ts, generators): the root module and its lookup. */
+export const SYSTEM = QUADCOPTER_5IN;
+export const lookup = lookupQuadcopterModule;
 
 export { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME, HARNESSES };

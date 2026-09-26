@@ -85,4 +85,6 @@ On pass, write `.research/acceptance.json`:
 }
 ```
 
-Then report back with the gaps, and the part is ready to register.
+Then run `npx tsx scripts/record-verification.ts <id>` to write the committed
+`library/parts/<id>/verification.json`, report back with the gaps, and the
+part is ready to register.

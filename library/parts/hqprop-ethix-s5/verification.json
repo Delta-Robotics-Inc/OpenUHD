@@ -1,0 +1,22 @@
+{
+  "partId": "hqprop-ethix-s5",
+  "recorded_at": "2026-09-26T19:42:39.017Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 14,
+    "confirmed": 14,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": null,
+  "assumptions": [],
+  "data_gaps": [
+    "hub mounting style / retention",
+    "recommended motor / cell count",
+    "operating temperature",
+    "thrust / efficiency data"
+  ],
+  "vocabulary_gaps": [
+    "Shaft protocol has no rotation-direction parameter; a CW prop and CCW prop are modelled as one module with the handedness split recorded in a performance/usage_note trait. A future 'rotation' parameter on Shaft would let DRC check prop handedness against motor position/direction."
+  ]
+}

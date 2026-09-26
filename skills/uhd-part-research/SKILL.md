@@ -58,6 +58,11 @@ For each source:
 | firmware | simulation | documentation | cad | custom`. `authority` is one of
 `manufacturer`, `distributor`, `community`.
 
+Standard parts (ISO/DIN fasteners and similar) are defined by the standard,
+not a manufacturer. Set `manufacturer` to `Generic (<standard>)`, tag the part
+`standard-part`, keep the supplier's SKU as `part_number`, and mark the
+supplier's drawing `authority: "distributor"`.
+
 The datasheet or manual blocks the pipeline. If no manufacturer technical
 source exists, escalate instead of authoring from distributor listings
 alone.
