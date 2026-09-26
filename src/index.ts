@@ -52,3 +52,4 @@ export * from "./system/index.js";
 export * from "./system/checks.js";
 export * from "./system/wiring.js";
 export * from "./system/geometry.js";
+export * from "./authoring/cad.js";
