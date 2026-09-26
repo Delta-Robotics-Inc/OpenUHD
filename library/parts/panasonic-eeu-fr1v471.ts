@@ -27,7 +27,7 @@
  *     rated voltage is the ceiling the rail must stay under (6S LiPo full
  *     charge 25.2 V < 35 V). It carries ripple_current = 1.79 A rms
  *     (100 kHz / +105 °C). `neg` (Ground) is the − lead.
- *   - ESR: Panasonic specifies impedance at 100 kHz (0.028 Ω max, +20 °C),
+ *   - ESR: Panasonic specifies impedance at 100 kHz (0.028 Ω, +20 °C),
  *     not ESR. Since |Z| ≥ ESR it is an upper bound on ESR at 100 kHz; the
  *     performance trait states it as impedance. The 120 Hz ESR bound from
  *     tan δ is labelled derived.
@@ -71,8 +71,8 @@ const ESR_120HZ_MAX_OHM = +(TAN_DELTA / (2 * Math.PI * 120 * CAPACITANCE_UF * 1e
 
 const LEAD_NOTE =
   `Radial lead, straight (bulk) form: lead ø${LEAD_DIA_MM}±0.05 mm, lead space F=${LEAD_SPACE_MM}±0.5 mm; ` +
-  "dimension drawing gives lead lengths '14min.' / '3min.' (src_datasheet). Soldered by the builder through the holes " +
-  "in the ESC's + / − battery pads (DolphinRC).";
+  "dimension drawing gives lead lengths '14min.' / '3min.' (src_datasheet). Soldered by the builder across the ESC's " +
+  "+ / − battery pads.";
 
 function withTraits(iface: InterfaceDef, traits: TraitDef[]): InterfaceDef {
   return { ...iface, traits: [...(iface.traits ?? []), ...traits] };
@@ -185,7 +185,7 @@ export const PANASONIC_EEU_FR1V471: ModuleDef = defineModule({
         ripple_conditions: "100 kHz / +105 °C",
         esr_ohm: Z_100K_20C_OHM,
         esr_note:
-          "Datasheet specifies impedance, not ESR: 0.028 Ω max at 100 kHz / +20 °C and 0.078 Ω at 100 kHz / -10 °C; |Z| ≥ ESR, so these bound ESR at 100 kHz.",
+          "Datasheet specifies impedance, not ESR: 0.028 Ω at 100 kHz / +20 °C and 0.078 Ω at 100 kHz / -10 °C; |Z| ≥ ESR, so these bound ESR at 100 kHz.",
         impedance_100kHz_minus10C_ohm: Z_100K_M10C_OHM,
         tan_delta_120Hz: TAN_DELTA,
         esr_120Hz_max_ohm_derived: ESR_120HZ_MAX_OHM,

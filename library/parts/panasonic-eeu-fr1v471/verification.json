@@ -1,0 +1,24 @@
+{
+  "partId": "panasonic-eeu-fr1v471",
+  "recorded_at": "2026-09-26T19:53:44.000Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 18,
+    "confirmed": 17,
+    "wrong": 0,
+    "unsupported": 1
+  },
+  "repairs": "unsupported pad-hole claim removed; impedance wording corrected",
+  "assumptions": [
+    "identity",
+    "lead polarity identification"
+  ],
+  "data_gaps": [
+    "bundled capacitor brand/series/MPN",
+    "mass",
+    "ESR (as such)"
+  ],
+  "vocabulary_gaps": [
+    "No capacitor builder; modelled as PowerIn (+) and Ground (-) so DRC checks the rail voltage against the rated voltage. Capacitance/ESR live in a performance trait (kind 'capacitor'), ripple_current is a new parameter id (A)."
+  ]
+}
