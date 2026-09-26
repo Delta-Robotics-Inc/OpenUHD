@@ -284,22 +284,48 @@ export function validateLink(def: ModuleDef, link: InterfaceLink, lookup: Module
     };
   }
 
+  const storedProblems = link.childLinks ? childLinkProblems(link.childLinks) : [];
   const children = link.childLinks
     ? storedChildren(link.childLinks, a, b)
     : connection.subLinks
         .filter((s) => s.from.interfaceId !== a.iface.id || s.to.interfaceId !== b.iface.id)
         .map((s) => childFromSubLink(s, a.owner, b.owner));
 
+  const state: LinkState = storedProblems.length
+    ? "incompatible"
+    : link.childLinks && STATE_MAP[connection.state] === "partial"
+      ? "configured"
+      : STATE_MAP[connection.state];
   return {
     link,
     a,
     b,
-    state: link.childLinks && STATE_MAP[connection.state] === "partial" ? "configured" : STATE_MAP[connection.state],
+    state,
     protocol: connection.protocol,
     children,
     unresolvedSlots: connection.unresolvedSlots.map((u) => `${u.moduleId}:${u.slotId}`),
-    diagnostics: connection.diagnostics,
+    diagnostics: [...storedProblems, ...connection.diagnostics],
   };
+}
+
+/** Stored child links must use each slot at most once on each side. */
+function childLinkProblems(stored: ChildLink[]): Diagnostic[] {
+  const problems: Diagnostic[] = [];
+  for (const side of ["a", "b"] as const) {
+    const seen = new Map<string, number>();
+    for (const c of stored) seen.set(c[side], (seen.get(c[side]) ?? 0) + 1);
+    for (const [slot, n] of seen) {
+      if (n > 1) {
+        problems.push({
+          severity: "error",
+          code: "child_link_duplicate",
+          message: `stored child links map ${side}-side ${slot} ${n} times; each conductor must land on a distinct slot`,
+          refs: [slot],
+        });
+      }
+    }
+  }
+  return problems;
 }
 
 /** Validate every stored link on a module. */

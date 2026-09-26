@@ -120,4 +120,25 @@ describe("quadcopter links", () => {
       ["phase_c", "phase_b", "manual"],
     ]);
   });
+
+  it("stored child links that land two conductors on one slot are incompatible", () => {
+    const bad: ModuleDef = {
+      ...QUADCOPTER_5IN,
+      links: [
+        {
+          id: "m1_bad",
+          a: { child: "stack", interfaceId: "motor_1" },
+          b: { child: "arm_rr", interfaceId: "motor__phases" },
+          childLinks: [
+            { a: "phase_a", b: "phase_a" },
+            { a: "phase_b", b: "phase_c" },
+            { a: "phase_c", b: "phase_c" },
+          ],
+        },
+      ],
+    };
+    const [result] = validateLinks(bad, lookup);
+    expect(result.state).toBe("incompatible");
+    expect(result.diagnostics[0].message).toMatch(/phase_c 2 times/);
+  });
 });
