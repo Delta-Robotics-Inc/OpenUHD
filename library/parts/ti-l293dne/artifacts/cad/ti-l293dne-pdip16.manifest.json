@@ -1,0 +1,261 @@
+{
+  "artifact": "ti-l293dne-pdip16",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "4964a957a75157c0e3cfc889574cb86079441b419e6478a309ecb07895523aa7",
+  "units": "mm",
+  "features": {
+    "package_top": {
+      "area_mm2": 124.945,
+      "centroid": [
+        0.012,
+        -0.055,
+        3.81
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "package_underside": {
+      "area_mm2": 125.73,
+      "centroid": [
+        0.0,
+        0.0,
+        0.51
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_1": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        8.89,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_2": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        6.35,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_3": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        3.81,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_4": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        1.27,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_5": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        -1.27,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_6": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        -3.81,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_7": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        -6.35,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_8": {
+      "area_mm2": 0.114,
+      "centroid": [
+        -3.81,
+        -8.89,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_9": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        -8.89,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_10": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        -6.35,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_11": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        -3.81,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_12": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        -1.27,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_13": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        1.27,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_14": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        3.81,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_15": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        6.35,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "pin_16": {
+      "area_mm2": 0.114,
+      "centroid": [
+        3.81,
+        8.89,
+        -3.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    }
+  }
+}

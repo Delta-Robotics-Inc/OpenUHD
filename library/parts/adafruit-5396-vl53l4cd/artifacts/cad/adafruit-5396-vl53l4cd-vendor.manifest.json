@@ -1,0 +1,151 @@
+{
+  "artifact": "adafruit-5396-vl53l4cd-vendor",
+  "tool": "manufacturer STEP, converted with build123d (library/cad/py/vendor_step.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "cc5d1703c2866f5ae976983377cd6242deacab597ac12354c698209f2d79880f",
+  "source": {
+    "file": "5396-Adafruit-VL53L4CD.step",
+    "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/main/5396%20VL53L4CD%20Sensor/5396%20Adafruit%20VL53L4CD.step",
+    "licence": "MIT (Copyright (c) 2016 Adafruit Industries, Adafruit_CAD_Parts LICENSE); committed"
+  },
+  "units": "mm",
+  "bbox": {
+    "min": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "max": [
+      25.4,
+      17.78,
+      4.53
+    ]
+  },
+  "features": {
+    "mount": {
+      "area_mm2": 49.323,
+      "centroid": [
+        12.7,
+        8.89,
+        0.785
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          2.54,
+          2.54,
+          0.785
+        ],
+        [
+          2.54,
+          15.24,
+          0.785
+        ],
+        [
+          22.86,
+          2.54,
+          0.785
+        ],
+        [
+          22.86,
+          15.24,
+          0.785
+        ]
+      ],
+      "diameter_mm": 2.5
+    },
+    "header": {
+      "area_mm2": 29.594,
+      "centroid": [
+        12.7,
+        2.54,
+        0.785
+      ],
+      "faces": 6,
+      "centres": [
+        [
+          6.35,
+          2.54,
+          0.785
+        ],
+        [
+          8.89,
+          2.54,
+          0.785
+        ],
+        [
+          11.43,
+          2.54,
+          0.785
+        ],
+        [
+          13.97,
+          2.54,
+          0.785
+        ],
+        [
+          16.51,
+          2.54,
+          0.785
+        ],
+        [
+          19.05,
+          2.54,
+          0.785
+        ]
+      ],
+      "diameter_mm": 1.0
+    },
+    "stemma_qt_1": {
+      "area_mm2": 163.833,
+      "centroid": [
+        2.352,
+        8.89,
+        3.078
+      ],
+      "faces": 89
+    },
+    "stemma_qt_2": {
+      "area_mm2": 163.833,
+      "centroid": [
+        23.048,
+        8.89,
+        3.078
+      ],
+      "faces": 89
+    },
+    "sensor": {
+      "area_mm2": 10.873,
+      "centroid": [
+        12.707,
+        8.879,
+        2.967
+      ],
+      "faces": 2,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "vendorComponents": [
+    "0603-NO",
+    "0805-NO",
+    "Adafruit_VL53L4CD_v2",
+    "Board",
+    "CHIPLED_0603_NOOUTLINE",
+    "JST_SH4",
+    "LGA12_ST",
+    "PCB_Component",
+    "RESPACK_4X0603",
+    "SOD-323",
+    "SOT23-5",
+    "SOT363"
+  ],
+  "notes": [
+    "No transform: STEP coordinates equal the Eagle board (origin at the lower-left board corner, board bottom z = 0, sensor facing +Z).",
+    "Holes agree with the Eagle .brd: 2.5 mm drills at (2.54, 2.54), (22.86, 2.54), (2.54, 15.24), (22.86, 15.24).",
+    "The 1x6 header is not modelled (pads only); 'header' is its six 1.0 mm holes."
+  ]
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "src_learn_guide",
+    "title": "Adafruit Learn: Adafruit VL53L4CD Time of Flight Distance Sensor (guide PDF: Overview, Pinouts, Downloads)",
+    "url": "https://learn.adafruit.com/adafruit-vl53l4cd-time-of-flight-distance-sensor.pdf",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "279188d19e5a5c2bb1020ee278d5c543c8c5ab2b9d46423fcc9c8942ca00b779",
+    "supports": ["2.8 V sensor on a breakout with regulator and level shifting, 3-5 V power or logic", "VIN: power the board at the microcontroller logic level", "GND common ground", "default I2C address 0x29", "SCL and SDA each have a 10K pull-up", "two STEMMA QT connectors", "GPIO: interrupt output, 2.8 V logic level", "XSHUT: shutdown, active low, level shifted for 3 V or 5 V logic", "LED jumper on the back cuts power to the on LED", "Downloads: datasheet, EagleCAD PCB files, 3D models on GitHub"]
+  },
+  {
+    "id": "src_learn_pinouts",
+    "title": "Adafruit Learn: VL53L4CD guide, Pinouts page (HTML)",
+    "url": "https://learn.adafruit.com/adafruit-vl53l4cd-time-of-flight-distance-sensor/pinouts",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:01:00Z",
+    "sha256": "0900930294a123fa087bf6e4d35506dca49f1a8f4e83d370a1c23c5f369b9fe9",
+    "supports": ["pin descriptions VIN, GND, SCL, SDA, STEMMA QT, GPIO, XSHUT, LED jumper (same text as the guide PDF)"]
+  },
+  {
+    "id": "src_product",
+    "title": "Adafruit product 5396: Adafruit VL53L4CD Time of Flight Distance Sensor - ~1 to 1300mm - STEMMA QT / Qwiic",
+    "url": "https://www.adafruit.com/product/5396",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:01:00Z",
+    "sha256": "36a39c4e619690ae96448ac2fa3549a17ca338ee44615f3e57a06b9ba2b941be",
+    "supports": ["product identity and SKU 5396", "~1 to 1300 mm range (title and description)", "0 to 1200 mm full FoV, 1 mm linearity, 18 deg diagonal FoV, up to 100 Hz (technical details, quoting ST)", "revision note Nov 20 2023: Pinguin silkscreen PCB, electrically identical; black or tan STEMMA QT connectors", "product dimensions 25.5 x 17.7 x 4.6 mm", "weight 1.8 g"]
+  },
+  {
+    "id": "src_pcb",
+    "title": "Adafruit-VL53L4CD-PCB (EagleCAD schematic and board), GitHub, commit de475b8aede92ff30e66671ded9ec015fc0df6ba",
+    "url": "https://github.com/adafruit/Adafruit-VL53L4CD-PCB",
+    "type": "schematic",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:02:00Z",
+    "sha256": "7f2992ebf5d1fe9b1a3863b040e0002245f74e66e19ad1339c6d10314c4e1391",
+    "licence": "Creative Commons Attribution/Share-Alike 3.0 (README License section and license.txt)",
+    "supports": ["sha256 is of 'Adafruit VL53L4CD.sch'; board file 'Adafruit VL53L4CD.brd' sha256 1337c456f84bd293f373b6cd54446571d814e987d21461f0d168223b28bc02c9", "JP2 1x6 header order: 1 VCC(VIN), 2 GND, 3 SCL, 4 SDA, 5 GPIO, 6 XSHUT", "LP5907-2.8 regulator (U3) from VCC to the 2.8 V sensor rail", "BSS138 dual MOSFET (Q3) I2C level shifter with 10K pull-ups (R7) on both sides", "GPIO1 pulled up to 2.8 V by R2 10K, no level shifter", "XSHUT: 1N4148 diode (D1, cathode to header) with R1 10K pull-up to 2.8 V", "STEMMA QT CONN3/CONN4 carry GND, V+ (VCC), SDA, SCL in parallel with the header", "green power LED via R3 10K and closed solder jumper SJ1", "board outline 25.4 x 17.78 mm with R2.54 corners", "four 2.5 mm plated mounting holes at (2.54, 2.54), (22.86, 2.54), (2.54, 15.24), (22.86, 15.24) mm", "header pads 1.0 mm drill, 2.54 mm pitch at y = 2.54 mm", "sensor U1 centred at (12.7, 8.89) mm"]
+  },
+  {
+    "id": "src_st_datasheet",
+    "title": "ST VL53L4CD datasheet DS13812 Rev 8 (July 2024)",
+    "url": "https://www.st.com/resource/en/datasheet/vl53l4cd.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:03:00Z",
+    "sha256": "0beb3bb5e958f6e463d919c3ac9226e5f3bdfa15fd09b009208a24d791e7707c",
+    "supports": ["Table 1: AVDD 2.6-3.5 V, operating temperature -30 to 85 C, 940 nm emitter, I2C up to 1 MHz, address 0x52 (8-bit; 7-bit 0x29)", "features: 0 to 1200 mm full FoV, linearity down to 1 mm, 18 deg diagonal FoV, up to 100 Hz", "Table 16: max ranging 1200 mm @90% / 1300 mm @50% detection, white target indoor, 33 ms timing budget", "section 6.2 minimum ranging distance 0 mm, linear from 1 mm", "Table 4 pin 7 GPIO1: interrupt output, open drain", "Table 11 absolute maximum AVDD and SCL/SDA/XSHUT/GPIO1: -0.5 to 3.6 V", "Table 14: HW standby 5 uA typ, active ranging 22 mA typ / 24 mA max, peak 40 mA", "storage -40 to 125 C", "Class 1 laser"]
+  },
+  {
+    "id": "src_cad",
+    "title": "Adafruit_CAD_Parts: 5396 Adafruit VL53L4CD.step (commit 6f52ee4d48df0e7118d2d82f485cb572051a24fe)",
+    "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/main/5396%20VL53L4CD%20Sensor/5396%20Adafruit%20VL53L4CD.step",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:01:00Z",
+    "sha256": "cc5d1703c2866f5ae976983377cd6242deacab597ac12354c698209f2d79880f",
+    "licence": "MIT License, Copyright (c) 2016 Adafruit Industries (repository LICENSE, sha256 f60436644e066301d4c2e8f1f0674a157b1f60e4fd5586717b99dde255cc18cd). Permits redistribution with the notice; committed with the licence text.",
+    "supports": ["board 25.4 x 17.78 x 1.6 mm, bottom face at z = 0, origin at the board corner (same coordinates as the Eagle board)", "four 2.5 mm holes on a 20.32 x 12.7 mm rectangle centred at (12.7, 8.89)", "six 1.0 mm header holes (no header fitted)", "two JST_SH4 STEMMA QT sockets on the short edges, 4.53 mm top", "LGA12_ST sensor on the top face at the board centre", "named components (LGA12_ST, SOT23-5, SOT363, JST_SH4, ...)"]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition: adafruit-vl53l4cd-breakout",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/adafruit-vl53l4cd-breakout/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:00:00Z",
+    "sha256": "9d57fbcc3d2ad50b86ad490c5534dc83a942094cb3e29f4978363b33d757d808",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]

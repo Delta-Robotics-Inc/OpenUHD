@@ -3,6 +3,9 @@
  * datasheet-honest ModuleDef (see docs/showcase-plan.md § 2.3).
  */
 
+export { ADAFRUIT_1411_16CH_PWM_SERVO_SHIELD } from "./adafruit-1411-16ch-pwm-servo-shield.js";
+export { ADAFRUIT_1438_MOTOR_SHIELD_V2 } from "./adafruit-1438-motor-shield-v2.js";
+export { ADAFRUIT_5396_VL53L4CD } from "./adafruit-5396-vl53l4cd.js";
 export { ADAFRUIT_938_128X64_OLED } from "./adafruit-938-128x64-oled.js";
 export { ADAFRUIT_FEATHER_NRF52_BLUEFRUIT_LE_3406 } from "./adafruit-feather-nrf52-bluefruit-le-3406.js";
 export { ARDUINO_NANO } from "./arduino-nano.js";
@@ -33,5 +36,7 @@ export { REV_21_1652_NEO_VORTEX } from "./rev-21-1652-neo-vortex-brushless-motor
 export { RP2040 } from "./rp2040.js";
 export { SEEED_XIAO_ESP32C3 } from "./seeed-xiao-esp32c3.js";
 export { STEPPERONLINE_17HS19_2004S1 } from "./stepperonline-17hs19-2004s1.js";
+export { TI_DRV8871 } from "./ti-drv8871.js";
+export { TI_L293DNE } from "./ti-l293dne.js";
 export { TOWERPRO_SG90 } from "./towerpro-sg90.js";
 export { VL53L0X } from "./vl53l0x.js";

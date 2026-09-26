@@ -1,0 +1,32 @@
+[
+  {
+    "id": "src_datasheet",
+    "title": "TI DRV8871 3.6-A Brushed DC Motor Driver With Internal Current Sense (PWM Control), datasheet SLVSCY9B (Aug 2015, rev. Jul 2016), with package option addendum (10-Nov-2025) and DDA0008B package outline (4214849/B 09/2025)",
+    "url": "https://www.ti.com/lit/ds/symlink/drv8871.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:00:00Z",
+    "sha256": "09de551aa0c6d090fd14b000634cfd894d782a050eed13110fe2eb10f1b548bf",
+    "supports": ["pin functions (section 5)", "absolute maximum ratings (6.1)", "recommended operating conditions (6.3)", "thermal information (6.4)", "electrical characteristics (6.5)", "H-bridge truth table (Table 1)", "sleep mode (7.3.2)", "ILIM current regulation equation, 15 kOhm minimum (7.3.3)", "protection (7.3.5)", "typical application: 0.1 uF + 47 uF on VM, 30 kOhm ILIM (8.2)", "orderable parts: DRV8871DDAR active, DRV8871DDA obsolete (addendum)", "DDA0008B package outline and land pattern (body 4.9 x 3.9, span 6.0, pitch 1.27, 1.7 max height, exposed pad 2.11-2.71 x 2.8-3.4)"]
+  },
+  {
+    "id": "src_product",
+    "title": "TI DRV8871 product folder (CAD/CAE symbols link to Ultra Librarian)",
+    "url": "https://www.ti.com/product/DRV8871",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:01:00Z",
+    "sha256": "46328cadf57344da8ecc4165e3d4f02361e22672a6baba4e44ad5e89b25b5d42",
+    "supports": ["identity", "CAD/CAE is offered only via Ultra Librarian (https://www.ultralibrarian.com/TI/embedded/?gpn=DRV8871&package=DDA&pin=8), login required; no STEP downloaded"]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition texas-instruments-drv8871",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/texas-instruments-drv8871/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:00:00Z",
+    "sha256": "c47badf3ba36beec25bfcd695ca355f55a79c59f1e31763daf5c1b7b48066743",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]
