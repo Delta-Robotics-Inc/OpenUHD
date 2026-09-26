@@ -76,6 +76,7 @@ import {
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   specs: "https://www.dji.com/o4-air-unit/specs",
@@ -331,7 +332,7 @@ const cameraMount = withTraits(
 // Module
 // ---------------------------------------------------------------------------
 
-export const DJI_O4_AIR_UNIT: ModuleDef = defineModule({
+const DJI_O4_AIR_UNIT_BASE: ModuleDef = defineModule({
   id: "dji-o4-air-unit",
   name: "DJI O4 Air Unit",
   version: "1.0.0",
@@ -474,3 +475,46 @@ export const DJI_O4_AIR_UNIT: ModuleDef = defineModule({
     { id: "art_rdq", name: "RaceDayQuads listing (distributor)", type: "documentation", url: SRC.rdq },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const DJI_O4_AIR_UNIT: ModuleDef = withGeometry(
+  DJI_O4_AIR_UNIT_BASE,
+  {
+    tx_module_mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("tx_module_mount", { area_mm2: 196.035, centroid: [0.0, 0.0, 3.0] }), own("tx_module_mount"), procedural("bolt_pattern")],
+    },
+    // The camera is a second body joined only by its cable, so its frame
+    // names the body artifact it is expressed in. Side plates clamp it from
+    // both sides, so the frame sits on the mid-plane (origin: the side-hole
+    // axis centre; normal: toward the left plate; xAxis: the lens
+    // direction) — a face-to-face mate would push it against one plate.
+    camera_mount: {
+      frame: { artifact: "cad_camera_step", origin: [0, 0, 0], normal: [-1, 0, 0], xAxis: [0, 1, 0] },
+      refs: [feature("camera_mount", { area_mm2: 443.52, centroid: [0.0, 0.0, 0.0] }, "cad_camera_step"), own("camera_mount")],
+    },
+  },
+  [
+    ...cadArtifacts({
+    dir: "library/parts/dji-o4-air-unit/artifacts/cad",
+    name: "dji-o4-air-unit",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["tx_module_mount"],
+  }),
+    ...cadArtifacts({
+    dir: "library/parts/dji-o4-air-unit/artifacts/cad",
+    name: "dji-o4-camera",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    prefix: "camera",
+    interfaces: ["camera_mount"],
+  }),
+  ],
+);

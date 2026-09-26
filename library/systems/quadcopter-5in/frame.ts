@@ -13,11 +13,15 @@
  * Sources: the mating parts' sources.json files; see
  * library/systems/quadcopter-5in/README.md for the brief.
  *
- * The frame has no CAD, material, or mass yet; those are data gaps until the
- * frame CAD workflow (PB-774) produces a source artifact.
+ * Its CAD is derived from these interfaces (PB-775): library/cad/params.ts
+ * turns the bolt patterns into parameters, library/cad/py/frame.py (build123d)
+ * and library/cad/kcl/frame.kcl build the plates, and the frames below are
+ * the same numbers (test/geometry.test.ts checks them against the
+ * generator's frames.json). Material and mass remain data gaps.
  */
 import type { ModuleDef } from "../../../src/types/index.js";
 import { BoltPattern, defineModule } from "../../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../../cad/artifacts.js";
 
 const motorMount = (corner: string, label: string) =>
   BoltPattern({
@@ -33,7 +37,7 @@ const motorMount = (corner: string, label: string) =>
     note: "Through holes on the arm tip on a 16 mm bolt circle (opposite holes 16 mm apart, adjacent 11.31 mm — the FPV '16x16' pattern). M3 screws thread into the motor base. Mirrors meps-neon-2207-v2-1950kv base_mount.",
   });
 
-export const QUADCOPTER_5IN_FRAME: ModuleDef = defineModule({
+const QUADCOPTER_5IN_FRAME_BASE: ModuleDef = defineModule({
   id: "quadcopter-5in-frame",
   name: "5-inch quadcopter frame (custom)",
   version: "0.1.0",
@@ -110,7 +114,10 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = defineModule({
       domain: "mechanical",
       metadata: {
         layout: "true-X, 5-inch",
-        status: "design intent — no CAD artifact yet",
+        status: "generated from its interfaces (library/cad/py/frame.py, library/cad/kcl/frame.kcl)",
+        wheelbase_mm: 225,
+        plate_thickness_mm: 5,
+        standoff_height_mm: 30,
       },
     },
   ],
@@ -119,11 +126,78 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = defineModule({
     {
       type: "data_gap",
       params: {
-        fields: ["wheelbase", "material", "plate thickness", "mass", "CAD artifact"],
-        note: "Filled in when the frame CAD workflow (PB-774) produces a source artifact.",
+        fields: ["material", "mass"],
+        note: "Wheelbase (225 mm), plate thickness (5 mm) and standoffs (30 mm) are design values in library/cad/params.ts; material and mass come with a real frame design (PB-774).",
       },
     },
   ],
 
   artifacts: [],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775). Frame coordinates: X forward, Y left, Z up, origin at the
+// stack centre on the underside of the bottom plate. Motor pads are raised
+// 0.5 mm so the frame side of each motor face is its own planar face.
+// ---------------------------------------------------------------------------
+
+export const QUADCOPTER_5IN_FRAME: ModuleDef = withGeometry(
+  QUADCOPTER_5IN_FRAME_BASE,
+  {
+    stack_mount: {
+      frame: { origin: [0, 0, 5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("stack_mount", { area_mm2: 201.062, centroid: [0.0, 0.0, 2.5] }), own("stack_mount"), procedural("bolt_pattern")],
+    },
+    motor_mount_fl: {
+      frame: { origin: [79.55, 79.55, 5.5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("motor_mount_fl", { area_mm2: 309.478, centroid: [79.55, 79.55, 5.5], normal: [0.0, 0.0, 1.0] }), own("motor_mount_fl"), feature("motor_mount_fl", undefined, "cad_kcl"), procedural("bolt_pattern")],
+    },
+    motor_mount_fr: {
+      frame: { origin: [79.55, -79.55, 5.5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("motor_mount_fr", { area_mm2: 309.478, centroid: [79.55, -79.55, 5.5], normal: [0.0, 0.0, 1.0] }), own("motor_mount_fr"), feature("motor_mount_fr", undefined, "cad_kcl"), procedural("bolt_pattern")],
+    },
+    motor_mount_rl: {
+      frame: { origin: [-79.55, 79.55, 5.5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("motor_mount_rl", { area_mm2: 309.478, centroid: [-79.55, 79.55, 5.5], normal: [0.0, 0.0, 1.0] }), own("motor_mount_rl"), feature("motor_mount_rl", undefined, "cad_kcl"), procedural("bolt_pattern")],
+    },
+    motor_mount_rr: {
+      frame: { origin: [-79.55, -79.55, 5.5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("motor_mount_rr", { area_mm2: 309.478, centroid: [-79.55, -79.55, 5.5], normal: [0.0, 0.0, 1.0] }), own("motor_mount_rr"), feature("motor_mount_rr", undefined, "cad_kcl"), procedural("bolt_pattern")],
+    },
+    camera_mount: {
+      frame: { origin: [50.0, 0, 15.0], normal: [0, -1, 0], xAxis: [1, 0, 0] },
+      refs: [feature("camera_mount", { area_mm2: 872.397, centroid: [50.0, 0.0, 16.009] }), own("camera_mount")],
+    },
+    gps_mount: {
+      frame: { origin: [-52.0, 0, 37.0], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("gps_mount", { area_mm2: 55.292, centroid: [-52.0, 0.0, 36.0] }), own("gps_mount"), procedural("bolt_pattern")],
+    },
+    vtx_mount: {
+      frame: { origin: [-45.0, 0, 5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("vtx_mount", { area_mm2: 138.23, centroid: [-45.0, 0.0, 2.5] }), own("vtx_mount"), procedural("bolt_pattern")],
+    },
+  },
+  [
+    ...cadArtifacts({
+      dir: "library/systems/quadcopter-5in/artifacts/cad",
+      name: "quadcopter-5in-frame",
+      generator: "library/cad/py/frame.py",
+      tool: "build123d 0.13.0",
+      interfaces: ["stack_mount", "motor_mount_fl", "motor_mount_fr", "motor_mount_rl", "motor_mount_rr", "camera_mount", "gps_mount", "vtx_mount"],
+    }),
+    {
+      id: "cad_kcl",
+      name: "Frame bottom plate (KCL)",
+      type: "cad",
+      role: "source",
+      format: "kcl",
+      units: "mm",
+      filePath: "library/cad/kcl/frame.kcl",
+      description: "KCL bottom plate; each motor pad's top face is tagged with its interface id ($motor_mount_fl, …).",
+      provenance: { tool: "Zoo KCL" },
+    },
+  ],
+);
+
+/** Where the battery sits on the top plate: not an interface (the pack is strapped), used to place it. */
+export const BATTERY_PAD = { origin: [7.5, 0, 37] as [number, number, number], normal: [0, 0, 1] as [number, number, number], xAxis: [1, 0, 0] as [number, number, number] };

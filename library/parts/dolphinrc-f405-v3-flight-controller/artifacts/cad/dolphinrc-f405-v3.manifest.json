@@ -1,0 +1,18 @@
+{
+  "artifact": "dolphinrc-f405-v3",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "0d1608aadeb95221f497a504937bf34a6876610adc5dee1383f4a99070327185",
+  "units": "mm",
+  "features": {
+    "stack_mount": {
+      "area_mm2": 80.425,
+      "centroid": [
+        0.0,
+        0.0,
+        0.8
+      ],
+      "faces": 4
+    }
+  }
+}

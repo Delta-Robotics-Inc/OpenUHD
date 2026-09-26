@@ -1,0 +1,162 @@
+{
+  "stack_mount": {
+    "origin": [
+      0,
+      0,
+      5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "vtx_mount": {
+    "origin": [
+      -45.0,
+      0,
+      5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "gps_mount": {
+    "origin": [
+      -52.0,
+      0,
+      37.0
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "camera_mount": {
+    "origin": [
+      50.0,
+      0,
+      15.0
+    ],
+    "normal": [
+      0,
+      -1,
+      0
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ]
+  },
+  "motor_mount_fl": {
+    "origin": [
+      79.55,
+      79.55,
+      5.5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "motor_mount_fr": {
+    "origin": [
+      79.55,
+      -79.55,
+      5.5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "motor_mount_rl": {
+    "origin": [
+      -79.55,
+      79.55,
+      5.5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "motor_mount_rr": {
+    "origin": [
+      -79.55,
+      -79.55,
+      5.5
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ],
+    "symmetryDeg": 90
+  },
+  "_battery_pad": {
+    "origin": [
+      7.5,
+      0,
+      37.0
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "xAxis": [
+      1,
+      0,
+      0
+    ]
+  }
+}

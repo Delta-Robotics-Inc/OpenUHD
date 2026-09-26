@@ -1,0 +1,18 @@
+{
+  "artifact": "dji-o4-camera",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "90fd6f426fe555e032ab5b21c158f1f3e1086f8d825542b381be0032d8aa73e6",
+  "units": "mm",
+  "features": {
+    "camera_mount": {
+      "area_mm2": 443.52,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 2
+    }
+  }
+}

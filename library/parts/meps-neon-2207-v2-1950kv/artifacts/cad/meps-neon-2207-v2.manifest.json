@@ -1,0 +1,74 @@
+{
+  "artifact": "meps-neon-2207-v2",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "899b37b00ee9fc2612c66e0b35e58e306139c53ad3ebaf04d2b0843b8da244cd",
+  "units": "mm",
+  "features": {
+    "base_mount": {
+      "area_mm2": 524.646,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "shaft": {
+      "area_mm2": 193.208,
+      "centroid": [
+        0.0,
+        0.0,
+        25.45
+      ],
+      "faces": 1
+    },
+    "phases_a": {
+      "area_mm2": 2.011,
+      "centroid": [
+        25.15,
+        -2.2,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "phases_b": {
+      "area_mm2": 2.011,
+      "centroid": [
+        25.15,
+        0.0,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "phases_c": {
+      "area_mm2": 2.011,
+      "centroid": [
+        25.15,
+        2.2,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

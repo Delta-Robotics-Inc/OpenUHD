@@ -194,8 +194,9 @@
       "bulk_cap"
     ],
     "source": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1259.pdf",
-    "assumptions": 0,
-    "openGaps": 0
+    "verification": "audited 17/18",
+    "assumptions": 2,
+    "openGaps": 3
   },
   {
     "line": 13,

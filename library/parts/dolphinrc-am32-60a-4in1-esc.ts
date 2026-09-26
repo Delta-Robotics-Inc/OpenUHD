@@ -53,6 +53,7 @@ import {
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   manual:
@@ -233,7 +234,7 @@ const mount = withTraits(
 // Module
 // ---------------------------------------------------------------------------
 
-export const DOLPHINRC_AM32_60A_4IN1_ESC: ModuleDef = defineModule({
+const DOLPHINRC_AM32_60A_4IN1_ESC_BASE: ModuleDef = defineModule({
   id: "dolphinrc-am32-60a-4in1-esc",
   name: "DolphinRC AM32 60A 4-in-1 ESC",
   version: "1.0.0",
@@ -365,3 +366,45 @@ export const DOLPHINRC_AM32_60A_4IN1_ESC: ModuleDef = defineModule({
     },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const DOLPHINRC_AM32_60A_4IN1_ESC: ModuleDef = withGeometry(
+  DOLPHINRC_AM32_60A_4IN1_ESC_BASE,
+  {
+    stack_mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("stack_mount", { area_mm2: 80.425, centroid: [0.0, 0.0, 0.8] }), own("stack_mount"), procedural("bolt_pattern")],
+    },
+    // Motor pads: geometry on the parent (three pads as one feature), unlike
+    // the motor, whose leads are bound per phase leaf.
+    motor_1: {
+      frame: { origin: [-20.0, -13.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_1", { area_mm2: 25.2, centroid: [-20.0, -13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1"), procedural("pad")],
+    },
+    motor_2: {
+      frame: { origin: [20.0, -13.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_2", { area_mm2: 25.2, centroid: [20.0, -13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2"), procedural("pad")],
+    },
+    motor_3: {
+      frame: { origin: [-20.0, 13.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_3", { area_mm2: 25.2, centroid: [-20.0, 13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3"), procedural("pad")],
+    },
+    motor_4: {
+      frame: { origin: [20.0, 13.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_4", { area_mm2: 25.2, centroid: [20.0, 13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4"), procedural("pad")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/dolphinrc-am32-60a-4in1-esc/artifacts/cad",
+    name: "dolphinrc-am32-60a",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["stack_mount", "motor_1", "motor_2", "motor_3", "motor_4"],
+  }),
+);

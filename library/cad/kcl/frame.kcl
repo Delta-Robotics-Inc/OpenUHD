@@ -1,0 +1,91 @@
+// Custom 5-inch frame bottom plate — the module whose CAD is derived from its
+// UHD interfaces. Every mount is placed from a UHD bolt pattern (params.kcl),
+// and each motor pad's top face is tagged with the UHD interface id, so the
+// binding { kind: "feature", artifact: "cad_kcl", name: "motor_mount_fl" }
+// is the tag itself.
+@settings(defaultLengthUnit = mm)
+
+import frameWheelbase, framePlateThickness, frameArmWidth, frameMotorBoltCircle, frameStackSpacing from "params.kcl"
+
+half = frameWheelbase / 2 / sqrt(2)
+boss = 0.5
+
+body = startSketchOn(XY)
+  |> rectangle(center = [-1.5, 0], width = 127, height = 56)
+  |> extrude(length = framePlateThickness)
+
+fn arm(@angle) {
+  length = frameWheelbase / 2
+  return startSketchOn(XY)
+    |> startProfile(at = [0, -frameArmWidth / 2])
+    |> line(end = [length, 0])
+    |> line(end = [0, frameArmWidth])
+    |> line(end = [-length, 0])
+    |> close()
+    |> extrude(length = framePlateThickness)
+    |> rotate(yaw = angle)
+}
+
+fn motorPad(@at, tag) {
+  return startSketchOn(offsetPlane(XY, offset = framePlateThickness))
+    |> circle(center = at, radius = 11)
+    |> extrude(length = boss, tagEnd = tag)
+}
+
+fn motorHoles(@at) {
+  r = frameMotorBoltCircle / 2
+  return startSketchOn(XY)
+    |> circle(
+         center = [
+           at[0] + r * cos(45deg),
+           at[1] + r * sin(45deg)
+         ],
+         radius = 1.6,
+       )
+    |> extrude(length = framePlateThickness + boss)
+    |> patternCircular3d(
+         instances = 4,
+         axis = Z,
+         center = [at[0], at[1], 0],
+         arcDegrees = 360deg,
+         rotateDuplicates = false,
+       )
+}
+
+fn stackHole(@at) {
+  return startSketchOn(XY)
+    |> circle(center = at, radius = 1.6)
+    |> extrude(length = framePlateThickness)
+}
+
+s = frameStackSpacing / 2
+plate = union([
+  body,
+  arm(45deg),
+  arm(135deg),
+  arm(-135deg),
+  arm(-45deg)
+])
+
+// Each pad's top face is tagged with its UHD interface id.
+padFl = motorPad([half, half], tag = $motor_mount_fl)
+padFr = motorPad([half, -half], tag = $motor_mount_fr)
+padRl = motorPad([-half, half], tag = $motor_mount_rl)
+padRr = motorPad([-half, -half], tag = $motor_mount_rr)
+
+holes = [
+  motorHoles([half, half]),
+  motorHoles([half, -half]),
+  motorHoles([-half, half]),
+  motorHoles([-half, -half]),
+  stackHole([s, s]),
+  stackHole([s, -s]),
+  stackHole([-s, s]),
+  stackHole([-s, -s])
+]
+frame = subtract(
+  [
+    union([plate, padFl, padFr, padRl, padRr])
+  ],
+  tools = holes,
+)

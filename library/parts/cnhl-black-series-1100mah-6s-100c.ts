@@ -58,6 +58,7 @@ import {
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product:
@@ -199,7 +200,7 @@ const balanceLead = {
 // Module
 // ---------------------------------------------------------------------------
 
-export const CNHL_BLACK_SERIES_1100MAH_6S_100C: ModuleDef = defineModule({
+const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
   id: "cnhl-black-series-1100mah-6s-100c",
   name: "CNHL Black Series 1100mAh 6S 22.2V 100C LiPo (XT60)",
   version: "1.0.0",
@@ -309,3 +310,24 @@ export const CNHL_BLACK_SERIES_1100MAH_6S_100C: ModuleDef = defineModule({
     },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const CNHL_BLACK_SERIES_1100MAH_6S_100C: ModuleDef = withGeometry(
+  CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE,
+  {},
+  // Body only: the pack has no mechanical interface (it is strapped), so it
+  // cannot be placed from links — see "unlinked modules" in the spec.
+  cadArtifacts({
+    dir: "library/parts/cnhl-black-series-1100mah-6s-100c/artifacts/cad",
+    name: "cnhl-1100-6s",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: [],
+  }),
+);

@@ -22,3 +22,7 @@ npm-debug.log*
 
 # Part research working memory (skills/uhd-part-research)
 library/parts/*/.research/
+
+.venv-cad/
+library/parts/*/artifacts/cad/vendor/
+__pycache__/

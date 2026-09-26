@@ -76,6 +76,7 @@ import {
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   manual:
@@ -476,7 +477,7 @@ const mount = withTraits(
 // Module
 // ---------------------------------------------------------------------------
 
-export const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER: ModuleDef = defineModule({
+const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER_BASE: ModuleDef = defineModule({
   id: "dolphinrc-f405-v3-flight-controller",
   name: "DolphinRC F405 V3 Flight Controller",
   version: "1.0.0",
@@ -622,3 +623,29 @@ export const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER: ModuleDef = defineModule({
     },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER: ModuleDef = withGeometry(
+  DOLPHINRC_F405_V3_FLIGHT_CONTROLLER_BASE,
+  {
+    stack_mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("stack_mount", { area_mm2: 80.425, centroid: [0.0, 0.0, 0.8] }), own("stack_mount"), procedural("bolt_pattern")],
+    },
+    // Electrical interfaces (UARTs, I2C, BEC pads) are not modelled yet and
+    // report as unmapped; USB is where a cable plugs in but has no geometry.
+  },
+  cadArtifacts({
+    dir: "library/parts/dolphinrc-f405-v3-flight-controller/artifacts/cad",
+    name: "dolphinrc-f405-v3",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["stack_mount"],
+  }),
+);

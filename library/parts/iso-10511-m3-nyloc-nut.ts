@@ -28,13 +28,14 @@
  */
 import type { ModuleDef } from "../../src/types/index.js";
 import { connectorTrait, defineModule, fastenerDiameterMm } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product: "https://www.westfieldfasteners.co.uk/Metric-Nuts/Nyloc-Nut-Type-T-Thin-M3-A2-Stainless.html",
   spec: "https://www.westfieldfasteners.co.uk/Standards/Nut-HexNy-M.pdf",
 } as const;
 
-export const ISO_10511_M3_NYLOC_NUT: ModuleDef = defineModule({
+const ISO_10511_M3_NYLOC_NUT_BASE: ModuleDef = defineModule({
   id: "iso-10511-m3-nyloc-nut",
   name: "M3 nyloc nut, ISO 10511 / DIN 985 Type T, A2 stainless",
   version: "1.0.0",
@@ -143,3 +144,27 @@ export const ISO_10511_M3_NYLOC_NUT: ModuleDef = defineModule({
     { id: "art_spec", name: "Westfield DIN 985 nyloc nut specification", type: "datasheet", url: SRC.spec },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const ISO_10511_M3_NYLOC_NUT: ModuleDef = withGeometry(
+  ISO_10511_M3_NYLOC_NUT_BASE,
+  {
+    thread: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1] },
+      refs: [feature("thread", { area_mm2: 37.699, centroid: [0.0, 0.0, 2.0] }), own("thread")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/iso-10511-m3-nyloc-nut/artifacts/cad",
+    name: "iso-10511-m3-nyloc",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["thread"],
+  }),
+);

@@ -1,0 +1,87 @@
+{
+  "source": "UHD library (library/parts, library/systems/quadcopter-5in) via library/cad/params.ts",
+  "motor": {
+    "diameter": 28.3,
+    "body_height": 19.3,
+    "overall_height": 31.6,
+    "shaft_diameter": 5,
+    "shaft_thread_length": 8,
+    "base_bolt_circle": 16,
+    "base_holes": 4,
+    "base_fastener": 3
+  },
+  "prop": {
+    "diameter": 127,
+    "hub_diameter": 12.8,
+    "hub_thickness": 6,
+    "bore": 5,
+    "blades": 3
+  },
+  "frame": {
+    "wheelbase": 225,
+    "plate_thickness": 5,
+    "arm_width": 14,
+    "motor_bolt_circle": 16,
+    "motor_fastener": 3,
+    "stack_spacing": 30.5,
+    "stack_fastener": 3,
+    "gps_spacing": 26,
+    "gps_fastener": 2,
+    "vtx_spacing": 25.5,
+    "vtx_fastener": 2,
+    "camera_spacing": 16,
+    "camera_width": 14,
+    "camera_fastener": 2,
+    "prop_clearance": 32.09902576697317
+  },
+  "esc": {
+    "length": 45,
+    "width": 41,
+    "height": 6,
+    "hole_spacing": 30.5,
+    "hole_diameter": 4
+  },
+  "fc": {
+    "length": 36,
+    "width": 36,
+    "height": 8,
+    "hole_spacing": 30.5,
+    "hole_diameter": 4
+  },
+  "gnss": {
+    "length": 32,
+    "width": 32,
+    "height": 10,
+    "hole_spacing": 26
+  },
+  "o4": {
+    "module": {
+      "length": 30,
+      "width": 30,
+      "height": 6,
+      "hole_spacing": 25.5,
+      "hole_diameter": 2.6
+    },
+    "camera": {
+      "length": 13.44,
+      "width": 12.36,
+      "height": 16.5,
+      "face_width": 13.1,
+      "lens_diameter": 8.5
+    }
+  },
+  "battery": {
+    "length": 75,
+    "width": 39.5,
+    "height": 35
+  },
+  "fasteners": {
+    "screw_length": 30,
+    "screw_diameter": 3,
+    "nut_height": 4,
+    "nut_across_flats": 5.5,
+    "spacer_length": 6,
+    "spacer_od": 6,
+    "spacer_id": 3.4
+  }
+}

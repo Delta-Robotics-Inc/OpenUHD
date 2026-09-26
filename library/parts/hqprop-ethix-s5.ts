@@ -32,6 +32,7 @@
  */
 import type { ModuleDef } from "../../src/types/index.js";
 import { defineModule, Shaft } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product: "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html",
@@ -68,7 +69,7 @@ hubBore.traits = [
   },
 ];
 
-export const HQPROP_ETHIX_S5: ModuleDef = defineModule({
+const HQPROP_ETHIX_S5_BASE: ModuleDef = defineModule({
   id: "hqprop-ethix-s5",
   name: "HQProp Ethix S5 5x4x3 Propeller",
   version: "1.0.0",
@@ -137,3 +138,27 @@ export const HQPROP_ETHIX_S5: ModuleDef = defineModule({
     { id: "art_rdq", name: "RaceDayQuads listing (distributor)", type: "documentation", url: SRC.rdq },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const HQPROP_ETHIX_S5: ModuleDef = withGeometry(
+  HQPROP_ETHIX_S5_BASE,
+  {
+    hub_bore: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 120 },
+      refs: [feature("hub_bore", { area_mm2: 94.248, centroid: [0.0, 0.0, 3.0] }), own("hub_bore"), procedural("shaft")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/hqprop-ethix-s5/artifacts/cad",
+    name: "hqprop-ethix-s5",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["hub_bore"],
+  }),
+);

@@ -1,0 +1,101 @@
+{
+  "artifact": "quadcopter-5in-frame",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "cac5bc2cc08fb63959cd5fe93f54f2e8824f015a32f43b116f8661f602ceaa18",
+  "units": "mm",
+  "features": {
+    "motor_mount_fl": {
+      "area_mm2": 309.478,
+      "centroid": [
+        79.55,
+        79.55,
+        5.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_mount_fr": {
+      "area_mm2": 309.478,
+      "centroid": [
+        79.55,
+        -79.55,
+        5.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_mount_rl": {
+      "area_mm2": 309.478,
+      "centroid": [
+        -79.55,
+        79.55,
+        5.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_mount_rr": {
+      "area_mm2": 309.478,
+      "centroid": [
+        -79.55,
+        -79.55,
+        5.5
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "stack_mount": {
+      "area_mm2": 201.062,
+      "centroid": [
+        0.0,
+        0.0,
+        2.5
+      ],
+      "faces": 4
+    },
+    "vtx_mount": {
+      "area_mm2": 138.23,
+      "centroid": [
+        -45.0,
+        0.0,
+        2.5
+      ],
+      "faces": 4
+    },
+    "gps_mount": {
+      "area_mm2": 55.292,
+      "centroid": [
+        -52.0,
+        0.0,
+        36.0
+      ],
+      "faces": 4
+    },
+    "camera_mount": {
+      "area_mm2": 872.397,
+      "centroid": [
+        50.0,
+        0.0,
+        16.009
+      ],
+      "faces": 2
+    }
+  }
+}

@@ -22,6 +22,7 @@
  */
 import type { ModuleDef } from "../../src/types/index.js";
 import { connectorTrait, defineModule, fastenerDiameterMm } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product: "https://www.ettinger.de/en/p/round-spacer-oe3.4-6.0-x-6.0-pa-gf-black/005.83.060",
@@ -29,7 +30,7 @@ const SRC = {
   drawing: "https://www.ettinger.de/media/26/33/c4/1747222703/Z00583060_8fa8bd.JPG",
 } as const;
 
-export const ETTINGER_005_83_060_M3_NYLON_SPACER_6MM: ModuleDef = defineModule({
+const ETTINGER_005_83_060_M3_NYLON_SPACER_6MM_BASE: ModuleDef = defineModule({
   id: "ettinger-005-83-060-m3-nylon-spacer-6mm",
   name: "ETTINGER 005.83.060 M3 round spacer 6 mm, PA6 GF25",
   version: "1.0.0",
@@ -131,3 +132,27 @@ export const ETTINGER_005_83_060_M3_NYLON_SPACER_6MM: ModuleDef = defineModule({
     { id: "art_drawing", name: "ETTINGER 005.83.060 technical sketch", type: "cad", url: SRC.drawing },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const ETTINGER_005_83_060_M3_NYLON_SPACER_6MM: ModuleDef = withGeometry(
+  ETTINGER_005_83_060_M3_NYLON_SPACER_6MM_BASE,
+  {
+    bore: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1] },
+      refs: [feature("bore", { area_mm2: 64.088, centroid: [0.0, 0.0, 3.0] }), own("bore")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/ettinger-005-83-060-m3-nylon-spacer-6mm/artifacts/cad",
+    name: "ettinger-spacer-6mm",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["bore"],
+  }),
+);

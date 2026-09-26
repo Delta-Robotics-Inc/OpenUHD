@@ -77,6 +77,12 @@ export interface InterfaceLink {
   childLinks?: ChildLink[];
   /** Child id of the harness module carrying this link, if any. */
   harness?: string;
+  /**
+   * How the two interfaces' geometry frames meet in an assembly: `gapMm`
+   * along A's normal (spacers, standoffs, washers), `rotationDeg` about it
+   * (within the frames' symmetry). Absent: faces touch, x-axes aligned.
+   */
+  mate?: { gapMm?: number; rotationDeg?: number };
 }
 
 /** Optional presentation hints. Per-project layout lives outside UHD. */

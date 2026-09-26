@@ -29,6 +29,7 @@
  */
 import type { ModuleDef } from "../../src/types/index.js";
 import { connectorTrait, defineModule, fastenerDiameterMm } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product:
@@ -36,7 +37,7 @@ const SRC = {
   spec: "https://www.westfieldfasteners.co.uk/Datasheets/ScrewBolt_SHCap_M.pdf",
 } as const;
 
-export const ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW: ModuleDef = defineModule({
+const ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW_BASE: ModuleDef = defineModule({
   id: "iso-4762-m3x30-socket-head-cap-screw",
   name: "M3 x 30 mm socket head cap screw, ISO 4762, A2 stainless",
   version: "1.0.0",
@@ -139,3 +140,27 @@ export const ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW: ModuleDef = defineModule({
     { id: "art_spec", name: "Westfield socket head cap screw specification (DIN 912 / ISO 4762)", type: "datasheet", url: SRC.spec },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW: ModuleDef = withGeometry(
+  ISO_4762_M3X30_SOCKET_HEAD_CAP_SCREW_BASE,
+  {
+    thread: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1] },
+      refs: [feature("thread", { area_mm2: 282.743, centroid: [0.0, 0.0, 15.0] }), own("thread")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/iso-4762-m3x30-socket-head-cap-screw/artifacts/cad",
+    name: "iso-4762-m3x30",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["thread"],
+  }),
+);

@@ -78,8 +78,10 @@ export const QUADCOPTER_5IN: ModuleDef = {
     ]),
 
     // Stack to frame
-    link("stack_mount", "ESC on frame", ["stack", "stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware" }),
-    link("fc_mount", "FC on frame", ["stack", "fc_stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware" }),
+    // Gaps are the stack-up along the M3 screws, PCB to PCB: 6 mm spacer, ESC
+    // PCB (1.6 mm), 6 mm spacer, FC. Both boards mate to the frame's pattern.
+    link("stack_mount", "ESC on frame", ["stack", "stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 6 } }),
+    link("fc_mount", "FC on frame", ["stack", "fc_stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 13.6 } }),
 
     // Receiver: CRSF on UART2, powered from the 5 V BEC
     link("rx_crsf", "CRSF", ["stack", "uart2"], ["receiver", "crsf"]),
@@ -98,7 +100,8 @@ export const QUADCOPTER_5IN: ModuleDef = {
     link("gnss_i2c", "Compass", ["stack", "i2c1"], ["gnss", "i2c_compass"]),
     link("gnss_power", "GPS 4.5V", ["stack", "rail_4v5"], ["gnss", "vin_5v"]),
     link("gnss_gnd", "GPS GND", ["stack", "gnd"], ["gnss", "gnd"]),
-    link("gps_mount", "GPS mount", ["gnss", "mount"], ["frame", "gps_mount"]),
+    // 5 mm standoffs: the GH6P sockets stand 4.35 mm proud of the component side (vendor STEP)
+    link("gps_mount", "GPS mount", ["gnss", "mount"], ["frame", "gps_mount"], { mate: { gapMm: 5 } }),
   ],
 };
 

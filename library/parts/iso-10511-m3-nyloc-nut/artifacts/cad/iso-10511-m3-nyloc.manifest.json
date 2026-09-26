@@ -1,0 +1,18 @@
+{
+  "artifact": "iso-10511-m3-nyloc",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "90fd6f426fe555e032ab5b21c158f1f3e1086f8d825542b381be0032d8aa73e6",
+  "units": "mm",
+  "features": {
+    "thread": {
+      "area_mm2": 37.699,
+      "centroid": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "faces": 1
+    }
+  }
+}

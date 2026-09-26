@@ -39,9 +39,9 @@
  *     Recorded as a source_discrepancy trait. 100/400 kHz from both QST
  *     datasheets.
  *   - Mounting: BoltPattern from the dimension image (26 mm spacing, Φ2 mm
- *     holes, 4 corners). Only one 26 mm dimension is drawn and no fastener is
- *     named, so the square shape and the 2 mm fastener diameter are
- *     `assumption` traits.
+ *     holes, 4 corners). The square shape is confirmed by Matek's STEP
+ *     (PB-775); no fastener is named, so the 2 mm fastener diameter is an
+ *     `assumption` trait.
  *   - No logic-level voltage on TX/RX/DA/CL and no pull-up claim: not stated
  *     (data gap).
  *   - LEDs have no interface vocabulary; they are usage_notes (gaps.json).
@@ -57,6 +57,7 @@ import {
   BoltPattern,
   connectorTrait,
 } from "../../src/protocols/index.js";
+import { feature, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product: "https://www.mateksys.com/?portfolio=m9n-5883",
@@ -64,6 +65,7 @@ const SRC = {
   imgDims: "https://www.mateksys.com/wp-content/uploads/2020/10/M9N-5883_2.jpg",
   gnssList: "https://www.mateksys.com/?page_id=2849",
   discontinued: "https://www.mateksys.com/?page_id=2853",
+  step: "https://www.mateksys.com/Downloads/other/M9N-5883_step.zip",
   qmc5883l:
     "https://www.qstcorp.com/upload/pdf/202512/13-52-04%20QMC5883L%20Datasheet%20Rev.%20B.pdf",
   qmc5883p: "https://www.qstcorp.com/upload/pdf/202512/2C939E5AA0704285BC3BE71132B8629B.pdf",
@@ -237,12 +239,10 @@ const mount = withTraits(
   }),
   [
     {
-      type: "assumption",
+      type: "usage_note",
       params: {
-        field: "hole pattern shape",
-        value: "square 26 x 26 mm",
-        reason: "The dimension image draws only one 26 mm spacing; the board is 32 x 32 mm with symmetric corner holes.",
-        source: SRC.imgDims,
+        note: "Hole pattern confirmed by Matek's STEP (PB-775): four Φ2.1 mm holes at (±13, ±13) mm, a 26 x 26 mm square centred on the 32 x 32 mm board. Previously an assumption from the single 26 mm dimension on the drawing.",
+        source: SRC.step,
       },
     },
     {
@@ -261,7 +261,7 @@ const mount = withTraits(
 // Module
 // ---------------------------------------------------------------------------
 
-export const MATEK_M9N_5883: ModuleDef = defineModule({
+const MATEK_M9N_5883_BASE: ModuleDef = defineModule({
   id: "matek-m9n-5883",
   name: "Matek M9N-5883 GNSS & Compass",
   version: "1.0.0",
@@ -402,3 +402,86 @@ export const MATEK_M9N_5883: ModuleDef = defineModule({
     { id: "art_qmc5883l", name: "QST QMC5883L datasheet Rev B", type: "datasheet", url: SRC.qmc5883l },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775), direction "vendor": bound to the manufacturer's own STEP
+// by the names Matek gave its components. Nothing is modelled here; the
+// STEP is not committed (redistribution terms not stated) and is fetched by
+// the part research into .research/cad. library/cad/py/gnss_vendor.py
+// converts it for viewers and writes the committed manifest, so bindings can
+// be checked without the vendor file.
+//
+// Vendor CAD evidence (M9N-5883_step.zip): 32 x 32 x 0.62 mm board, 4 x Φ2.1
+// holes on a 26 x 26 mm square centred on the board, R3 corners; patch
+// antenna on the underside (-Z), components and both JST-GH-6P sockets on
+// +Z reaching 4.35 mm. So the module mounts component side down, antenna up,
+// on >= 4.5 mm standoffs.
+// ---------------------------------------------------------------------------
+
+export const MATEK_M9N_5883: ModuleDef = withGeometry(
+  MATEK_M9N_5883_BASE,
+  {
+    // Normal +Z is the component side facing the frame. No symmetryDeg: the
+    // hole square repeats every 90° but the compass does not — rotating the
+    // module changes Betaflight align_mag.
+    mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, 1], xAxis: [1, 0, 0] },
+      refs: [
+        feature("mount", { area_mm2: 16.46, centroid: [0.0, 0.0, -0.312] }, "cad_vendor_step"),
+        { kind: "artifact", artifact: "cad_vendor_if_mount" },
+        procedural("bolt_pattern"),
+      ],
+    },
+    // Both sockets carry the same six signals (5V RX TX CL DA G), so each
+    // interface on them has two alternative physical locations.
+    uart_gnss: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    i2c_compass: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    vin_5v: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    gnd: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+  },
+  [
+    {
+      id: "cad_vendor_step",
+      name: "M9N-5883 STEP (Matek)",
+      type: "3d_model",
+      role: "source",
+      format: "step",
+      units: "mm",
+      url: SRC.step,
+      filePath: "library/parts/matek-m9n-5883/.research/cad/M9N-5883.step",
+      description: "Manufacturer STEP with named components (Board, GH6P-1, GH6P-2, MAG, ANTENNA, GPS, …). Not committed.",
+      provenance: { tool: "manufacturer", sourceDigest: "0b3cb5cd696a2982639e4c7bc7bd24bb720b7a4fc0e2f60d088e5903134e5272" },
+    },
+    {
+      id: "cad_vendor_glb",
+      name: "M9N-5883 (GLB)",
+      type: "3d_model",
+      role: "body",
+      format: "glb",
+      units: "m",
+      filePath: "library/parts/matek-m9n-5883/artifacts/cad/vendor/M9N-5883.glb",
+      description: "Converted locally from the vendor STEP by library/cad/py/gnss_vendor.py (gitignored).",
+      provenance: { generatedFrom: "cad_vendor_step", tool: "build123d 0.13.0" },
+    },
+    {
+      id: "cad_vendor_manifest",
+      name: "M9N-5883 vendor component manifest",
+      type: "cad",
+      role: "source",
+      format: "json",
+      filePath: "library/parts/matek-m9n-5883/artifacts/cad/matek-m9n-5883-vendor.manifest.json",
+      provenance: { generatedFrom: "cad_vendor_step", tool: "build123d 0.13.0" },
+    },
+    {
+      id: "cad_vendor_if_mount",
+      name: "mount geometry",
+      type: "3d_model",
+      role: "interface",
+      interfaceId: "mount",
+      format: "glb",
+      units: "m",
+      filePath: "library/parts/matek-m9n-5883/artifacts/cad/vendor/interfaces/mount.glb",
+      provenance: { generatedFrom: "cad_vendor_step", tool: "build123d 0.13.0" },
+    },
+  ],
+);

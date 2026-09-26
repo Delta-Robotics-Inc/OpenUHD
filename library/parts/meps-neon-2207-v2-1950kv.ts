@@ -44,6 +44,7 @@ import {
   cellCount,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   product: "https://www.mepsking.shop/neon-2207-fpv-brushless-motor.html",
@@ -159,7 +160,7 @@ const shaft = Shaft({
 // Module
 // ---------------------------------------------------------------------------
 
-export const MEPS_NEON_2207_V2_1950KV: ModuleDef = defineModule({
+const MEPS_NEON_2207_V2_1950KV_BASE: ModuleDef = defineModule({
   id: "meps-neon-2207-v2-1950kv",
   name: "MEPS NEON 2207 V2 1950KV Brushless Motor",
   version: "1.0.0",
@@ -263,3 +264,78 @@ export const MEPS_NEON_2207_V2_1950KV: ModuleDef = defineModule({
     { id: "art_test_data", name: "NEON 2207 V2 thrust test data", type: "datasheet", url: SRC.test },
   ],
 });
+
+// ---------------------------------------------------------------------------
+// Geometry (PB-775): representative CAD generated from this definition's own
+// dimensions by library/cad/py/parts.py — not manufacturer CAD. Frames are in
+// the body's coordinates (mm); refs list D1 feature, D2 own artifact, D3
+// procedural, in that order. See docs/geometry-artifacts.md.
+// ---------------------------------------------------------------------------
+
+export const MEPS_NEON_2207_V2_1950KV: ModuleDef = withGeometry(
+  MEPS_NEON_2207_V2_1950KV_BASE,
+  {
+    // The motor face. Origin: bolt-circle centre on the base; normal: out of
+    // the base (the arm approaches from -Z); xAxis: toward hole #1 is at 45°
+    // from it, and the 4-hole pattern repeats every 90°.
+    base_mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [
+        feature("base_mount", { area_mm2: 524.646, centroid: [0.0, 0.0, 0.0], normal: [0.0, 0.0, -1.0] }),
+        own("base_mount"),
+        feature("baseMount", undefined, "cad_kcl"),
+        { kind: "artifact", artifact: "cad_kcl_base_mount" },
+        procedural("bolt_pattern"),
+      ],
+    },
+    // Where the propeller seats: top of the bell, shaft axis +Z.
+    shaft: {
+      frame: { origin: [0, 0, 19.3], normal: [0, 0, 1], xAxis: [1, 0, 0] },
+      refs: [feature("shaft", { area_mm2: 193.208, centroid: [0.0, 0.0, 25.45] }), own("shaft"), procedural("shaft")],
+    },
+    // "phases" has no geometry of its own: it resolves to its three leads.
+    phases_a: {
+      frame: { origin: [25.15, -2.2, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_a", { area_mm2: 2.011, centroid: [25.15, -2.2, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_a")],
+    },
+    phases_b: {
+      frame: { origin: [25.15, 0, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_b", { area_mm2: 2.011, centroid: [25.15, 0.0, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_b")],
+    },
+    phases_c: {
+      frame: { origin: [25.15, 2.2, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_c", { area_mm2: 2.011, centroid: [25.15, 2.2, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_c")],
+    },
+  },
+  [
+    ...cadArtifacts({
+    dir: "library/parts/meps-neon-2207-v2-1950kv/artifacts/cad",
+    name: "meps-neon-2207-v2",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["base_mount", "shaft", "phases_a", "phases_b", "phases_c"],
+  }),
+    {
+      id: "cad_kcl",
+      name: "Motor (KCL)",
+      type: "cad",
+      role: "source",
+      format: "kcl",
+      units: "mm",
+      filePath: "library/cad/kcl/motor.kcl",
+      description: "KCL body; the motor face is the extrude start cap tagged $baseMount.",
+      provenance: { tool: "Zoo KCL" },
+    },
+    {
+      id: "cad_kcl_base_mount",
+      name: "Motor face (KCL)",
+      type: "cad",
+      role: "interface",
+      interfaceId: "base_mount",
+      format: "kcl",
+      units: "mm",
+      filePath: "library/cad/kcl/motor_base_mount.kcl",
+      provenance: { tool: "Zoo KCL" },
+    },
+  ],
+);
