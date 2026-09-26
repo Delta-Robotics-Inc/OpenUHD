@@ -93,6 +93,8 @@ const config: DocConfig = {
           { label: "BEC 5 V rating", q: p(F405, "bec_5v", "max_current") },
           { label: "BEC 10 V rating", q: p(F405, "bec_10v", "max_current") },
           { label: "GPS rail", q: p(F405, "rail_4v5", "voltage"), f: "d1" },
+          { label: "GPS rail fed from", q: `def:${F405}:interfaces[id=rail_4v5].traits[type=supplied_from].params.interfaceId`, sub: "assumed branch" },
+          { label: "GNSS draw", q: p(GNSS, "vin_5v", "current_draw"), f: "si" },
         ],
       },
       {

@@ -3,7 +3,8 @@
  * not one link at a time.
  *
  *   link_state          every stored link, from validateLinks
- *   supply_budget       loads on each power output vs its rating
+ *   supply_budget       loads on each power output vs its rating (branch
+ *                       rails with `supplied_from` count against their parent)
  *   propulsion_current  summed motor peak current vs battery and ESC ratings
  *   bus_address         duplicate I2C addresses on one master
  *   interface_reuse     a non-shareable interface linked more than once
@@ -16,6 +17,7 @@
 import type { InterfaceDef } from "../types/interface.js";
 import type { ModuleDef } from "../types/module.js";
 import type { Parameter } from "../types/parameter.js";
+import type { SuppliedFromTrait } from "../types/trait.js";
 import {
   boundaryInterfaces,
   validateLinks,
@@ -105,37 +107,85 @@ function powerEdges(links: LinkResult[]): PowerEdge[] {
   return out;
 }
 
+/** The `supplied_from` trait of a power output: the sibling output it branches from. */
+function suppliedFrom(iface: InterfaceDef): SuppliedFromTrait["params"] | undefined {
+  const t = iface.traits?.find((x) => x.type === "supplied_from");
+  return t ? (t.params as SuppliedFromTrait["params"]) : undefined;
+}
+
+interface SupplyGroup {
+  /** Canonical path of the source output (first link that names it), or `owner#iface` if unlinked. */
+  path: string;
+  owner: ModuleDef;
+  iface: InterfaceDef;
+  /** Loads linked directly to this output. */
+  edges: PowerEdge[];
+  /** Branch outputs whose loads this output also carries (supplied_from). */
+  branches: SupplyGroup[];
+}
+
 function supplyBudgetRule(links: LinkResult[]): SystemDiagnostic[] {
-  const bySource = new Map<string, PowerEdge[]>();
+  const groups = new Map<string, SupplyGroup>();
+  const keyOf = (owner: ModuleDef, ifaceId: string) => `${owner.id}#${ifaceId}`;
   for (const edge of powerEdges(links)) {
-    bySource.set(edge.source.path, [...(bySource.get(edge.source.path) ?? []), edge]);
+    const key = keyOf(edge.source.owner, edge.source.iface.id);
+    const g = groups.get(key) ?? { path: edge.source.path, owner: edge.source.owner, iface: edge.source.iface, edges: [], branches: [] };
+    g.edges.push(edge);
+    groups.set(key, g);
   }
+  // attach branch rails to their parent output (created if nothing links it directly)
+  for (const g of [...groups.values()]) {
+    const from = suppliedFrom(g.iface);
+    if (!from) continue;
+    const parentIface = g.owner.interfaces.find((i) => i.id === from.interfaceId);
+    if (!parentIface) continue;
+    const key = keyOf(g.owner, parentIface.id);
+    const parent = groups.get(key) ?? { path: `${g.path.split(":")[0]}:${parentIface.id}`, owner: g.owner, iface: parentIface, edges: [], branches: [] };
+    parent.branches.push(g);
+    groups.set(key, parent);
+  }
+
   const out: SystemDiagnostic[] = [];
-  for (const [sourcePath, edges] of bySource) {
-    const source = edges[0].source;
+  for (const g of groups.values()) {
+    const { path: sourcePath, iface } = g;
     // batteries feed the propulsion rule instead
-    if (param(source.iface, "cell_count")) continue;
-    const volts = nominal(param(source.iface, "voltage"));
-    const amps = toAmps(param(source.iface, "max_current"));
-    const refs = [sourcePath, ...edges.map((e) => e.load.path), ...edges.map((e) => `link:${e.link.link.id}`)];
+    if (param(iface, "cell_count")) continue;
+    const from = suppliedFrom(iface);
+    const allEdges = [...g.edges, ...g.branches.flatMap((b) => b.edges)];
+    const refs = [sourcePath, ...allEdges.map((e) => e.load.path), ...allEdges.map((e) => `link:${e.link.link.id}`), ...g.branches.map((b) => b.path)];
+    if (from && g.owner.interfaces.some((i) => i.id === from.interfaceId)) {
+      const parentPath = `${sourcePath.split(":")[0]}:${from.interfaceId}`;
+      out.push({
+        id: `supply_budget:${sourcePath}`,
+        rule: "supply_budget",
+        severity: "info",
+        message: `${sourcePath}: branch of ${parentPath}${from.via ? ` via ${from.via}` : ""}; its ${g.edges.length} load(s) are budgeted there${from.assumption ? " (assumed relation, not a cited source)" : ""}.`,
+        refs: [sourcePath, parentPath, ...g.edges.map((e) => e.load.path), ...g.edges.map((e) => `link:${e.link.link.id}`)],
+        details: { suppliedFrom: parentPath, assumption: from.assumption, source: from.source },
+      });
+      continue;
+    }
+    const volts = nominal(param(iface, "voltage"));
+    const amps = toAmps(param(iface, "max_current"));
     const unknown: string[] = [];
-    let drawA = 0;
-    let requiredW = 0;
-    for (const { load } of edges) {
+    let loadW = 0;
+    for (const { load, source } of allEdges) {
+      // each load draws at its own rail's voltage (a branch rail may sit lower)
+      const railV = nominal(param(source.iface, "voltage")) ?? volts;
       const draw = toAmps(param(load.iface, "current_draw"));
       const minW = nominal(param(load.iface, "min_supply_power"));
-      if (draw !== undefined) drawA += draw;
-      if (minW !== undefined) requiredW += minW;
+      if (minW !== undefined) loadW += minW;
+      else if (draw !== undefined && railV !== undefined) loadW += draw * railV;
       if (draw === undefined && minW === undefined) unknown.push(load.path);
     }
-    const loadW = requiredW + (volts !== undefined ? drawA * volts : 0);
+    const count = allEdges.length;
 
     if (amps === undefined || volts === undefined) {
       out.push({
         id: `supply_budget:${sourcePath}`,
         rule: "supply_budget",
         severity: "info",
-        message: `${sourcePath}: no current rating on the source, so its ${edges.length} load(s) cannot be budgeted.`,
+        message: `${sourcePath}: no current rating on the source, so its ${count} load(s) cannot be budgeted.`,
         refs,
       });
       continue;
@@ -143,16 +193,17 @@ function supplyBudgetRule(links: LinkResult[]): SystemDiagnostic[] {
     const capacityW = volts * amps;
     const ratio = loadW / capacityW;
     const severity = ratio > 1 ? "error" : ratio > 0.8 ? "warning" : "info";
+    const via = g.branches.length ? ` (including ${g.branches.map((b) => b.path).join(", ")})` : "";
     out.push({
       id: `supply_budget:${sourcePath}`,
       rule: "supply_budget",
       severity,
       message:
-        `${sourcePath}: known loads need ${fmt(loadW, "W")} of ${fmt(capacityW, "W")} (${fmt(volts, "V")} × ${fmt(amps, "A")}, ${Math.round(ratio * 100)}%)` +
+        `${sourcePath}${via}: known loads need ${fmt(loadW, "W")} of ${fmt(capacityW, "W")} (${fmt(volts, "V")} × ${fmt(amps, "A")}, ${Math.round(ratio * 100)}%)` +
         (unknown.length ? `; ${unknown.length} load(s) state no draw: ${unknown.join(", ")}` : "") +
         ".",
       refs,
-      details: { capacityW, loadW, unknownLoads: unknown },
+      details: { capacityW, loadW: Number(loadW.toFixed(4)), unknownLoads: unknown, branches: g.branches.map((b) => b.path) },
     });
   }
   return out;

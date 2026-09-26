@@ -211,10 +211,14 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     return [
       `<b>${esc(leaf?.iface.name ?? d.refs[0])}</b><br><span class="muted small">${esc(d.refs[0])}</span>`,
       leaf ? doc.v(`def:${leaf.def.id}:interfaces[id=${leaf.iface.id}].parameters[id=voltage].value`, "d1") : "—",
-      det.capacityW !== undefined ? doc.v(q("capacityW"), "u=W") : '<span class="v st-gap">—</span><sup class="mk mk-gap">—</sup>',
-      det.loadW !== undefined ? doc.v(q("loadW"), "u=W") : '<span class="v st-gap">—</span>',
+      det.capacityW !== undefined
+        ? doc.v(q("capacityW"), "u=W")
+        : det.suppliedFrom
+          ? `from ${doc.v(q("suppliedFrom"))}${det.assumption ? ' <sup class="mk mk-assumption">A</sup>' : ""}`
+          : '<span class="v st-gap">—</span><sup class="mk mk-gap">—</sup>',
+      det.loadW !== undefined ? doc.v(q("loadW"), "u=W|s3") : det.suppliedFrom ? '<span class="muted">in parent</span>' : '<span class="v st-gap">—</span>',
       esc(loads.join(", ")),
-      esc((det.unknownLoads ?? []).join(", ") || (det.capacityW === undefined ? "source has no current rating" : "—")),
+      esc((det.unknownLoads ?? []).join(", ") || (det.suppliedFrom ? `budgeted on ${det.suppliedFrom}${det.assumption ? " (assumed branch)" : ""}` : det.capacityW === undefined ? "source has no current rating" : "—")),
     ];
   });
 
@@ -247,7 +251,7 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     : "";
   out.push(`<div class="block"><div class="cols"><div class="chartbox"><h3>BEC and rail utilisation (known loads)</h3>${meters}<div class="cap"><b>Figure ${figNum(env)}</b><span>checkSystem supply_budget.</span></div></div>
     <div class="chartbox"><h3>Propulsion peak current vs battery ratings</h3>${propChart}<div class="cap"><b>Figure ${figNum(env)}</b><span>${pc ? esc(pc.message) : ""}</span></div></div></div></div>`);
-  out.push(`<div class="block keep">${sub("Power rails")}${table([{ h: "Rail" }, { h: "Voltage", cls: "num" }, { h: "Capacity", cls: "num" }, { h: "Known load", cls: "num" }, { h: "Loads" }, { h: "Unbudgeted" }], railRows, { foot: "From checkSystem rule supply_budget: capacity = rail voltage × current rating; loads that state no draw cannot be budgeted." })}</div>`);
+  out.push(`<div class="block keep">${sub("Power rails")}${table([{ h: "Rail" }, { h: "Voltage", cls: "num" }, { h: "Capacity", cls: "num" }, { h: "Known load", cls: "num" }, { h: "Loads" }, { h: "Unbudgeted" }], railRows, { foot: "From checkSystem rule supply_budget: capacity = rail voltage × current rating; loads that state no draw cannot be budgeted. A branch rail (supplied_from) is budgeted on the output that feeds it; A marks a relation assumed, not cited." })}</div>`);
   // operating ranges of power inputs
   const opRows: string[][] = [];
   for (const inst of ctx.scene.assembly.instances.filter((i) => i.kind === "module")) {

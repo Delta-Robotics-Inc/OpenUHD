@@ -32,6 +32,25 @@ describe("system checks on the nominal quadcopter", () => {
     const d = diagnostics.find((x) => x.id === "supply_budget:stack:bec_5v")!;
     expect(d.details?.unknownLoads).toEqual(["receiver:vcc_5v"]);
   });
+
+  it("budgets the 4.5 V GPS rail on the 5 V BEC it branches from (PB-797, assumed relation)", () => {
+    const rail = diagnostics.find((x) => x.id === "supply_budget:stack:rail_4v5")!;
+    expect(rail.details?.suppliedFrom).toBe("stack:bec_5v");
+    expect(String(rail.details?.assumption)).toMatch(/Not stated by DolphinRC/);
+    const bec = diagnostics.find((x) => x.id === "supply_budget:stack:bec_5v")!;
+    expect(bec.details?.branches).toEqual(["stack:rail_4v5"]);
+    // GNSS 50 mA (Matek) at the rail's 4.5 V lower bound; the receiver states no draw
+    expect(bec.details?.loadW).toBeCloseTo(0.225, 6);
+    expect(bec.refs).toContain("gnss:vin_5v");
+  });
+
+  it("without the branch relation the GPS rail cannot be budgeted", async () => {
+    const { QUADCOPTER_5IN, lookupQuadcopterModule } = await import("../library/systems/quadcopter-5in/index.js");
+    const fc = lookupQuadcopterModule("dolphinrc-f405-v3-flight-controller")!;
+    const bare = { ...fc, interfaces: fc.interfaces.map((i) => (i.id === "rail_4v5" ? { ...i, traits: (i.traits ?? []).filter((t) => t.type !== "supplied_from") } : i)) };
+    const d = checkSystem(QUADCOPTER_5IN, (id) => (id === fc.id ? bare : lookupQuadcopterModule(id))).diagnostics.find((x) => x.id === "supply_budget:stack:rail_4v5")!;
+    expect(d.message).toMatch(/no current rating/);
+  });
 });
 
 describe("fault scenarios", () => {

@@ -180,7 +180,8 @@ function resolveDef(q: string, def: ModuleDef | undefined, path: string): Resolv
   else if (w.lastKey === "weight_g") unit = "g";
   else if (w.lastKey) unit = unitFromKey(w.lastKey);
   const keys = w.trail.filter((x) => x && typeof x === "object" && !Array.isArray(x) && typeof x.id === "string").map((x) => x.id);
-  const inAssumptionTrait = w.trail.some((x) => x && typeof x === "object" && x.type === "assumption");
+  // an assumption trait, or any trait/spec object carrying its own `assumption` note (supplied_from, torque, material)
+  const inAssumptionTrait = w.trail.some((x) => x && typeof x === "object" && (x.type === "assumption" || (typeof x.assumption === "string" && x.assumption) || (typeof x.params?.assumption === "string" && x.params.assumption)));
   const assumption = inAssumptionTrait ? "assumption trait" : assumptionFor(def, [...keys, w.lastKey ?? ""]);
   const srcs = moduleSources(def.id);
   const verified = Boolean(moduleVerification(def.id));
