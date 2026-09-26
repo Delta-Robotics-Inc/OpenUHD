@@ -109,3 +109,13 @@ export function escSignalRateKbps(value: number | [number, number]): Parameter {
     ? { id: "esc_signal_rate", unit: "kbit/s", range: value }
     : { id: "esc_signal_rate", unit: "kbit/s", value };
 }
+
+/** Typical current a load draws from its supply, in amps (capacity checks, not overlap). */
+export function currentDrawA(value: number): Parameter {
+  return { id: "current_draw", unit: "A", value };
+}
+
+/** Minimum supply power a load requires from its source, in watts (capacity checks). */
+export function minSupplyPowerW(value: number): Parameter {
+  return { id: "min_supply_power", unit: "W", value };
+}

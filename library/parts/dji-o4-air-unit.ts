@@ -67,6 +67,7 @@
  */
 import type { InterfaceDef, ModuleDef, TraitDef } from "../../src/types/index.js";
 import {
+  minSupplyPowerW,
   BoltPattern,
   Ground,
   PowerIn,
@@ -119,6 +120,8 @@ const vcc = withTraits(
     name: "VCC (3-in-1 cable, red)",
     pin: "VCC",
     voltageV: VCC_RANGE_V,
+    // DJI: power from a BEC "with output power >= 10 W" (src_manual p.11)
+    parameters: [minSupplyPowerW(10)],
   }),
   [
     pinFn("Power. DJI O4 Air Unit: 3.7-13.2 V", "red"),

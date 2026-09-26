@@ -13,6 +13,7 @@ export const CAPACITY_PARAM_IDS = new Set([
   "burst_current",
   "drive_current",
   "current_draw",
+  "min_supply_power",
   "max_flow",
   "flow_rate",
 ]);
