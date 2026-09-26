@@ -84,14 +84,14 @@ def build() -> dict:
         for key, (sx, sy) in CORNERS.items():
             with Locations(Pos(sx * HALF, sy * HALF, T)):
                 Cylinder(11, BOSS, align=MIN)
-                with Locations(*[(r * math.cos(math.radians(45 + 90 * k)), r * math.sin(math.radians(45 + 90 * k))) for k in range(4) for r in [F["motor_bolt_circle"] / 2]]):
+                with Locations(*[(r * math.cos(math.radians(90 * k)), r * math.sin(math.radians(90 * k))) for k in range(4) for r in [F["motor_bolt_circle"] / 2]]):
                     Cylinder(1.6, BOSS, align=MIN, mode=Mode.SUBTRACT)
                 Cylinder(3.5, BOSS, align=MIN, mode=Mode.SUBTRACT)  # shaft/circlip relief
     # through holes under the pads
     for key, (sx, sy) in CORNERS.items():
         with BuildPart() as holes:
             with Locations(Pos(sx * HALF, sy * HALF, 0)):
-                with Locations(*[(8 * math.cos(math.radians(45 + 90 * k)), 8 * math.sin(math.radians(45 + 90 * k))) for k in range(4)]):
+                with Locations(*[(8 * math.cos(math.radians(90 * k)), 8 * math.sin(math.radians(90 * k))) for k in range(4)]):
                     Cylinder(1.6, T, align=MIN)
                 Cylinder(3.5, T, align=MIN)
         bottom.part = bottom.part - holes.part
@@ -100,62 +100,74 @@ def build() -> dict:
         for side in (1, -1):
             with Locations(Pos(CAMERA_X, side * (cam_inner + 1), T)):
                 Box(20, 2, 22, align=MIN)
-        # pivot screw through each plate at the camera's side-hole axis
-        with Locations(Pos(CAMERA_X, 0, CAM_Z) * Rot(90, 0, 0)):
-            Cylinder(1.1, 2 * (cam_inner + 2), mode=Mode.SUBTRACT)
+        # two M2 holes per side, 16 mm apart vertically (O4 camera side holes)
+        for dz in (-8, 8):
+            with Locations(Pos(CAMERA_X, 0, CAM_Z + dz) * Rot(90, 0, 0)):
+                Cylinder(1.1, 2 * (cam_inner + 2), mode=Mode.SUBTRACT)
 
-    with BuildPart() as standoffs:
-        with Locations(*[Pos(x, y, T) for x, y in STANDOFFS]):
-            Cylinder(2.5, TOP_Z - T, align=MIN)
-
-    with BuildPart() as top:
-        with Locations(Pos(-10, 0, TOP_Z)):
-            Box(120, 56, TOP_T, align=MIN)  # x -70 … 50
-        fillet(top.edges().filter_by(Axis.Z), radius=4)
-        with Locations(*[Pos(x, y, TOP_Z) for x, y in STANDOFFS]):
-            Cylinder(1.6, TOP_T, align=MIN, mode=Mode.SUBTRACT)
-        with Locations(*[Pos(GPS_X + x, y, TOP_Z) for x, y in square(F["gps_spacing"])]):
-            Cylinder(1.1, TOP_T, align=MIN, mode=Mode.SUBTRACT)
-        # battery strap slots
-        for x in (-14, 28):
-            with Locations(Pos(x, 0, TOP_Z)):
-                Box(3, 22, TOP_T, align=MIN, mode=Mode.SUBTRACT)
+    # standoff holes in the bottom plate (the standoffs are hardware now)
+    with BuildPart() as standoff_holes:
+        with Locations(*STANDOFFS):
+            Cylinder(1.6, T, align=MIN)
+    bottom.part = bottom.part - standoff_holes.part
 
     a.body(bottom.part, "bottom_plate")
     a.body(pads.part, "motor_pads")
     a.body(plates.part, "camera_plates")
-    a.body(standoffs.part, "standoffs")
-    a.body(top.part, "top_plate")
 
     # ---- interface features (D1 names = UHD interface ids) -----------------
     def near(faces, x, y, r):
         return [f for f in faces if math.hypot(f.center(CenterOf.MASS).X - x, f.center(CenterOf.MASS).Y - y) < r]
 
-    pad_tops = pads.part.faces().filter_by(Axis.Z).filter_by(lambda f: f.center(CenterOf.MASS).Z > T + BOSS / 2)
+    at = lambda f: f.center(CenterOf.MASS)
+    pad_tops = pads.part.faces().filter_by(Axis.Z).filter_by(lambda f: at(f).Z > T + BOSS / 2)
     for key, (sx, sy) in CORNERS.items():
         a.feature(f"motor_mount_{key}", near(pad_tops, sx * HALF, sy * HALF, 12))
     cyl = lambda part: [f for f in part.faces() if f.geom_type.name == "CYLINDER"]
-    a.feature("stack_mount", [f for f in cyl(bottom.part) if abs(abs(f.center(CenterOf.MASS).X) - F["stack_spacing"] / 2) < 0.2 and abs(abs(f.center(CenterOf.MASS).Y) - F["stack_spacing"] / 2) < 0.2 and f.radius < 2])
-    a.feature("vtx_mount", [f for f in cyl(bottom.part) if abs(abs(f.center(CenterOf.MASS).X - VTX_X) - F["vtx_spacing"] / 2) < 0.2 and f.radius < 1.2])
-    a.feature("gps_mount", [f for f in cyl(top.part) if abs(abs(f.center(CenterOf.MASS).X - GPS_X) - F["gps_spacing"] / 2) < 0.2 and f.radius < 1.2])
-    a.feature("camera_mount", [f for f in plates.part.faces() if f.geom_type.name == "PLANE" and abs(f.normal_at().Y) > 0.9 and abs(f.center(CenterOf.MASS).Y) < cam_inner + 0.5])
+    a.feature("stack_mount", [f for f in cyl(bottom.part) if abs(abs(at(f).X) - F["stack_spacing"] / 2) < 0.2 and abs(abs(at(f).Y) - F["stack_spacing"] / 2) < 0.2 and f.radius < 2])
+    a.feature("vtx_mount", [f for f in cyl(bottom.part) if abs(abs(at(f).X - VTX_X) - F["vtx_spacing"] / 2) < 0.2 and f.radius < 1.2])
+    a.feature("standoff_mount", [f for f in cyl(bottom.part) if any(math.hypot(at(f).X - x, at(f).Y - y) < 0.2 for x, y in STANDOFFS)])
+    a.feature("camera_mount", [f for f in plates.part.faces() if f.geom_type.name == "PLANE" and abs(f.normal_at().Y) > 0.9 and abs(at(f).Y) < cam_inner + 0.5])
     a.write()
+
+    # ---- top plate: its own module; origin at the standoff centre, underside
+    t = Artifact("quadcopter-5in-top-plate", system_dir("quadcopter-5in"), HERE)
+    with BuildPart() as top:
+        with Locations(Pos(-10, 0, 0)):
+            Box(120, 56, TOP_T, align=MIN)  # x -70 … 50
+        fillet(top.edges().filter_by(Axis.Z), radius=4)
+        with Locations(*STANDOFFS):
+            Cylinder(1.6, TOP_T, align=MIN, mode=Mode.SUBTRACT)
+        with Locations(*[Pos(GPS_X + x, y, 0) for x, y in square(F["gps_spacing"])]):
+            Cylinder(1.1, TOP_T, align=MIN, mode=Mode.SUBTRACT)
+        for x in (-14, 28):  # battery strap slots
+            with Locations(Pos(x, 0, 0)):
+                Box(3, 22, TOP_T, align=MIN, mode=Mode.SUBTRACT)
+    t.body(top.part, "top_plate")
+    t.feature("standoff_mount", [f for f in cyl(top.part) if any(math.hypot(at(f).X - x, at(f).Y - y) < 0.2 for x, y in STANDOFFS)])
+    t.feature("gps_mount", [f for f in cyl(top.part) if abs(abs(at(f).X - GPS_X) - F["gps_spacing"] / 2) < 0.2 and f.radius < 1.2])
+    t.write()
 
     # ---- frames for UHD (same numbers as the geometry above) ---------------
     frames = {
         "stack_mount": {"origin": [0, 0, T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90},
         "vtx_mount": {"origin": [VTX_X, 0, T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90},
-        "gps_mount": {"origin": [GPS_X, 0, TOP_Z + TOP_T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90},
+        "standoff_mount": {"origin": [0, 0, T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 180},
         "camera_mount": {"origin": [CAMERA_X, 0, CAM_Z], "normal": [0, -1, 0], "xAxis": [1, 0, 0]},  # mid-plane of the clamp
+        # circle patterns: xAxis points at hole 1. The pads' holes are at k·90°,
+        # i.e. 45° off the arm, so motor leads (between two holes) run down the arm.
         **{
             f"motor_mount_{k}": {"origin": [round(sx * HALF, 3), round(sy * HALF, 3), T + BOSS], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90}
             for k, (sx, sy) in CORNERS.items()
         },
-        # not an interface yet: where the battery sits (see docs/geometry-artifacts.md, "unlinked modules")
-        "_battery_pad": {"origin": [7.5, 0, TOP_Z + TOP_T], "normal": [0, 0, 1], "xAxis": [1, 0, 0]},
     }
     out = system_dir("quadcopter-5in") / "quadcopter-5in-frame.frames.json"
     out.write_text(json.dumps(frames, indent=2) + "\n")
+    top_frames = {
+        "standoff_mount": {"origin": [0, 0, 0], "normal": [0, 0, -1], "xAxis": [1, 0, 0], "symmetryDeg": 180},
+        "gps_mount": {"origin": [GPS_X, 0, TOP_T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90},
+    }
+    (system_dir("quadcopter-5in") / "quadcopter-5in-top-plate.frames.json").write_text(json.dumps(top_frames, indent=2) + "\n")
     return frames
 
 

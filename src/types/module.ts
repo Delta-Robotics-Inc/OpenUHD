@@ -1,3 +1,4 @@
+import type { FastenerStackItem } from "./geometry.js";
 import type { InterfaceDef } from "./interface.js";
 import type { HarnessDef } from "./harness.js";
 import type { ArtifactDef } from "./artifact.js";
@@ -125,6 +126,12 @@ export interface ModuleDef {
   kind?: ModuleKind;
   /** For kind "harness": how the carried links are arranged. */
   topology?: "wire" | "bus" | "split" | "or";
+  /**
+   * Fastener harnesses: where each child part sits on the joint the harness
+   * carries (see FastenerStackItem). Lets an assembly place hardware from the
+   * model instead of by hand.
+   */
+  fastenerStack?: FastenerStackItem[];
   description?: string;
   version?: string;
 

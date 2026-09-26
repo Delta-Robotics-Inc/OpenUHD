@@ -12,14 +12,17 @@ import type { InterfaceLink, ModuleDef } from "../../../src/types/index.js";
 import type { ModuleLookup } from "../../../src/system/index.js";
 import * as parts from "../../parts/index.js";
 import { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM } from "./assemblies.js";
-import { QUADCOPTER_5IN_FRAME } from "./frame.js";
+import { QUADCOPTER_5IN_FRAME, QUADCOPTER_5IN_TOP_PLATE } from "./frame.js";
+import { HARDWARE_PARTS } from "./hardware.js";
 import { HARNESSES } from "./harnesses.js";
 
+// `leads`: rotation of the motor on its pad (a multiple of the pattern's 90°)
+// that points its phase leads back along the arm toward the ESC.
 const ARMS = [
-  { id: "arm_fr", label: "Front-right arm", motor: 2 },
-  { id: "arm_rr", label: "Rear-right arm", motor: 1 },
-  { id: "arm_rl", label: "Rear-left arm", motor: 3 },
-  { id: "arm_fl", label: "Front-left arm", motor: 4 },
+  { id: "arm_fr", label: "Front-right arm", motor: 2, leads: 180 },
+  { id: "arm_rr", label: "Rear-right arm", motor: 1, leads: 270 },
+  { id: "arm_rl", label: "Rear-left arm", motor: 3, leads: 0 },
+  { id: "arm_fl", label: "Front-left arm", motor: 4, leads: 90 },
 ] as const;
 
 const corner = (armId: string) => armId.slice(4);
@@ -50,6 +53,7 @@ export const QUADCOPTER_5IN: ModuleDef = {
   interfaces: [],
   children: [
     { id: "frame", moduleDefId: "quadcopter-5in-frame", name: "Frame" },
+    { id: "top_plate", moduleDefId: "quadcopter-5in-top-plate", name: "Top plate" },
     { id: "stack", moduleDefId: "dolphinrc-f405-v3-stack", name: "FC + ESC stack" },
     ...ARMS.map((arm) => ({ id: arm.id, moduleDefId: "quadcopter-5in-arm", name: arm.label })),
     { id: "battery", moduleDefId: "cnhl-black-series-1100mah-6s-100c", name: "6S battery" },
@@ -62,6 +66,11 @@ export const QUADCOPTER_5IN: ModuleDef = {
     { id: "xt60_lead", moduleDefId: "dolphinrc-xt60-battery-lead", name: "XT60 battery lead" },
     { id: "dji_cable", moduleDefId: "dji-o4-3in1-cable", name: "DJI 3-in-1 cable" },
     { id: "stack_hardware", moduleDefId: "quadcopter-5in-stack-hardware", name: "Stack hardware" },
+    { id: "frame_hardware", moduleDefId: "quadcopter-5in-frame-hardware", name: "Frame hardware" },
+    ...ARMS.map((arm) => ({ id: `${arm.id}_hardware`, moduleDefId: "quadcopter-5in-motor-hardware", name: `${arm.label} motor hardware` })),
+    { id: "vtx_hardware", moduleDefId: "quadcopter-5in-vtx-hardware", name: "Air unit hardware" },
+    { id: "camera_hardware", moduleDefId: "quadcopter-5in-camera-hardware", name: "Camera hardware" },
+    { id: "gps_hardware", moduleDefId: "quadcopter-5in-gps-hardware", name: "GPS hardware" },
   ],
   links: [
     // Power
@@ -74,14 +83,20 @@ export const QUADCOPTER_5IN: ModuleDef = {
     // Propulsion: ESC channel -> arm (exports motor phases), arm -> frame
     ...ARMS.flatMap((arm) => [
       link(`m${arm.motor}_phases`, `Motor ${arm.motor}`, ["stack", `motor_${arm.motor}`], [arm.id, "motor__phases"]),
-      link(`${arm.id}_mount`, `${arm.label} mount`, [arm.id, "motor__base_mount"], ["frame", `motor_mount_${corner(arm.id)}`]),
+      link(`${arm.id}_mount`, `${arm.label} mount`, [arm.id, "motor__base_mount"], ["frame", `motor_mount_${corner(arm.id)}`], {
+        harness: `${arm.id}_hardware`,
+        mate: { rotationDeg: arm.leads },
+      }),
     ]),
 
     // Stack to frame
-    // Gaps are the stack-up along the M3 screws, PCB to PCB: 6 mm spacer, ESC
-    // PCB (1.6 mm), 6 mm spacer, FC. Both boards mate to the frame's pattern.
-    link("stack_mount", "ESC on frame", ["stack", "stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 6 } }),
-    link("fc_mount", "FC on frame", ["stack", "fc_stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 13.6 } }),
+    // Gaps to each PCB's underside along the M3 screws: 6 mm spacer, 4 mm
+    // grommet with the 1.6 mm PCB centred in it, 6 mm spacer, 4 mm grommet
+    // (stack hardware's fastenerStack). Both boards mate to the frame's pattern.
+    link("stack_mount", "ESC on frame", ["stack", "stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 7.2 } }),
+    link("fc_mount", "FC on frame", ["stack", "fc_stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware", mate: { gapMm: 17.2 } }),
+    // Top plate on four 30 mm standoffs
+    link("top_plate_mount", "Top plate on standoffs", ["frame", "standoff_mount"], ["top_plate", "standoff_mount"], { harness: "frame_hardware", mate: { gapMm: 30 } }),
 
     // Receiver: CRSF on UART2, powered from the 5 V BEC
     link("rx_crsf", "CRSF", ["stack", "uart2"], ["receiver", "crsf"]),
@@ -92,8 +107,9 @@ export const QUADCOPTER_5IN: ModuleDef = {
     link("video_power", "O4 10V", ["stack", "bec_10v"], ["video", "vcc"], { harness: "dji_cable" }),
     link("video_gnd", "O4 GND", ["stack", "gnd"], ["video", "gnd"], { harness: "dji_cable" }),
     link("video_osd", "MSP DisplayPort", ["stack", "uart5"], ["video", "uart_osd"], { harness: "dji_cable" }),
-    link("camera_mount", "Camera plates", ["video", "camera_mount"], ["frame", "camera_mount"]),
-    link("vtx_mount", "Air unit mount", ["video", "tx_module_mount"], ["frame", "vtx_mount"]),
+    link("camera_mount", "Camera plates", ["video", "camera_mount"], ["frame", "camera_mount"], { harness: "camera_hardware" }),
+    // 3 mm airflow spacers under the module (DJI: mount in airflow)
+    link("vtx_mount", "Air unit mount", ["video", "tx_module_mount"], ["frame", "vtx_mount"], { harness: "vtx_hardware", mate: { gapMm: 3 } }),
 
     // GNSS: UART1 + compass on I2C1, powered from the 4.5 V GPS rail
     link("gnss_uart", "GPS", ["stack", "uart1"], ["gnss", "uart_gnss"]),
@@ -101,11 +117,19 @@ export const QUADCOPTER_5IN: ModuleDef = {
     link("gnss_power", "GPS 4.5V", ["stack", "rail_4v5"], ["gnss", "vin_5v"]),
     link("gnss_gnd", "GPS GND", ["stack", "gnd"], ["gnss", "gnd"]),
     // 5 mm standoffs: the GH6P sockets stand 4.35 mm proud of the component side (vendor STEP)
-    link("gps_mount", "GPS mount", ["gnss", "mount"], ["frame", "gps_mount"], { mate: { gapMm: 5 } }),
+    link("gps_mount", "GPS mount", ["gnss", "mount"], ["top_plate", "gps_mount"], { harness: "gps_hardware", mate: { gapMm: 5 } }),
   ],
 };
 
-const ASSEMBLIES: ModuleDef[] = [QUADCOPTER_5IN, QUADCOPTER_5IN_FRAME, DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, ...HARNESSES];
+const ASSEMBLIES: ModuleDef[] = [
+  QUADCOPTER_5IN,
+  QUADCOPTER_5IN_FRAME,
+  QUADCOPTER_5IN_TOP_PLATE,
+  DOLPHINRC_F405_V3_STACK,
+  QUADCOPTER_5IN_ARM,
+  ...HARNESSES,
+  ...HARDWARE_PARTS,
+];
 
 const BY_ID = new Map<string, ModuleDef>(
   [...(Object.values(parts) as ModuleDef[]), ...ASSEMBLIES].map((def) => [def.id, def]),
@@ -118,4 +142,4 @@ export const lookupQuadcopterModule: ModuleLookup = (id) => BY_ID.get(id);
 export const SYSTEM = QUADCOPTER_5IN;
 export const lookup = lookupQuadcopterModule;
 
-export { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME, HARNESSES };
+export { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME, QUADCOPTER_5IN_TOP_PLATE, HARNESSES, HARDWARE_PARTS };

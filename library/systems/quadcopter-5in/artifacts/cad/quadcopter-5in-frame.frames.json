@@ -35,11 +35,11 @@
     ],
     "symmetryDeg": 90
   },
-  "gps_mount": {
+  "standoff_mount": {
     "origin": [
-      -52.0,
       0,
-      37.0
+      0,
+      5
     ],
     "normal": [
       0,
@@ -51,7 +51,7 @@
       0,
       0
     ],
-    "symmetryDeg": 90
+    "symmetryDeg": 180
   },
   "camera_mount": {
     "origin": [
@@ -141,22 +141,5 @@
       0
     ],
     "symmetryDeg": 90
-  },
-  "_battery_pad": {
-    "origin": [
-      7.5,
-      0,
-      37.0
-    ],
-    "normal": [
-      0,
-      0,
-      1
-    ],
-    "xAxis": [
-      1,
-      0,
-      0
-    ]
   }
 }

@@ -47,17 +47,39 @@
   - [ ] `stack:uart5 R5` → `video:uart_osd TX` — crossover
   - [ ] `stack:uart5 TX5` → `video:uart_osd RX` — crossover
 
-## mechanical assembly
+## arm_fr_hardware
 
 - [ ] **Front-right arm mount** — `arm_fr:motor__base_mount` ↔ `frame:motor_mount_fr` (bolt_pattern)
+
+## arm_rr_hardware
+
 - [ ] **Rear-right arm mount** — `arm_rr:motor__base_mount` ↔ `frame:motor_mount_rr` (bolt_pattern)
+
+## arm_rl_hardware
+
 - [ ] **Rear-left arm mount** — `arm_rl:motor__base_mount` ↔ `frame:motor_mount_rl` (bolt_pattern)
+
+## arm_fl_hardware
+
 - [ ] **Front-left arm mount** — `arm_fl:motor__base_mount` ↔ `frame:motor_mount_fl` (bolt_pattern)
-- [ ] **Camera plates** — `video:camera_mount` ↔ `frame:camera_mount` (bolt_pattern)
-- [ ] **Air unit mount** — `video:tx_module_mount` ↔ `frame:vtx_mount` (bolt_pattern)
-- [ ] **GPS mount** — `gnss:mount` ↔ `frame:gps_mount` (bolt_pattern)
 
 ## stack_hardware
 
 - [ ] **ESC on frame** — `stack:stack_mount` ↔ `frame:stack_mount` (bolt_pattern)
 - [ ] **FC on frame** — `stack:fc_stack_mount` ↔ `frame:stack_mount` (bolt_pattern)
+
+## frame_hardware
+
+- [ ] **Top plate on standoffs** — `frame:standoff_mount` ↔ `top_plate:standoff_mount` (bolt_pattern)
+
+## camera_hardware
+
+- [ ] **Camera plates** — `video:camera_mount` ↔ `frame:camera_mount` (bolt_pattern)
+
+## vtx_hardware
+
+- [ ] **Air unit mount** — `video:tx_module_mount` ↔ `frame:vtx_mount` (bolt_pattern)
+
+## gps_hardware
+
+- [ ] **GPS mount** — `gnss:mount` ↔ `top_plate:gps_mount` (bolt_pattern)

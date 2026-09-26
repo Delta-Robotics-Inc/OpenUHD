@@ -117,6 +117,100 @@
   },
   {
     "line": 8,
+    "partId": "iso-10511-m2-nyloc-nut",
+    "name": "M2 nyloc nut, DIN 985, A2 stainless",
+    "manufacturer": "Westfield Fasteners",
+    "partNumber": "WF16826",
+    "quantity": 8,
+    "buy": "purchase",
+    "usedBy": [
+      "vtx_hardware/nuts",
+      "gps_hardware/nuts"
+    ],
+    "source": "https://www.westfieldfasteners.co.uk/Metric-Nuts/Nyloc-Nut-Type-T-Standard-M2-A2-Stainless.html",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 9,
+    "partId": "m2-nylon-spacer-3mm",
+    "name": "M2 nylon spacer, Ø2.7/4.0 x 3 mm",
+    "manufacturer": "Ettinger",
+    "partNumber": "007.02.403",
+    "quantity": 4,
+    "packQuantity": 100,
+    "buy": "purchase",
+    "usedBy": [
+      "vtx_hardware/spacers"
+    ],
+    "source": "https://www.ettinger.de/p/distanzhuelse-oe2-7-4-0-x-3-0-pa6.0-gv25-schwarz/007.02.403",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 10,
+    "partId": "m2-nylon-spacer-5mm",
+    "name": "M2 nylon spacer, Ø2.7/4.0 x 5 mm",
+    "manufacturer": "Ettinger",
+    "partNumber": "007.02.405",
+    "quantity": 4,
+    "packQuantity": 100,
+    "buy": "purchase",
+    "usedBy": [
+      "gps_hardware/spacers"
+    ],
+    "source": "https://www.ettinger.de/p/distanzhuelse-oe2-7-4-0-x-5-0-pa6.0-gv25-schwarz/007.02.405",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 11,
+    "partId": "iso-4762-m2x12",
+    "name": "M2 x 12 mm socket head cap screw, ISO 4762",
+    "manufacturer": "Generic (ISO 4762 / DIN 912)",
+    "partNumber": "WF2332",
+    "quantity": 4,
+    "buy": "purchase",
+    "usedBy": [
+      "gps_hardware/screws"
+    ],
+    "source": "https://www.westfieldfasteners.co.uk/Bolts-Screws-Metric/304-DIN-912-Cap-Screw-M2x12mm.html",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 12,
+    "partId": "iso-4762-m2x18",
+    "name": "M2 x 18 mm socket head cap screw, ISO 4762",
+    "manufacturer": "Generic (ISO 4762 / DIN 912)",
+    "partNumber": "WF17972",
+    "quantity": 4,
+    "buy": "purchase",
+    "usedBy": [
+      "vtx_hardware/screws"
+    ],
+    "source": "https://www.westfieldfasteners.co.uk/Bolts-Screws-Metric/Socket-Head-Cap-Screw-M2x18-A2-Stainless.html",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 13,
+    "partId": "m3-aluminium-standoff-30mm",
+    "name": "M3 aluminium standoff, 30 mm, female–female, 5.5 mm AF",
+    "manufacturer": "Ettinger",
+    "partNumber": "005.03.308",
+    "quantity": 4,
+    "packQuantity": 100,
+    "buy": "purchase",
+    "usedBy": [
+      "frame_hardware/standoffs"
+    ],
+    "source": "https://www.ettinger.de/p/abstandsbolzen-aluminium-passiviert-i-i-sw5-5x30-gewinde-m3x7-m3x7/005.03.308",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 14,
     "partId": "iso-10511-m3-nyloc-nut",
     "name": "M3 nyloc nut, ISO 10511 / DIN 985 Type T, A2 stainless",
     "manufacturer": "Generic (ISO 10511 / DIN 985)",
@@ -132,7 +226,7 @@
     "openGaps": 2
   },
   {
-    "line": 9,
+    "line": 15,
     "partId": "iso-4762-m3x30-socket-head-cap-screw",
     "name": "M3 x 30 mm socket head cap screw, ISO 4762, A2 stainless",
     "manufacturer": "Generic (ISO 4762 / DIN 912)",
@@ -148,7 +242,22 @@
     "openGaps": 2
   },
   {
-    "line": 10,
+    "line": 16,
+    "partId": "iso-4762-m3x8",
+    "name": "M3 x 8 mm socket head cap screw, ISO 4762",
+    "manufacturer": "Generic (ISO 4762 / DIN 912)",
+    "partNumber": "WF2344",
+    "quantity": 8,
+    "buy": "purchase",
+    "usedBy": [
+      "frame_hardware/screws"
+    ],
+    "source": "https://www.westfieldfasteners.co.uk/Bolts-Screws-Metric/Stainless-Socket-Cap-Screw-M3x8mm.html",
+    "assumptions": 1,
+    "openGaps": 0
+  },
+  {
+    "line": 17,
     "partId": "matek-m9n-5883",
     "name": "Matek M9N-5883 GNSS & Compass",
     "manufacturer": "Matek Systems",
@@ -164,7 +273,7 @@
     "openGaps": 8
   },
   {
-    "line": 11,
+    "line": 18,
     "partId": "meps-neon-2207-v2-1950kv",
     "name": "MEPS NEON 2207 V2 1950KV Brushless Motor",
     "manufacturer": "MEPS",
@@ -183,7 +292,7 @@
     "openGaps": 7
   },
   {
-    "line": 12,
+    "line": 19,
     "partId": "panasonic-eeu-fr1v471",
     "name": "Panasonic EEU-FR1V471 470 µF 35 V low-ESR electrolytic capacitor",
     "manufacturer": "Panasonic Industry",
@@ -199,7 +308,7 @@
     "openGaps": 3
   },
   {
-    "line": 13,
+    "line": 20,
     "partId": "radiomaster-rp1-v2-elrs-2g4",
     "name": "RadioMaster RP1 V2 ExpressLRS 2.4GHz Nano Receiver",
     "manufacturer": "RadioMaster",
@@ -215,7 +324,21 @@
     "openGaps": 4
   },
   {
-    "line": 14,
+    "line": 21,
+    "partId": "quadcopter-5in-top-plate",
+    "name": "5-inch frame top plate (custom)",
+    "manufacturer": "Delta Robotics (custom)",
+    "partNumber": "QUAD5-TOP",
+    "quantity": 1,
+    "buy": "fabricate",
+    "usedBy": [
+      "top_plate"
+    ],
+    "assumptions": 0,
+    "openGaps": 1
+  },
+  {
+    "line": 22,
     "partId": "quadcopter-5in-frame",
     "name": "5-inch quadcopter frame (custom)",
     "manufacturer": "Delta Robotics (custom)",
@@ -226,10 +349,10 @@
       "frame"
     ],
     "assumptions": 0,
-    "openGaps": 0
+    "openGaps": 1
   },
   {
-    "line": 15,
+    "line": 23,
     "partId": "dji-o4-3in1-cable",
     "name": "DJI O4 3-in-1 cable",
     "manufacturer": "DJI",
@@ -243,7 +366,7 @@
     "openGaps": 0
   },
   {
-    "line": 16,
+    "line": 24,
     "partId": "dolphinrc-sh8-fc-esc-cable",
     "name": "FC/ESC SH1.0 8-pin cable",
     "manufacturer": "DolphinRC",
@@ -257,7 +380,38 @@
     "openGaps": 0
   },
   {
-    "line": 17,
+    "line": 25,
+    "partId": "o4-camera-screw-m2x5",
+    "name": "M2 x 5 mm camera screw (included with the O4)",
+    "manufacturer": "Included (unbranded)",
+    "quantity": 4,
+    "buy": "included",
+    "includedWith": "dji-o4-air-unit",
+    "usedBy": [
+      "camera_hardware/screws"
+    ],
+    "assumptions": 1,
+    "openGaps": 1
+  },
+  {
+    "line": 26,
+    "partId": "motor-screw-m3x8",
+    "name": "M3 x 8 mm motor screw (included with the motor)",
+    "manufacturer": "Included (unbranded)",
+    "quantity": 16,
+    "buy": "included",
+    "includedWith": "meps-neon-2207-v2-1950kv",
+    "usedBy": [
+      "arm_fr_hardware/screws",
+      "arm_rr_hardware/screws",
+      "arm_rl_hardware/screws",
+      "arm_fl_hardware/screws"
+    ],
+    "assumptions": 1,
+    "openGaps": 1
+  },
+  {
+    "line": 27,
     "partId": "dolphinrc-xt60-battery-lead",
     "name": "XT60 battery lead (12 AWG)",
     "manufacturer": "DolphinRC",

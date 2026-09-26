@@ -16,6 +16,7 @@ import { join } from "path";
 import { fileURLToPath } from "url";
 import type { InterfaceDef, ModuleDef } from "../../src/types/index.js";
 import { lookup } from "../systems/quadcopter-5in/index.js";
+import { HARDWARE_PARTS } from "../systems/quadcopter-5in/hardware.js";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 
@@ -47,6 +48,7 @@ function dims(def: ModuleDef): { length: number; width: number; height: number }
 const motor = part("meps-neon-2207-v2-1950kv");
 const prop = part("hqprop-ethix-s5");
 const frame = part("quadcopter-5in-frame");
+const topPlate = part("quadcopter-5in-top-plate");
 const esc = part("dolphinrc-am32-60a-4in1-esc");
 const fc = part("dolphinrc-f405-v3-flight-controller");
 const gnss = part("matek-m9n-5883");
@@ -91,8 +93,8 @@ const params = {
     motor_fastener: p(iface(frame, "motor_mount_fl"), "fastener_diameter"),
     stack_spacing: p(iface(frame, "stack_mount"), "hole_spacing"),
     stack_fastener: p(iface(frame, "stack_mount"), "fastener_diameter"),
-    gps_spacing: p(iface(frame, "gps_mount"), "hole_spacing"),
-    gps_fastener: p(iface(frame, "gps_mount"), "fastener_diameter"),
+    gps_spacing: p(iface(topPlate, "gps_mount"), "hole_spacing"),
+    gps_fastener: p(iface(topPlate, "gps_mount"), "fastener_diameter"),
     vtx_spacing: p(iface(frame, "vtx_mount"), "hole_spacing"),
     vtx_fastener: p(iface(frame, "vtx_mount"), "fastener_diameter"),
     camera_spacing: p(iface(frame, "camera_mount"), "hole_spacing"),
@@ -115,6 +117,23 @@ const params = {
     spacer_id: 3.4,
   },
 };
+
+// Mounting hardware (library/systems/quadcopter-5in/hardware.ts) for library/cad/py/hardware.py
+const hardware = HARDWARE_PARTS.map((def) => {
+  const i = def.interfaces[0];
+  const kind = (["screw", "nut", "spacer", "standoff"] as const).find((k) => def.tags?.includes(k))!;
+  const meta = (def.domains?.[0]?.metadata ?? {}) as Record<string, number>;
+  return {
+    id: def.id,
+    kind,
+    diameter: p(i, "fastener_diameter"),
+    length: p(i, "length"),
+    head_diameter: meta.head_diameter_mm,
+    head_height: meta.head_height_mm,
+    outer: meta.outer_mm,
+  };
+});
+(params as Record<string, unknown>).hardware = hardware;
 
 if (params.frame.prop_clearance < 5) {
   throw new Error(`wheelbase ${wheelbase} mm leaves ${params.frame.prop_clearance.toFixed(1)} mm prop clearance (< 5 mm)`);

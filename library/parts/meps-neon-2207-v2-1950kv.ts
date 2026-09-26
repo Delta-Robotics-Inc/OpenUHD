@@ -276,10 +276,10 @@ export const MEPS_NEON_2207_V2_1950KV: ModuleDef = withGeometry(
   MEPS_NEON_2207_V2_1950KV_BASE,
   {
     // The motor face. Origin: bolt-circle centre on the base; normal: out of
-    // the base (the arm approaches from -Z); xAxis: toward hole #1 is at 45°
-    // from it, and the 4-hole pattern repeats every 90°.
+    // the base (the arm approaches from -Z); xAxis: toward hole #1 (at 45° in
+    // the model), and the 4-hole pattern repeats every 90°.
     base_mount: {
-      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [0.7071, 0.7071, 0], symmetryDeg: 90 },
       refs: [
         feature("base_mount", { area_mm2: 524.646, centroid: [0.0, 0.0, 0.0], normal: [0.0, 0.0, -1.0] }),
         own("base_mount"),

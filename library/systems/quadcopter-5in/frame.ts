@@ -9,7 +9,8 @@
  *   - motor_mount_*: the MEPS NEON 2207 V2 base pattern — meps-neon-2207-v2-1950kv
  *   - camera_mount: DJI O4 camera lens-mount side holes — dji-o4-air-unit
  *   - vtx_mount: DJI O4 transmission module 25.5 x 25.5 mm M2 — dji-o4-air-unit
- *   - gps_mount: Matek M9N-5883 26 mm, Φ2 mm holes — matek-m9n-5883
+ *   - standoff_mount: the top plate's standoff pattern (design)
+ * The GPS mount is on the top plate (QUADCOPTER_5IN_TOP_PLATE below).
  * Sources: the mating parts' sources.json files; see
  * library/systems/quadcopter-5in/README.md for the brief.
  *
@@ -79,15 +80,17 @@ const QUADCOPTER_5IN_FRAME_BASE: ModuleDef = defineModule({
       note: "Side plates for the 14 mm-wide DJI O4 camera; mirrors dji-o4-air-unit camera_mount.",
     }),
     BoltPattern({
-      id: "gps_mount",
-      name: "GPS mount",
+      id: "standoff_mount",
+      name: "Top-plate standoffs",
       role: "structure",
-      shape: "square",
-      spacingMm: 26,
+      shape: "rectangle",
+      spacingMm: 56,
+      spacingYmm: 48,
       holeCount: 4,
-      fastener: "M2",
-      fastenerDiameterMm: 2,
-      note: "Rear GPS mast pad for the Matek M9N-5883 (26 mm hole spacing, Φ2 mm); keep >= 10 cm from power wiring, ESC and motors (Matek guidance). Mirrors matek-m9n-5883 mount.",
+      fastener: "M3",
+      fastenerDiameterMm: 3,
+      threaded: false,
+      note: "Four M3 holes for the 30 mm standoffs carrying the top plate (quadcopter-5in-top-plate).",
     }),
     BoltPattern({
       id: "vtx_mount",
@@ -166,11 +169,11 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = withGeometry(
     },
     camera_mount: {
       frame: { origin: [50.0, 0, 15.0], normal: [0, -1, 0], xAxis: [1, 0, 0] },
-      refs: [feature("camera_mount", { area_mm2: 872.397, centroid: [50.0, 0.0, 16.009] }), own("camera_mount")],
+      refs: [feature("camera_mount", { area_mm2: 864.795, centroid: [50.0, 0.0, 16.018] }), own("camera_mount")],
     },
-    gps_mount: {
-      frame: { origin: [-52.0, 0, 37.0], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
-      refs: [feature("gps_mount", { area_mm2: 55.292, centroid: [-52.0, 0.0, 36.0] }), own("gps_mount"), procedural("bolt_pattern")],
+    standoff_mount: {
+      frame: { origin: [0, 0, 5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 180 },
+      refs: [feature("standoff_mount", { area_mm2: 201.062, centroid: [0.0, 0.0, 2.5] }), own("standoff_mount"), procedural("bolt_pattern")],
     },
     vtx_mount: {
       frame: { origin: [-45.0, 0, 5], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
@@ -183,7 +186,7 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = withGeometry(
       name: "quadcopter-5in-frame",
       generator: "library/cad/py/frame.py",
       tool: "build123d 0.13.0",
-      interfaces: ["stack_mount", "motor_mount_fl", "motor_mount_fr", "motor_mount_rl", "motor_mount_rr", "camera_mount", "gps_mount", "vtx_mount"],
+      interfaces: ["stack_mount", "motor_mount_fl", "motor_mount_fr", "motor_mount_rl", "motor_mount_rr", "camera_mount", "vtx_mount", "standoff_mount"],
     }),
     {
       id: "cad_kcl",
@@ -199,5 +202,72 @@ export const QUADCOPTER_5IN_FRAME: ModuleDef = withGeometry(
   ],
 );
 
-/** Where the battery sits on the top plate: not an interface (the pack is strapped), used to place it. */
+/** Where the battery sits on the top plate (root coordinates): not an interface (the pack is strapped), used to place it. */
 export const BATTERY_PAD = { origin: [7.5, 0, 37] as [number, number, number], normal: [0, 0, 1] as [number, number, number], xAxis: [1, 0, 0] as [number, number, number] };
+
+// ---------------------------------------------------------------------------
+// Top plate: a separate plate on four 30 mm standoffs (frame hardware harness)
+// ---------------------------------------------------------------------------
+
+const QUADCOPTER_5IN_TOP_PLATE_BASE: ModuleDef = defineModule({
+  id: "quadcopter-5in-top-plate",
+  name: "5-inch frame top plate (custom)",
+  version: "0.1.0",
+  manufacturer: "Delta Robotics (custom)",
+  part_number: "QUAD5-TOP",
+  description: "2 mm top plate on four 30 mm standoffs: carries the GPS mast pad and the battery (strap slots).",
+  tags: ["frame", "custom", "quadcopter", "plate"],
+  categories: ["structure"],
+  display: { icon: "square" },
+  interfaces: [
+    BoltPattern({
+      id: "standoff_mount",
+      name: "Standoff holes",
+      role: "component",
+      shape: "rectangle",
+      spacingMm: 56,
+      spacingYmm: 48,
+      holeCount: 4,
+      fastener: "M3",
+      fastenerDiameterMm: 3,
+      threaded: false,
+      note: "Mirrors quadcopter-5in-frame standoff_mount.",
+    }),
+    BoltPattern({
+      id: "gps_mount",
+      name: "GPS mount",
+      role: "structure",
+      shape: "square",
+      spacingMm: 26,
+      holeCount: 4,
+      fastener: "M2",
+      fastenerDiameterMm: 2,
+      note: "Rear GPS mast pad for the Matek M9N-5883 (26 mm hole spacing, Φ2 mm); keep >= 10 cm from power wiring, ESC and motors (Matek guidance). Mirrors matek-m9n-5883 mount.",
+    }),
+  ],
+  domains: [{ domain: "mechanical", metadata: { plate_thickness_mm: 2, status: "generated from its interfaces (library/cad/py/frame.py)" } }],
+  traits: [{ type: "data_gap", params: { fields: ["material", "mass"], note: "Design values in library/cad/params.ts." } }],
+  artifacts: [],
+});
+
+/** Top-plate coordinates: origin at the standoff pattern centre on the plate's underside. */
+export const QUADCOPTER_5IN_TOP_PLATE: ModuleDef = withGeometry(
+  QUADCOPTER_5IN_TOP_PLATE_BASE,
+  {
+    standoff_mount: {
+      frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 180 },
+      refs: [feature("standoff_mount", { area_mm2: 80.425, centroid: [0.0, 0.0, 1.0] }), own("standoff_mount"), procedural("bolt_pattern")],
+    },
+    gps_mount: {
+      frame: { origin: [-52, 0, 2], normal: [0, 0, 1], xAxis: [1, 0, 0], symmetryDeg: 90 },
+      refs: [feature("gps_mount", { area_mm2: 55.292, centroid: [-52.0, 0.0, 1.0] }), own("gps_mount"), procedural("bolt_pattern")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/systems/quadcopter-5in/artifacts/cad",
+    name: "quadcopter-5in-top-plate",
+    generator: "library/cad/py/frame.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["standoff_mount", "gps_mount"],
+  }),
+);

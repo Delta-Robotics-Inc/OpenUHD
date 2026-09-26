@@ -83,5 +83,75 @@
     "spacer_length": 6,
     "spacer_od": 6,
     "spacer_id": 3.4
-  }
+  },
+  "hardware": [
+    {
+      "id": "motor-screw-m3x8",
+      "kind": "screw",
+      "diameter": 3,
+      "length": 8,
+      "head_diameter": 5.5,
+      "head_height": 3
+    },
+    {
+      "id": "o4-camera-screw-m2x5",
+      "kind": "screw",
+      "diameter": 2,
+      "length": 5,
+      "head_diameter": 3.8,
+      "head_height": 2
+    },
+    {
+      "id": "iso-4762-m3x8",
+      "kind": "screw",
+      "diameter": 3,
+      "length": 8,
+      "head_diameter": 5.5,
+      "head_height": 3
+    },
+    {
+      "id": "iso-4762-m2x12",
+      "kind": "screw",
+      "diameter": 2,
+      "length": 12,
+      "head_diameter": 3.8,
+      "head_height": 2
+    },
+    {
+      "id": "iso-4762-m2x18",
+      "kind": "screw",
+      "diameter": 2,
+      "length": 18,
+      "head_diameter": 3.8,
+      "head_height": 2
+    },
+    {
+      "id": "iso-10511-m2-nyloc-nut",
+      "kind": "nut",
+      "diameter": 2,
+      "length": 2.8,
+      "outer": 4
+    },
+    {
+      "id": "m2-nylon-spacer-5mm",
+      "kind": "spacer",
+      "diameter": 2,
+      "length": 5,
+      "outer": 4
+    },
+    {
+      "id": "m2-nylon-spacer-3mm",
+      "kind": "spacer",
+      "diameter": 2,
+      "length": 3,
+      "outer": 4
+    },
+    {
+      "id": "m3-aluminium-standoff-30mm",
+      "kind": "standoff",
+      "diameter": 3,
+      "length": 30,
+      "outer": 5.5
+    }
+  ]
 }

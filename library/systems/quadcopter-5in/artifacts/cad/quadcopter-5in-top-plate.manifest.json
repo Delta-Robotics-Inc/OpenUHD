@@ -1,0 +1,27 @@
+{
+  "artifact": "quadcopter-5in-top-plate",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "498855be0efb4bdc73ee4b243d5856432ae496e31ad1ca9bbdb1a3b9a207da93",
+  "units": "mm",
+  "features": {
+    "standoff_mount": {
+      "area_mm2": 80.425,
+      "centroid": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "faces": 4
+    },
+    "gps_mount": {
+      "area_mm2": 55.292,
+      "centroid": [
+        -52.0,
+        0.0,
+        1.0
+      ],
+      "faces": 4
+    }
+  }
+}

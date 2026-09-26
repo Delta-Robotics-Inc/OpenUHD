@@ -264,6 +264,8 @@ export interface MateEdge {
   /** Link id, prefixed with the path of the module that declares it. */
   linkId: string;
   harness?: string;
+  /** Path of the harness instance carrying the link. */
+  harnessPath?: string[];
   a: ResolvedLeafEndpoint & { frame: GeometryFrame };
   b: ResolvedLeafEndpoint & { frame: GeometryFrame };
   mate?: Link["mate"];
@@ -297,12 +299,32 @@ export interface RouteEdge {
   b: ResolvedLeafEndpoint & { frames: { interfaceId: string; frame: GeometryFrame }[] };
 }
 
+/** One hardware part placed by a fastener harness (world = the assembly root's coordinates). */
+export interface HardwarePlacement {
+  /** Harness instance path, e.g. "arm_fl_hardware". */
+  harness: string;
+  /** Harness child id and its definition. */
+  child: string;
+  def: ModuleDef;
+  /** Link (joint) the stack was applied to. */
+  linkId: string;
+  matrix: Mat4;
+  /** Body the stack is measured from (the structure side) and the one it holds. */
+  structure: string;
+  mounted: string;
+  /** Position along the structure normal (mm) and orientation, from the stack item. */
+  atMm: number;
+  direction: 1 | -1;
+}
+
 export interface Assembly {
   instances: GeometryInstance[];
   placements: Placement[];
   /** Rigid mates: links between mechanical interfaces that both have frames. */
   mates: MateEdge[];
   routes: RouteEdge[];
+  /** Hardware placed from fastener harnesses (`ModuleDef.fastenerStack`). */
+  hardware: HardwarePlacement[];
   /** Non-mechanical links where at least one end has no geometry (not drawable yet). */
   unrouted: { linkId: string; missing: string[] }[];
   issues: AssemblyIssue[];
@@ -373,7 +395,14 @@ export function assemble(
       }
       continue;
     }
-    mates.push({ linkId, harness: link.harness, a: { ...a, frame: fa }, b: { ...b, frame: fb }, mate: link.mate });
+    mates.push({
+      linkId,
+      harness: link.harness,
+      harnessPath: link.harness ? [...prefix, link.harness] : undefined,
+      a: { ...a, frame: fa },
+      b: { ...b, frame: fb },
+      mate: link.mate,
+    });
 
     const rot = link.mate?.rotationDeg ?? 0;
     for (const [end, f] of [[a, fa], [b, fb]] as const) {
@@ -450,5 +479,135 @@ export function assemble(
     });
   }
 
-  return { instances, placements: [...placed.values()], mates, routes, unrouted, issues };
+  const hardware = placeHardware(instances, mates, placed, lookup, issues);
+  return { instances, placements: [...placed.values()], mates, routes, unrouted, hardware, issues };
+}
+
+// ---------------------------------------------------------------------------
+// Bolt patterns and fastener stacks
+// ---------------------------------------------------------------------------
+
+const paramValue = (iface: InterfaceDef, id: string) => {
+  const p = iface.parameters?.find((x) => x.id === id);
+  return p?.value ?? p?.range?.[0];
+};
+
+/**
+ * Hole centres of a bolt-pattern interface in its frame's x/y (mm). Circles
+ * start at the frame's xAxis (the frame's xAxis points at hole 1); squares
+ * and rectangles are centred, sides along x and y.
+ */
+export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
+  const spacing = paramValue(iface, "hole_spacing");
+  if (spacing === undefined) return [];
+  const count = paramValue(iface, "hole_count") ?? 4;
+  const shape = iface.traits?.find((t) => t.type === "bolt_pattern")?.params?.shape;
+  if (shape === "circle") {
+    return Array.from({ length: count }, (_, k) => {
+      const a = (2 * Math.PI * k) / count;
+      return [(Math.cos(a) * spacing) / 2, (Math.sin(a) * spacing) / 2] as [number, number];
+    });
+  }
+  const sy = paramValue(iface, "hole_spacing_y") ?? spacing;
+  return [
+    [-spacing / 2, -sy / 2],
+    [spacing / 2, -sy / 2],
+    [spacing / 2, sy / 2],
+    [-spacing / 2, sy / 2],
+  ];
+}
+
+/** Frame as a Mat4 (columns x, y, z = normal; translation = origin). */
+export function frameMatrix(frame: GeometryFrame): Mat4 {
+  const [x, y, z] = basis(frame);
+  const o = frame.origin;
+  return [x[0], y[0], z[0], o[0], x[1], y[1], z[1], o[1], x[2], y[2], z[2], o[2], 0, 0, 0, 1];
+}
+
+const translate = (x: number, y: number, z: number): Mat4 => [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1];
+const FLIP: Mat4 = [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1];
+
+function placeHardware(
+  instances: GeometryInstance[],
+  mates: MateEdge[],
+  placed: Map<string, Placement>,
+  lookup: ModuleLookup,
+  issues: AssemblyIssue[],
+): HardwarePlacement[] {
+  const out: HardwarePlacement[] = [];
+  const done = new Set<string>();
+  for (const e of mates) {
+    if (!e.harnessPath) continue;
+    const key = e.harnessPath.join("/");
+    if (done.has(key)) continue;
+    const harness = instances.find((i) => i.path.join("/") === key)?.def;
+    if (!harness?.fastenerStack?.length) continue;
+    done.add(key);
+
+    const isStructure = (end: MateEdge["a"]) => end.iface.protocols?.some((p) => p.type === "bolt_pattern" && p.roles?.includes("structure"));
+    const s = isStructure(e.b) && !isStructure(e.a) ? e.b : e.a;
+    const m = s === e.a ? e.b : e.a;
+    const at = placed.get(bodyKey(s.path, s.frame.artifact));
+    if (!at) continue;
+    const base = multiplyMat4(at.matrix, frameMatrix(s.frame));
+    const holes = boltPatternHoles(s.iface);
+
+    const counts = new Map<string, number>();
+    const spans = new Map<string, { kind: string; child: string; from: number; to: number }[]>();
+    for (const item of harness.fastenerStack) {
+      const ref = harness.children?.find((c) => c.id === item.child);
+      const def = ref && lookup(ref.moduleDefId);
+      if (!def) {
+        issues.push({ severity: "error", subject: key, message: `fastener stack names "${item.child}", which is not a child of ${harness.id}` });
+        continue;
+      }
+      const dir = item.direction ?? 1;
+      const len = def.interfaces.map((i) => paramValue(i, "length")).find((v) => v !== undefined) ?? 0;
+      const kind = def.tags?.includes("nut") ? "nut" : def.tags?.includes("screw") ? "screw" : "part";
+      for (const [x, y] of item.positions ?? holes) {
+        const local = multiplyMat4(translate(x, y, item.atMm), dir === 1 ? IDENTITY : FLIP);
+        out.push({
+          harness: key,
+          child: item.child,
+          def,
+          linkId: e.linkId,
+          matrix: multiplyMat4(base, local),
+          structure: bodyKey(s.path, s.frame.artifact),
+          mounted: bodyKey(m.path, m.frame.artifact),
+          atMm: item.atMm,
+          direction: dir,
+        });
+        counts.set(item.child, (counts.get(item.child) ?? 0) + 1);
+        const hole = `${x.toFixed(2)},${y.toFixed(2)}`;
+        const list = spans.get(hole) ?? [];
+        list.push({ kind, child: item.child, from: Math.min(item.atMm, item.atMm + dir * len), to: Math.max(item.atMm, item.atMm + dir * len) });
+        spans.set(hole, list);
+      }
+    }
+    for (const ref of harness.children ?? []) {
+      const n = counts.get(ref.id) ?? 0;
+      if (n !== (ref.quantity ?? 1)) {
+        issues.push({ severity: "warning", subject: key, message: `${ref.id}: the harness lists ${ref.quantity ?? 1}, its fastener stack places ${n}` });
+      }
+    }
+    // every nut must sit on thread
+    const reported = new Set<string>();
+    for (const list of spans.values()) {
+      for (const nut of list.filter((x) => x.kind === "nut")) {
+        const screw = list.find((x) => x.kind === "screw" && x.from <= nut.to && x.to >= nut.from);
+        const msg = !screw
+          ? `${nut.child}: no screw passes through it`
+          : screw.to < nut.to && screw.from <= nut.from
+            ? `${screw.child} ends ${(nut.to - screw.to).toFixed(1)} mm short of the far face of ${nut.child}`
+            : screw.from > nut.from && screw.to >= nut.to
+              ? `${screw.child} ends ${(screw.from - nut.from).toFixed(1)} mm short of the far face of ${nut.child}`
+              : undefined;
+        if (msg && !reported.has(msg)) {
+          reported.add(msg);
+          issues.push({ severity: "error", subject: key, message: msg });
+        }
+      }
+    }
+  }
+  return out;
 }

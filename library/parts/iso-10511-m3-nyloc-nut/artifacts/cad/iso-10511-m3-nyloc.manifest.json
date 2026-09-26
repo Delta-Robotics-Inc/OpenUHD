@@ -2,7 +2,7 @@
   "artifact": "iso-10511-m3-nyloc",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "90fd6f426fe555e032ab5b21c158f1f3e1086f8d825542b381be0032d8aa73e6",
+  "sourceDigest": "a2d4f29f1604835caa745aaa6cb48d1a856c15468eb1ac86e1120cbcc843daac",
   "units": "mm",
   "features": {
     "thread": {

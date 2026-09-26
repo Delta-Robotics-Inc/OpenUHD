@@ -108,8 +108,14 @@ def board(part_id: str, name: str, spec: dict, extra=None) -> None:
         inset = spec["hole_spacing"] - spec["hole_diameter"] - 2
         with Locations(Pos(0, 0, PCB)):
             Box(inset, inset, spec["height"] - PCB, align=MIN)
+    # rubber grommets in the stack holes (included with the stack): 4 mm clamp, centred on the PCB
+    with BuildPart() as grommets:
+        with Locations(*[(x, y, PCB / 2 - 2) for x in (-s, s) for y in (-s, s)]):
+            Cylinder(3.5, 4, align=MIN)
+            Cylinder(1.6, 4, align=MIN, mode=Mode.SUBTRACT)
     a.body(pcb.part, "pcb")
     a.body(parts_.part, "components")
+    a.body(grommets.part, "grommets")
     holes = [f for f in pcb.part.faces() if f.geom_type.name == "CYLINDER"]
     a.feature("stack_mount", holes)
     if extra:

@@ -95,3 +95,24 @@ export interface ArtifactProvenance {
   /** sha256 of the source at generation time. */
   sourceDigest?: string;
 }
+
+/**
+ * How a fastener harness's parts sit on the joint it carries (PB-775).
+ *
+ * Positions are measured along the normal of the joint's *structure-side*
+ * interface frame (the end whose bolt pattern role is "structure"; else end
+ * a), from its origin: negative is behind the structure face (a screw head
+ * under a plate), positive toward the mounted part. Each item is placed at
+ * every hole of the structure's bolt pattern unless `positions` says
+ * otherwise.
+ */
+export interface FastenerStackItem {
+  /** Harness child id; its module supplies the geometry and length. */
+  child: string;
+  /** Where the part's own origin sits along the normal (mm). */
+  atMm: number;
+  /** Part's own +Z along (+1, default) or against (-1) the normal. */
+  direction?: 1 | -1;
+  /** In-plane hole positions in the frame's x/y (mm); default: the bolt pattern's holes. */
+  positions?: [number, number][];
+}

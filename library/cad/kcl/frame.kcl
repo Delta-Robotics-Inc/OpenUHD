@@ -37,8 +37,8 @@ fn motorHoles(@at) {
   return startSketchOn(XY)
     |> circle(
          center = [
-           at[0] + r * cos(45deg),
-           at[1] + r * sin(45deg)
+           at[0] + r * cos(0deg),
+           at[1] + r * sin(0deg)
          ],
          radius = 1.6,
        )

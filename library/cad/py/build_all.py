@@ -5,11 +5,14 @@
 """
 import frame
 import gnss_vendor
+import hardware
 import parts
 
 if __name__ == "__main__":
     parts.build()
     print("frame:")
     frame.build()
+    print("hardware:")
+    hardware.build()
     print("gnss (vendor):")
     gnss_vendor.build()

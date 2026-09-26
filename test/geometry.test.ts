@@ -55,8 +55,10 @@ describe("mateTransform", () => {
   it("applies gap along the placed side's normal and rotation about it", () => {
     const m = mateTransform(frameFl, motorFace, 90, 2);
     close(applyMat4(m, [0, 0, 0]), [frameFl.origin[0], frameFl.origin[1], frameFl.origin[2] + 2]);
-    const x = applyMat4(m, [1, 0, 0]);
-    close([x[0] - frameFl.origin[0], x[1] - frameFl.origin[1]], [0, 1]);
+    // the motor's hole-1 direction lands on the pad's hole-1 direction, turned 90°
+    const x = applyMat4(m, motorFace.xAxis!);
+    expect(x[0] - frameFl.origin[0]).toBeCloseTo(0, 4);
+    expect(x[1] - frameFl.origin[1]).toBeCloseTo(1, 4); // xAxis is written to 4 decimals
   });
 });
 
@@ -139,11 +141,12 @@ describe("assemble", () => {
   it("places every mechanically linked module from the links alone", () => {
     close(at("arm_fl/motor")!, [79.55, 79.55, 5.5]);
     close(at("arm_fl/prop")!, [79.55, 79.55, 5.5 + 19.3]);
-    close(at("stack/esc")!, [0, 0, 11]);
-    close(at("stack/fc")!, [0, 0, 5 + 13.6]);
+    close(at("stack/esc")!, [0, 0, 5 + 7.2]);
+    close(at("stack/fc")!, [0, 0, 5 + 17.2]);
+    close(at("top_plate")!, [0, 0, 35]);
     close(at("gnss")!, [-52, 0, 42]);
     close(at("video#cad_camera_step")!, [50, 0, 15]);
-    expect(asm.placements).toHaveLength(14);
+    expect(asm.placements).toHaveLength(15);
   });
 
   it("flips the GNSS antenna up: its component side faces the frame", () => {
@@ -160,6 +163,50 @@ describe("assemble", () => {
 
   it("reports modules no mate reaches instead of guessing", () => {
     expect(asm.issues.filter((i) => i.severity === "info").map((i) => i.subject).sort()).toEqual(["battery", "bulk_cap", "receiver", "strap"]);
+  });
+
+  it("places every fastener of every mounting harness, and every nut sits on thread", () => {
+    const byHarness = new Map<string, number>();
+    for (const h of asm.hardware) byHarness.set(h.harness, (byHarness.get(h.harness) ?? 0) + 1);
+    expect(Object.fromEntries(byHarness)).toEqual({
+      arm_fl_hardware: 4,
+      arm_fr_hardware: 4,
+      arm_rl_hardware: 4,
+      arm_rr_hardware: 4,
+      stack_hardware: 16,
+      frame_hardware: 12,
+      camera_hardware: 4,
+      vtx_hardware: 12,
+      gps_hardware: 12,
+    });
+    expect(asm.issues.filter((i) => i.severity !== "info")).toEqual([]);
+    // motor screws: heads under the arm, on the pad's 16 mm circle
+    const screw = asm.hardware.find((h) => h.harness === "arm_fl_hardware")!;
+    const head = applyMat4(screw.matrix, [0, 0, 0]);
+    expect(head[2]).toBeCloseTo(0, 6);
+    expect(Math.hypot(head[0] - 79.55, head[1] - 79.55)).toBeCloseTo(8, 6);
+  });
+
+  it("flags a screw too short for its nut", () => {
+    const short: ModuleDef = { ...lookup("quadcopter-5in-gps-hardware")!, fastenerStack: [
+      { child: "nuts", atMm: -2, direction: -1 },
+      { child: "spacers", atMm: 0 },
+      { child: "screws", atMm: 8, direction: -1 },
+    ] };
+    const errors = assemble(SYSTEM, (id) => (id === short.id ? short : lookup(id)), { root: ["frame"] }).issues.filter((i) => i.severity === "error");
+    expect(errors[0]).toMatchObject({ subject: "gps_hardware" });
+    expect(errors[0].message).toMatch(/screws ends 0\.8 mm short of the far face of nuts/);
+  });
+
+  it("points every motor's leads down its arm", () => {
+    for (const arm of ["arm_fl", "arm_fr", "arm_rl", "arm_rr"]) {
+      const p = asm.placements.find((x) => x.key === `${arm}/motor`)!;
+      const c = applyMat4(p.matrix, [0, 0, 0]);
+      const lead = applyMat4(p.matrix, [25, 0, 1.5]);
+      const toCentre = Math.atan2(-c[1], -c[0]);
+      const leadDir = Math.atan2(lead[1] - c[1], lead[0] - c[0]);
+      expect(Math.cos(leadDir - toCentre)).toBeCloseTo(1, 6);
+    }
   });
 
   it("rejects a rotation outside the bolt pattern's symmetry", () => {
@@ -179,7 +226,7 @@ describe("assemble", () => {
         id: "fc_again",
         a: { child: "stack", interfaceId: "fc_stack_mount" },
         b: { child: "frame", interfaceId: "stack_mount" },
-        mate: { gapMm: 11.6 },
+        mate: { gapMm: 15.2 },
       }),
     };
     const issues = assemble(shifted, lookup, { root: ["frame"] }).issues.filter((i) => i.severity === "error");

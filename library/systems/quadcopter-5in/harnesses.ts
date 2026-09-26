@@ -8,6 +8,11 @@
  * SH1.0 8-pin cable, XT60 lead and M3 grommets; DJI O4 user manual for the
  * 3-in-1 cable). Hardware quantities for the stack bolts come from the
  * fastener parts once they are in the library (PB-791).
+ *
+ * Mechanical harnesses carry a `fastenerStack` (PB-775): where each part sits
+ * along the joint's structure-side normal, from the structure face. `assemble`
+ * places every screw, spacer, standoff and nut from it and checks that each
+ * nut sits on thread.
  */
 import type { ModuleDef } from "../../../src/types/index.js";
 import { connectorTrait } from "../../../src/protocols/index.js";
@@ -109,8 +114,129 @@ export const QUADCOPTER_5IN_STACK_HARDWARE: ModuleDef = {
       ],
     },
   ],
+  // from the bottom plate's top face (z = 0): head under the 5 mm plate,
+  // spacer, ESC grommet (6–10), spacer, FC grommet (16–20), nut (20–24)
+  fastenerStack: [
+    { child: "screws", atMm: -5 },
+    { child: "spacers", atMm: 0 },
+    { child: "spacers", atMm: 10 },
+    { child: "nuts", atMm: 20 },
+  ],
   traits: [
     { type: "usage_note", params: { note: "Per post, bottom to top: screw head under the 5 mm bottom plate, 6 mm spacer, ESC in its grommet (4 mm), 6 mm spacer, FC in its grommet (4 mm), nyloc nut; 1 mm of thread protrudes. Boards use the M3 x 8 grommets included with the DolphinRC stack. Stack-up worked out in the fastener parts' usage notes (assumes a 5 mm plate and 4 mm grommet clamp)." } },
+  ],
+};
+
+const bolts = (id: string, name: string, size: number, spacing: number, spacingY?: number) => ({
+  id,
+  name,
+  domain: "mechanical" as const,
+  exposed: false,
+  protocols: [{ type: "bolt_pattern", roles: ["component"] }],
+  parameters: [
+    { id: "hole_spacing", unit: "mm", value: spacing },
+    ...(spacingY ? [{ id: "hole_spacing_y", unit: "mm", value: spacingY }] : []),
+    { id: "fastener_diameter", unit: "mm", value: size },
+  ],
+});
+
+/** One motor's four screws, up through the arm into the motor base. */
+export const QUADCOPTER_5IN_MOTOR_HARDWARE: ModuleDef = {
+  id: "quadcopter-5in-motor-hardware",
+  name: "Motor hardware (M3)",
+  kind: "harness",
+  topology: "bus",
+  description: "Four M3 x 8 screws (included with the motor) up through the arm pad into the motor base's 16 mm bolt circle.",
+  tags: ["harness", "mechanical", "fasteners"],
+  display: { icon: "wrench" },
+  children: [{ id: "screws", moduleDefId: "motor-screw-m3x8", name: "M3 x 8 motor screw", quantity: 4 }],
+  interfaces: [bolts("bolts", "4 x M3 on 16 mm", 3, 16)],
+  // from the pad top (z = 0): heads under the 5 mm arm + 0.5 mm pad
+  fastenerStack: [{ child: "screws", atMm: -5.5 }],
+};
+
+/** Standoffs and screws joining the bottom and top plates. */
+export const QUADCOPTER_5IN_FRAME_HARDWARE: ModuleDef = {
+  id: "quadcopter-5in-frame-hardware",
+  name: "Frame hardware (M3 standoffs)",
+  kind: "harness",
+  topology: "bus",
+  description: "Four 30 mm M3 aluminium standoffs, each held by an M3 x 8 screw from below the bottom plate and from above the top plate.",
+  tags: ["harness", "mechanical", "fasteners"],
+  display: { icon: "wrench" },
+  children: [
+    { id: "standoffs", moduleDefId: "m3-aluminium-standoff-30mm", name: "30 mm standoff", quantity: 4 },
+    { id: "screws", moduleDefId: "iso-4762-m3x8", name: "M3 x 8 screw", quantity: 8 },
+  ],
+  interfaces: [bolts("bolts", "4 x M3 on 56 x 48 mm", 3, 56, 48)],
+  // from the bottom plate's top face: screw from below, standoff 0–30, top plate 30–32, screw from above
+  fastenerStack: [
+    { child: "screws", atMm: -5 },
+    { child: "standoffs", atMm: 0 },
+    { child: "screws", atMm: 32, direction: -1 },
+  ],
+};
+
+/** GPS: screws down through the board, spacers, nuts under the top plate. */
+export const QUADCOPTER_5IN_GPS_HARDWARE: ModuleDef = {
+  id: "quadcopter-5in-gps-hardware",
+  name: "GPS hardware (M2)",
+  kind: "harness",
+  topology: "bus",
+  description: "Four M2 x 12 screws down through the GPS board, 5 mm nylon spacers, and M2 nyloc nuts under the top plate.",
+  tags: ["harness", "mechanical", "fasteners"],
+  display: { icon: "wrench" },
+  children: [
+    { id: "screws", moduleDefId: "iso-4762-m2x12", name: "M2 x 12 screw", quantity: 4 },
+    { id: "spacers", moduleDefId: "m2-nylon-spacer-5mm", name: "5 mm spacer", quantity: 4 },
+    { id: "nuts", moduleDefId: "iso-10511-m2-nyloc-nut", name: "M2 nyloc nut", quantity: 4 },
+  ],
+  interfaces: [bolts("bolts", "4 x M2 on 26 mm", 2, 26)],
+  // from the top plate's top face: nut under the 2 mm plate, spacer 0–5, board 5–5.62, screw head on the board
+  fastenerStack: [
+    { child: "nuts", atMm: -2, direction: -1 },
+    { child: "spacers", atMm: 0 },
+    { child: "screws", atMm: 5.62, direction: -1 },
+  ],
+};
+
+/** O4 transmission module on the bottom plate. */
+export const QUADCOPTER_5IN_VTX_HARDWARE: ModuleDef = {
+  id: "quadcopter-5in-vtx-hardware",
+  name: "Air unit hardware (M2)",
+  kind: "harness",
+  topology: "bus",
+  description: "Four M2 x 18 screws up through the bottom plate, 3 mm airflow spacers, the module, M2 nyloc nuts.",
+  tags: ["harness", "mechanical", "fasteners"],
+  display: { icon: "wrench" },
+  children: [
+    { id: "screws", moduleDefId: "iso-4762-m2x18", name: "M2 x 18 screw", quantity: 4 },
+    { id: "spacers", moduleDefId: "m2-nylon-spacer-3mm", name: "3 mm spacer", quantity: 4 },
+    { id: "nuts", moduleDefId: "iso-10511-m2-nyloc-nut", name: "M2 nyloc nut", quantity: 4 },
+  ],
+  interfaces: [bolts("bolts", "4 x M2 on 25.5 mm", 2, 25.5)],
+  fastenerStack: [
+    { child: "screws", atMm: -5 },
+    { child: "spacers", atMm: 0 },
+    { child: "nuts", atMm: 9 },
+  ],
+};
+
+/** O4 camera between the side plates: two screws per side (O4 manual p.6). */
+export const QUADCOPTER_5IN_CAMERA_HARDWARE: ModuleDef = {
+  id: "quadcopter-5in-camera-hardware",
+  name: "Camera hardware (M2)",
+  kind: "harness",
+  topology: "bus",
+  description: "Four M2 x 5 screws (included with the O4) through the 2 mm side plates into the camera's side holes, 16 mm apart.",
+  tags: ["harness", "mechanical", "fasteners"],
+  display: { icon: "wrench" },
+  children: [{ id: "screws", moduleDefId: "o4-camera-screw-m2x5", name: "M2 x 5 camera screw", quantity: 4 }],
+  interfaces: [bolts("bolts", "2 x M2 per side, 16 mm", 2, 16, 14)],
+  // frame: mid-plane of the clamp, normal toward the left plate, y = up; plates' outer faces at ±9
+  fastenerStack: [
+    { child: "screws", atMm: -9, positions: [[0, -8], [0, 8]] },
+    { child: "screws", atMm: 9, direction: -1, positions: [[0, -8], [0, 8]] },
   ],
 };
 
@@ -119,4 +245,9 @@ export const HARNESSES: ModuleDef[] = [
   DJI_O4_3IN1_CABLE,
   DOLPHINRC_XT60_BATTERY_LEAD,
   QUADCOPTER_5IN_STACK_HARDWARE,
+  QUADCOPTER_5IN_MOTOR_HARDWARE,
+  QUADCOPTER_5IN_FRAME_HARDWARE,
+  QUADCOPTER_5IN_GPS_HARDWARE,
+  QUADCOPTER_5IN_VTX_HARDWARE,
+  QUADCOPTER_5IN_CAMERA_HARDWARE,
 ];

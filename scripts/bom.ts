@@ -42,14 +42,18 @@ function trait(def: ModuleDef, type: string, key: string): unknown {
   return undefined;
 }
 
-function evidence(partId: string): { source?: string; verification?: string; assumptions: number; openGaps: number } {
+function evidence(partId: string, def?: ModuleDef): { source?: string; verification?: string; assumptions: number; openGaps: number } {
   const dir = join(ROOT, "library", "parts", partId);
-  let source: string | undefined;
+  // system-level hardware without a research folder cites its supplier listing in a usage_note
+  let source: string | undefined = def?.traits?.find((t) => t.type === "usage_note" && typeof t.params?.source === "string")?.params?.source as string | undefined;
   if (existsSync(join(dir, "sources.json"))) {
     const rows = JSON.parse(readFileSync(join(dir, "sources.json"), "utf8")) as Array<Record<string, unknown>>;
     source = String((rows.find((r) => r.authority === "manufacturer") ?? rows[0])?.url ?? "");
   }
-  if (!existsSync(join(dir, "verification.json"))) return { source, assumptions: 0, openGaps: 0 };
+  if (!existsSync(join(dir, "verification.json"))) {
+    const count = (type: string) => def?.traits?.filter((t) => t.type === type).length ?? 0;
+    return { source, assumptions: count("assumption"), openGaps: count("data_gap") };
+  }
   const v = JSON.parse(readFileSync(join(dir, "verification.json"), "utf8"));
   return {
     source,
@@ -86,7 +90,7 @@ export function buildBom(system: ModuleDef, lookup: ModuleLookup): BomRow[] {
         buy: custom ? "fabricate" : includedWith ? "included" : "purchase",
         includedWith,
         usedBy: [],
-        ...evidence(child.id),
+        ...evidence(child.id, child),
       };
       row.quantity += qty;
       row.usedBy.push(childPath);
