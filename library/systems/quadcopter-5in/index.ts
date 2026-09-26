@@ -6,7 +6,7 @@
  * `validateLinks(QUADCOPTER_5IN, lookupQuadcopterModule)` for per-link DRC.
  *
  * Motor order follows Betaflight Quad-X: M1 rear-right, M2 front-right,
- * M3 rear-left, M4 front-left.
+ * M3 rear-left, M4 front-left; spin is Betaflight's default "props in".
  */
 import type { InterfaceLink, ModuleDef } from "../../../src/types/index.js";
 import type { ModuleLookup } from "../../../src/system/index.js";
@@ -18,11 +18,15 @@ import { HARNESSES } from "./harnesses.js";
 
 // `leads`: rotation of the motor on its pad (a multiple of the pattern's 90°)
 // that points its phase leads back along the arm toward the ESC.
+// `spin`: Betaflight Quad-X default ("props in", yaw_motors_reversed OFF):
+// M1 rear-right CW, M2 front-right CCW, M3 rear-left CCW, M4 front-left CW,
+// viewed from above (betaflight-reference.md §3a). Set on the arm instance,
+// it applies to the arm's motor (ESC direction) and to its prop (variant).
 const ARMS = [
-  { id: "arm_fr", label: "Front-right arm", motor: 2, leads: 180 },
-  { id: "arm_rr", label: "Rear-right arm", motor: 1, leads: 270 },
-  { id: "arm_rl", label: "Rear-left arm", motor: 3, leads: 0 },
-  { id: "arm_fl", label: "Front-left arm", motor: 4, leads: 90 },
+  { id: "arm_fr", label: "Front-right arm", motor: 2, leads: 180, spin: "ccw" },
+  { id: "arm_rr", label: "Rear-right arm", motor: 1, leads: 270, spin: "cw" },
+  { id: "arm_rl", label: "Rear-left arm", motor: 3, leads: 0, spin: "ccw" },
+  { id: "arm_fl", label: "Front-left arm", motor: 4, leads: 90, spin: "cw" },
 ] as const;
 
 const corner = (armId: string) => armId.slice(4);
@@ -55,7 +59,7 @@ export const QUADCOPTER_5IN: ModuleDef = {
     { id: "frame", moduleDefId: "quadcopter-5in-frame", name: "Frame" },
     { id: "top_plate", moduleDefId: "quadcopter-5in-top-plate", name: "Top plate" },
     { id: "stack", moduleDefId: "dolphinrc-f405-v3-stack", name: "FC + ESC stack" },
-    ...ARMS.map((arm) => ({ id: arm.id, moduleDefId: "quadcopter-5in-arm", name: arm.label })),
+    ...ARMS.map((arm) => ({ id: arm.id, moduleDefId: "quadcopter-5in-arm", name: arm.label, spin: arm.spin })),
     { id: "battery", moduleDefId: "cnhl-black-series-1100mah-6s-100c", name: "6S battery" },
     { id: "receiver", moduleDefId: "radiomaster-rp1-v2-elrs-2g4", name: "ELRS receiver" },
     { id: "video", moduleDefId: "dji-o4-air-unit", name: "DJI O4 Air Unit" },

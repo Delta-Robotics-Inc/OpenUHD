@@ -2,8 +2,14 @@
   "artifact": "quadcopter-5in-frame",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "40dc5461f90a831f90ede053029f1c3f70a4e5c90dc68159a63a6f4b1fd5a84c",
+  "sourceDigest": "c9db6afdf963bcadc0fb814d07061bc5af937237cdaff9d277c701dbc8319920",
   "units": "mm",
+  "volume_mm3": 59862.882,
+  "bodies": {
+    "bottom_plate": 57514.336,
+    "motor_pads": 618.957,
+    "camera_plates": 1729.589
+  },
   "features": {
     "motor_mount_fl": {
       "area_mm2": 309.478,

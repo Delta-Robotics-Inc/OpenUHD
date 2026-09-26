@@ -5,51 +5,72 @@
  * so they work for any system that has the parts, not just the quadcopter.
  */
 import type { ModuleDef } from "../../../src/types/index.js";
+import { fullThrottle, thrustTests } from "../../../src/system/propulsion.js";
+import { massByDefinition, moduleMass, systemMass, type ModuleMass, type SystemMass } from "../../../src/system/mass.js";
+import { cadVolumeMm3 } from "../../../library/cad/manifests.js";
 import { category } from "./model.js";
 import type { DerivedDef, DocContext } from "./values.js";
 
-const weightOf = (d: ModuleDef): number | undefined => d.domains?.find((x) => x.domain === "mechanical")?.weight_g;
-const perf = (d: ModuleDef) => d.traits?.find((t) => t.type === "performance")?.params as Record<string, any> | undefined;
-
-/** Leaf module instances plus placed hardware, as (instance label, def) pairs. */
-export function massItems(ctx: DocContext): { path: string; def: ModuleDef }[] {
-  const items = ctx.scene.assembly.instances.filter((i) => i.kind === "module").map((i) => ({ path: i.path.join("/"), def: i.def }));
-  for (const h of ctx.scene.hardware) items.push({ path: h.key, def: h.def });
-  return items;
+/** System mass from the model (src/system/mass.ts): stated weights, else CAD volume × material density. */
+export function modelMass(ctx: DocContext): SystemMass {
+  return systemMass(ctx.sys.system, ctx.sys.lookup, cadVolumeMm3);
 }
 
-export function massBreakdown(ctx: DocContext) {
-  const groups = new Map<string, { def: ModuleDef; count: number; weight?: number }>();
-  for (const it of massItems(ctx)) {
-    const g = groups.get(it.def.id) ?? { def: it.def, count: 0, weight: weightOf(it.def) };
-    g.count++;
-    groups.set(it.def.id, g);
-  }
-  return [...groups.values()];
+/** Model queries a module's mass rests on. */
+function massInputs(def: ModuleDef, m?: ModuleMass): string[] {
+  if (!m) return [];
+  if (m.basis === "stated") return [`def:${def.id}:domains[domain=mechanical].weight_g`];
+  return [`def:${def.id}:domains[domain=mechanical].material.density_g_cm3`];
 }
 
 const motors = (ctx: DocContext) => ctx.scene.assembly.instances.filter((i) => i.kind === "module" && category(i.def) === "motor");
 const firstOf = (ctx: DocContext, cat: string) => ctx.scene.assembly.instances.find((i) => i.kind === "module" && category(i.def) === cat)?.def;
 
 export const DERIVED: Record<string, DerivedDef> = {
-  "mass.known_total": {
-    label: "Mass of parts with a stated weight",
+  "mass.all_up": {
+    label: "All-up weight of parts with a mass in the model",
     unit: "g",
-    formula: "∑ (count × domains[mechanical].weight_g) over leaf instances and placed hardware",
+    formula: "systemMass: ∑ quantity × (weight_g, else CAD volume × material density) over every instance; instances with neither are listed, not guessed",
     compute: (ctx) => {
-      const b = massBreakdown(ctx).filter((g) => g.weight !== undefined);
+      const m = modelMass(ctx);
+      const groups = massByDefinition(m).filter((g) => g.mass);
       return {
-        value: Number(b.reduce((s, g) => s + g.count * g.weight!, 0).toFixed(2)),
-        inputs: b.map((g) => `def:${g.def.id}:domains[domain=mechanical].weight_g`),
+        value: Number(m.totalG.toFixed(1)),
+        inputs: groups.flatMap((g) => massInputs(g.def, g.mass)),
+        note: m.missing.length ? `excludes ${m.missing.length} part(s) with no mass: ${m.missing.map((e) => e.def.name).join(", ")}; ${m.assumedG.toFixed(1)} g of it is computed from assumed material/geometry` : undefined,
       };
     },
   },
-  "mass.missing_count": {
-    label: "Parts without a stated weight",
-    formula: "count of leaf instances and placed hardware whose definition has no weight_g",
+  "mass.assumed": {
+    label: "Part of the all-up weight computed from assumed material or nominal geometry",
+    unit: "g",
+    formula: "∑ systemMass entries whose material carries an assumption",
     compute: (ctx) => {
-      const b = massBreakdown(ctx).filter((g) => g.weight === undefined);
-      return { value: b.reduce((s, g) => s + g.count, 0), inputs: [], note: b.map((g) => `${g.def.id} ×${g.count}`).join(", ") };
+      const m = modelMass(ctx);
+      const groups = massByDefinition(m).filter((g) => g.mass?.assumed);
+      return { value: Number(m.assumedG.toFixed(1)), inputs: groups.flatMap((g) => massInputs(g.def, g.mass)) };
+    },
+  },
+  "mass.missing_count": {
+    label: "Parts without a mass in the model",
+    formula: "count (by quantity) of systemMass entries with no weight_g and no material + CAD volume",
+    compute: (ctx) => {
+      const m = modelMass(ctx);
+      return { value: m.missing.reduce((s, e) => s + e.quantity, 0), inputs: [], note: m.missing.map((e) => `${e.def.name} (${e.path})`).join(", ") };
+    },
+  },
+  "mass.module": {
+    label: "Mass of one module",
+    unit: "g",
+    formula: "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+    compute: (ctx, args = []) => {
+      const def = ctx.sys.lookup(args[0] ?? "");
+      const m = def ? moduleMass(def, cadVolumeMm3) : undefined;
+      return {
+        value: m ? Number(m.massG.toFixed(m.massG < 1 ? 2 : 1)) : undefined,
+        inputs: def ? massInputs(def, m) : [],
+        note: m?.basis === "cad_volume" ? `${(m.volumeMm3! / 1000).toFixed(2)} cm³ × ${m.material!.density_g_cm3} g/cm³ (${m.material!.name})${m.assumed ? "; assumption: " + m.material!.assumption : ""}` : undefined,
+      };
     },
   },
   "propulsion.motor_count": {
@@ -60,29 +81,31 @@ export const DERIVED: Record<string, DerivedDef> = {
   "propulsion.thrust_full_total": {
     label: "Static thrust, all motors at full throttle",
     unit: "g",
-    formula: "motors × performance.thrust_tests[0].full_throttle.thrust_g",
+    formula: "motors × thrust_g of the top (100 %) row of the first thrust table",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;
-      const t = d && perf(d)?.thrust_tests?.[0];
+      const t = d && thrustTests(d)[0];
+      const top = t ? fullThrottle(t) : undefined;
       return {
-        value: t ? m.length * t.full_throttle.thrust_g : undefined,
-        inputs: d ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g`] : [],
-        note: t ? `manufacturer test with ${t.propeller} at ${t.supply_V} V` : "no thrust test in the motor model",
+        value: top ? m.length * top.thrust_g : undefined,
+        inputs: d && top ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=${top.throttle_pct}].thrust_g`] : [],
+        note: t ? `manufacturer table with ${t.propeller} at ${t.supply_V} V (not the fitted propeller)` : "no thrust test in the motor model",
       };
     },
   },
   "propulsion.current_full_total": {
     label: "Static current, all motors at full throttle",
     unit: "A",
-    formula: "motors × performance.thrust_tests[0].full_throttle.current_A",
+    formula: "motors × current_A of the top (100 %) row of the first thrust table",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;
-      const t = d && perf(d)?.thrust_tests?.[0];
+      const t = d && thrustTests(d)[0];
+      const top = t ? fullThrottle(t) : undefined;
       return {
-        value: t ? Number((m.length * t.full_throttle.current_A).toFixed(2)) : undefined,
-        inputs: d ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].full_throttle.current_A`] : [],
+        value: top ? Number((m.length * top.current_A).toFixed(2)) : undefined,
+        inputs: d && top ? [`def:${d.id}:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=${top.throttle_pct}].current_A`] : [],
       };
     },
   },

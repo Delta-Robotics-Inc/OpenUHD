@@ -33,6 +33,8 @@ const BUILDER_PROTOCOLS = [
 const CANONICAL_TRAITS = new Set([
   "pin_functions", "connector", "operating_conditions", "absolute_maximum",
   "performance", "assumption", "source_discrepancy", "data_gap", "usage_note",
+  // PB-797: typed relations (src/types/trait.ts)
+  "supplied_from", "handedness",
   // emitted by builders
   "phase_order", "esc_signal_protocols", "serial_rx_protocol", "bolt_pattern", "shaft",
 ]);

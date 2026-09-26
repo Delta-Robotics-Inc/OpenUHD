@@ -180,7 +180,8 @@ function resolveDef(q: string, def: ModuleDef | undefined, path: string): Resolv
   else if (w.lastKey === "weight_g") unit = "g";
   else if (w.lastKey) unit = unitFromKey(w.lastKey);
   const keys = w.trail.filter((x) => x && typeof x === "object" && !Array.isArray(x) && typeof x.id === "string").map((x) => x.id);
-  const inAssumptionTrait = w.trail.some((x) => x && typeof x === "object" && x.type === "assumption");
+  // an assumption trait, or any trait/spec object carrying its own `assumption` note (supplied_from, torque, material)
+  const inAssumptionTrait = w.trail.some((x) => x && typeof x === "object" && (x.type === "assumption" || (typeof x.assumption === "string" && x.assumption) || (typeof x.params?.assumption === "string" && x.params.assumption)));
   const assumption = inAssumptionTrait ? "assumption trait" : assumptionFor(def, [...keys, w.lastKey ?? ""]);
   const srcs = moduleSources(def.id);
   const verified = Boolean(moduleVerification(def.id));
@@ -240,7 +241,7 @@ export function makeResolver(ctx: Omit<DocContext, "resolve">): (q: string) => R
       if (d && call) {
         const r = d.compute(full, call[2].split(",").map((x) => x.trim()));
         const inputs = r.inputs.map(resolve);
-        const status: ValueStatus = inputs.some((i) => i.status === "standin") ? "standin" : r.value === undefined ? "gap" : "derived";
+        const status: ValueStatus = inputs.some((i) => i.status === "standin") ? "standin" : r.value === undefined ? "gap" : inputs.some((i) => i.status === "assumption") ? "assumption" : "derived";
         return { q, value: r.value, unit: r.unit ?? d.unit, status, inputs: r.inputs, formula: d.formula, note: r.note };
       }
       if (!d) return { q, value: undefined, status: "gap", note: `no derivation "${rest}"` };
@@ -250,7 +251,9 @@ export function makeResolver(ctx: Omit<DocContext, "resolve">): (q: string) => R
         ? "standin"
         : inputs.some((i) => i.status === "gap") && r.value === undefined
           ? "gap"
-          : "derived";
+          : inputs.some((i) => i.status === "assumption")
+            ? "assumption"
+            : "derived";
       return { q, value: r.value, unit: r.unit ?? d.unit, status, inputs: r.inputs, formula: d.formula, note: r.note };
     }
     if (scheme === "ver") {

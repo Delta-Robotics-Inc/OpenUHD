@@ -17,9 +17,9 @@
  *     `thread` is set: the bore is plain and the M5 thread belongs to the
  *     motor shaft. The sources do not say whether the hub is nut-retained or
  *     T-mount, so that is a `data_gap`, not a claim.
- *   - Handedness (CW vs CCW) has no parameter on the Shaft protocol, so it is
- *     a performance field + usage_note; recorded as a vocabulary gap in
- *     .research/gaps.json. No protocol was invented.
+ *   - Handedness (CW vs CCW) has no parameter on the Shaft protocol. It is a
+ *     typed `handedness` trait (PB-797, HandednessTrait): one definition, two
+ *     variants; each fitted prop's variant is `ChildModuleRef.spin`.
  *   - No electrical domain (passive part). No network/fluid domains.
  *   - Thermal: neither source gives an operating or storage temperature, so
  *     there is no thermal domain or operating_conditions trait. verify-part's
@@ -30,7 +30,7 @@
  *   - Prop diameter is kept in inches as the source states it; no mm
  *     envelope is put in dimensions_mm (would be a derived value).
  */
-import type { ModuleDef } from "../../src/types/index.js";
+import type { HandednessTrait, ModuleDef } from "../../src/types/index.js";
 import { defineModule, Shaft } from "../../src/protocols/index.js";
 import { cadArtifacts, feature, own, procedural, withGeometry } from "../cad/artifacts.js";
 
@@ -116,6 +116,17 @@ const HQPROP_ETHIX_S5_BASE: ModuleDef = defineModule({
         source: [SRC.product, SRC.rdq],
       },
     },
+    // PB-797: the handed variants, typed. The fitted variant is instance
+    // data (ChildModuleRef.spin); prop_handedness checks it against the motor.
+    {
+      type: "handedness",
+      params: {
+        variants: ["cw", "ccw"],
+        pack: { cw: 2, ccw: 2 },
+        source: SRC.product,
+        note: "Sold as one SKU 'Ethix S5 Light Grey (2CW+2CCW)': 'Includes 2 x CW Ethix S5 propeller 2 x CCW Ethix S5 propeller'. The page does not say how CW and CCW are marked on the prop.",
+      },
+    } satisfies HandednessTrait,
     {
       type: "usage_note",
       params: {

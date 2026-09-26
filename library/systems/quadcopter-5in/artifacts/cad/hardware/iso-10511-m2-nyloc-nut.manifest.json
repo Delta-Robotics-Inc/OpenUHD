@@ -2,7 +2,11 @@
   "artifact": "iso-10511-m2-nyloc-nut",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "cc66465fd0c35e512d2dc90dc298de0f982f3d5c51c6676a86c204bc0138ff60",
+  "sourceDigest": "fc34ba9a47331548b39cbe1b6e4f3f0e998ec824b8bc8c08c69aa065d923171f",
   "units": "mm",
+  "volume_mm3": 30.001,
+  "bodies": {
+    "nut": 30.001
+  },
   "features": {}
 }

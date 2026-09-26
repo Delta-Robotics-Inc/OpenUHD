@@ -334,8 +334,8 @@
     "usedBy": [
       "top_plate"
     ],
-    "assumptions": 0,
-    "openGaps": 1
+    "assumptions": 1,
+    "openGaps": 0
   },
   {
     "line": 22,
@@ -348,8 +348,8 @@
     "usedBy": [
       "frame"
     ],
-    "assumptions": 0,
-    "openGaps": 1
+    "assumptions": 1,
+    "openGaps": 0
   },
   {
     "line": 23,

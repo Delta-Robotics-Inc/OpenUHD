@@ -9,6 +9,9 @@ import { barChart, lineChart, meterChart, ACCENT } from "../charts.js";
 import { callouts, dimension, figure, groupRow, note, sec, sub, table, leafOf, parseEnd } from "../blocks.js";
 import { esc, MARKERS } from "../html.js";
 import { allBodies, interfaceAnchor, renderBody, ISO } from "../figures.js";
+import { thrustTests } from "../../../../src/system/propulsion.js";
+import { massByDefinition, moduleMass, systemMass } from "../../../../src/system/mass.js";
+import { cadVolumeMm3 } from "../../../../library/cad/manifests.js";
 import { category } from "../model.js";
 import { column } from "../testdata.js";
 import { coverPage, figNum, testOf, testTag, thumbnail, type BuildEnv } from "./common.js";
@@ -121,11 +124,31 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
       ["Standoff height", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].metadata.standoff_height_mm")],
       ["Propeller diameter", doc.v("def:hqprop-ethix-s5:domains[domain=mechanical].metadata.prop_diameter_in", "u=in")],
       ["Motor diameter", doc.v("def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].metadata.diameter_mm")],
-      ["Frame mass", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].weight_g")],
-      ["Top plate mass", doc.v("def:quadcopter-5in-top-plate:domains[domain=mechanical].weight_g")],
+      ["Plate material", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].material.name", undefined, { cls: "wrap" })],
+      ["Material density", doc.v("def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3", "u=g/cm³")],
+      ["Frame mass", doc.v("derived:mass.module(quadcopter-5in-frame)", "d1")],
+      ["Top plate mass", doc.v("derived:mass.module(quadcopter-5in-top-plate)", "d1")],
     ], { cls: "dense" })}
-    <p class="small muted">Frame material and mass are open data gaps of the custom frame module.</p></div></div></div>`);
+    <p class="small muted">Plate masses are the generated CAD volume × the declared material density (systemMass), so they follow the design.</p></div></div></div>`);
   out.push(`<div class="block">${figure({ src: env.img(side.file), w: side.width, h: side.height, overlay: sideDims, num: figNum(env), caption: "Right side, front to the right. Plate gap is the frame's standoff height.", unit: "mm" })}</div>`);
+
+  // mass budget (systemMass): every instance by definition, and what has no mass
+  {
+    const sm = systemMass(ctx.sys.system, ctx.sys.lookup, cadVolumeMm3);
+    const groups = massByDefinition(sm);
+    const rows = groups
+      .filter((g) => g.mass)
+      .sort((a, b) => (b.totalG ?? 0) - (a.totalG ?? 0))
+      .map((g) => {
+        const unit = g.mass!.basis === "stated" ? doc.v(`def:${g.def.id}:domains[domain=mechanical].weight_g`) : doc.v(`derived:mass.module(${g.def.id})`);
+        return [esc(shortDefName(g.def)), String(g.quantity), unit, g.mass!.basis === "stated" ? "stated" : `CAD × ${esc(g.mass!.material!.name.replace(/ \(.*\)/, ""))}`];
+      });
+    const missing = groups.filter((g) => !g.mass);
+    out.push(`<div class="block keep">${sub("Mass budget")}${table([{ h: "Part" }, { h: "Qty", cls: "num" }, { h: "Each", cls: "num" }, { h: "Basis" }], rows, {
+      cls: "dense",
+      foot: `All-up weight ${doc.v("derived:mass.all_up", "d1")} (systemMass), of which ${doc.v("derived:mass.assumed", "d1")} is computed from assumed material or nominal CAD geometry. Not included, no mass in the model: ${missing.map((g) => `${esc(g.def.name)} ×${g.quantity}`).join(", ") || "none"}. Rows in order of total mass (quantity × each).`,
+    })}</div>`);
+  }
 
   // interface callouts
   const calls = (ds.mechanicalCallouts ?? []).map((s) => ({ s, a: interfaceAnchor(ctx.scene, s) })).filter((x) => x.a);
@@ -210,10 +233,14 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     return [
       `<b>${esc(leaf?.iface.name ?? d.refs[0])}</b><br><span class="muted small">${esc(d.refs[0])}</span>`,
       leaf ? doc.v(`def:${leaf.def.id}:interfaces[id=${leaf.iface.id}].parameters[id=voltage].value`, "d1") : "—",
-      det.capacityW !== undefined ? doc.v(q("capacityW"), "u=W") : '<span class="v st-gap">—</span><sup class="mk mk-gap">—</sup>',
-      det.loadW !== undefined ? doc.v(q("loadW"), "u=W") : '<span class="v st-gap">—</span>',
+      det.capacityW !== undefined
+        ? doc.v(q("capacityW"), "u=W")
+        : det.suppliedFrom
+          ? `from ${doc.v(q("suppliedFrom"))}${det.assumption ? ' <sup class="mk mk-assumption">A</sup>' : ""}`
+          : '<span class="v st-gap">—</span><sup class="mk mk-gap">—</sup>',
+      det.loadW !== undefined ? doc.v(q("loadW"), "u=W|s3") : det.suppliedFrom ? '<span class="muted">in parent</span>' : '<span class="v st-gap">—</span>',
       esc(loads.join(", ")),
-      esc((det.unknownLoads ?? []).join(", ") || (det.capacityW === undefined ? "source has no current rating" : "—")),
+      esc((det.unknownLoads ?? []).join(", ") || (det.suppliedFrom ? `budgeted on ${det.suppliedFrom}${det.assumption ? " (assumed branch)" : ""}` : det.capacityW === undefined ? "source has no current rating" : "—")),
     ];
   });
 
@@ -246,7 +273,7 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     : "";
   out.push(`<div class="block"><div class="cols"><div class="chartbox"><h3>BEC and rail utilisation (known loads)</h3>${meters}<div class="cap"><b>Figure ${figNum(env)}</b><span>checkSystem supply_budget.</span></div></div>
     <div class="chartbox"><h3>Propulsion peak current vs battery ratings</h3>${propChart}<div class="cap"><b>Figure ${figNum(env)}</b><span>${pc ? esc(pc.message) : ""}</span></div></div></div></div>`);
-  out.push(`<div class="block keep">${sub("Power rails")}${table([{ h: "Rail" }, { h: "Voltage", cls: "num" }, { h: "Capacity", cls: "num" }, { h: "Known load", cls: "num" }, { h: "Loads" }, { h: "Unbudgeted" }], railRows, { foot: "From checkSystem rule supply_budget: capacity = rail voltage × current rating; loads that state no draw cannot be budgeted." })}</div>`);
+  out.push(`<div class="block keep">${sub("Power rails")}${table([{ h: "Rail" }, { h: "Voltage", cls: "num" }, { h: "Capacity", cls: "num" }, { h: "Known load", cls: "num" }, { h: "Loads" }, { h: "Unbudgeted" }], railRows, { foot: "From checkSystem rule supply_budget: capacity = rail voltage × current rating; loads that state no draw cannot be budgeted. A branch rail (supplied_from) is budgeted on the output that feeds it; A marks a relation assumed, not cited." })}</div>`);
   // operating ranges of power inputs
   const opRows: string[][] = [];
   for (const inst of ctx.scene.assembly.instances.filter((i) => i.kind === "module")) {
@@ -264,14 +291,33 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
   // ---------------------------------------------------------------- 06 performance
   out.push(sec("06", "Performance", "test data", ' data-break="before"'));
   const motor = ctx.scene.assembly.instances.find((i) => category(i.def) === "motor")?.def;
-  const tests = ((motor?.traits?.find((t) => t.type === "performance")?.params as any)?.thrust_tests ?? []) as any[];
+  const tests = motor ? thrustTests(motor) : [];
   const mq = (i: number, k: string) => `def:${motor!.id}:traits[type=performance].params.thrust_tests[${i}].${k}`;
+  const fitted = ctx.scene.assembly.instances.find((i) => category(i.def) === "prop")?.def.name ?? "";
   if (motor && tests.length) {
-    out.push(`<div class="block">${sub("Motor thrust test (manufacturer)")}${table(
-      [{ h: "Propeller" }, { h: "Supply", cls: "num" }, { h: "50 % thrust", cls: "num" }, { h: "50 % current", cls: "num" }, { h: "100 % thrust", cls: "num" }, { h: "100 % current", cls: "num" }, { h: "100 % power", cls: "num" }, { h: "RPM at 100 %", cls: "num" }],
-      tests.map((_, i) => [doc.v(mq(i, "propeller")), doc.v(mq(i, "supply_V")), doc.v(mq(i, "half_throttle.thrust_g"), "u=g"), doc.v(mq(i, "half_throttle.current_A"), "u=A"), doc.v(mq(i, "full_throttle.thrust_g"), "u=g"), doc.v(mq(i, "full_throttle.current_A"), "u=A|d1"), doc.v(mq(i, "full_throttle.power_W"), "u=W"), doc.v(mq(i, "full_throttle.rpm"), "u=rpm")]),
-      { cls: "dense", foot: `${esc(motor.name)}; the model holds the 50 % and 100 % rows of the maker's table. The fitted propeller (${esc(ctx.scene.assembly.instances.find((i) => category(i.def) === "prop")?.def.name ?? "")}) was not tested by the maker.` },
-    )}</div>`);
+    // the maker's full table: every printed row of every test prop, side by side by throttle
+    const throttles = [...new Set(tests.flatMap((t) => t.rows.map((r) => r.throttle_pct)))].sort((a, b) => a - b);
+    const cols = [{ h: "Throttle", cls: "num" }, ...tests.flatMap((t) => [
+      { h: `${t.propeller.replace(/^MEPS /, "")} V`, cls: "num" },
+      { h: "A", cls: "num" },
+      { h: "rpm", cls: "num" },
+      { h: "g", cls: "num" },
+      { h: "W", cls: "num" },
+    ])];
+    const rowq = (i: number, pct: number, k: string) => mq(i, `rows[throttle_pct=${pct}].${k}`);
+    const rows = throttles.map((pct) => [
+      `${pct} %`,
+      ...tests.flatMap((t, i) =>
+        t.rows.some((r) => r.throttle_pct === pct)
+          ? [doc.v(rowq(i, pct, "voltage_V"), "d1|nounit"), doc.v(rowq(i, pct, "current_A"), "d1|nounit"), doc.v(rowq(i, pct, "rpm"), "nounit"), doc.v(rowq(i, pct, "thrust_g"), "nounit"), doc.v(rowq(i, pct, "power_W"), "nounit")]
+          : ["—", "—", "—", "—", "—"],
+      ),
+    ]);
+    const heads = tests.map((_, i) => `${doc.v(mq(i, "propeller"))} at ${doc.v(mq(i, "supply_V"), "d1")}`).join("; ");
+    out.push(`<div class="block keep">${sub("Motor thrust tables (manufacturer)")}${table(cols, rows, {
+      cls: "dense",
+      foot: `${esc(motor.name)}: every row of the maker's KV table, per test propeller (${heads}); columns per propeller are measured supply voltage, current, speed, thrust and electrical power. The fitted propeller (${esc(fitted)}) is not one the maker tested, so these figures, and every figure derived from them below, are for the maker's test props.`,
+    })}</div>`);
   }
   const sweep = testOf(env, "throttle-sweep");
   const hover = testOf(env, "hover-current");
@@ -296,12 +342,12 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
       y2: { label: "Current", unit: "A", min: 0 },
       legend: true,
       series: [
-        { label: "thrust (fit)", points: thr.map((t, i) => [t, tpm[i]]) },
-        { label: "current (fit)", points: thr.map((t, i) => [t, ipm[i]]), axis: "y2", color: "#1b1b1b", dashed: true },
-        { label: "maker's test", points: [[50, tests[0].half_throttle.thrust_g], [100, tests[0].full_throttle.thrust_g]], markersOnly: true, color: ACCENT },
-        { label: "", points: [[50, tests[0].half_throttle.current_A], [100, tests[0].full_throttle.current_A]], markersOnly: true, axis: "y2", color: "#1b1b1b", endLabel: false },
+        { label: "thrust", points: thr.map((t, i) => [t, tpm[i]]) },
+        { label: "current", points: thr.map((t, i) => [t, ipm[i]]), axis: "y2", color: "#1b1b1b", dashed: true },
+        { label: "maker's rows", points: tests[0].rows.map((r) => [r.throttle_pct, r.thrust_g]), markersOnly: true, color: ACCENT },
+        { label: "", points: tests[0].rows.map((r) => [r.throttle_pct, r.current_A]), markersOnly: true, axis: "y2", color: "#1b1b1b", endLabel: false },
       ],
-    })}<div class="cap"><b>Figure ${figNum(env)}</b><span>Circles: maker's test points (${esc(tests[0].propeller)}). Lines: ${esc(sweep.provenance.method)}</span></div></div>`);
+    })}<div class="cap"><b>Figure ${figNum(env)}</b><span>Circles: every row of the maker's table (${esc(tests[0].propeller)} at ${tests[0].supply_V} V, not the fitted prop). Lines: ${esc(sweep.provenance.method)}</span></div></div>`);
   }
   if (flight) {
     const names = flight.rows.map((r) => String(r[0]));
@@ -382,17 +428,18 @@ export async function buildDatasheet(env: BuildEnv): Promise<string> {
     const q = (k: string) => `sys:bom[line=${b.line}].${k}`;
     const def = ctx.sys.lookup(b.partId);
     const hasW = def?.domains?.some((d) => d.domain === "mechanical" && d.weight_g !== undefined);
+    const computed = def && !hasW ? moduleMass(def, cadVolumeMm3) : undefined;
     return [
       doc.v(q("line")),
       `${doc.v(q("name"), undefined, { cls: "wrap" })}<br><span class="muted small">${esc(b.partId)}</span>`,
       `${doc.v(q("manufacturer"), undefined, { cls: "wrap" })}${b.partNumber ? `<br><span class="muted small">${doc.v(q("partNumber"), undefined, { cls: "wrap" })}</span>` : ""}`,
       doc.v(q("quantity")) + (b.packQuantity ? `<br><span class="muted small">pack of ${doc.v(q("packQuantity"))}</span>` : ""),
       b.buy === "included" ? `<span class="tag">incl.</span><br><span class="muted small">${esc(b.includedWith)}</span>` : `<span class="tag ${b.buy === "fabricate" ? "warn" : ""}">${esc(b.buy)}</span>`,
-      hasW ? doc.v(`def:${b.partId}:domains[domain=mechanical].weight_g`) : '<span class="v st-gap">—</span>',
+      hasW ? doc.v(`def:${b.partId}:domains[domain=mechanical].weight_g`) : computed ? doc.v(`derived:mass.module(${b.partId})`) : '<span class="v st-gap">—</span>',
       `${doc.v(q("verification"))}<br><span class="muted small">A ${doc.v(q("assumptions"), undefined, { marker: false })} · gaps ${doc.v(q("openGaps"), undefined, { marker: false })}</span>`,
     ];
   });
-  out.push(`<div class="bom">${table([{ h: "#", cls: "num" }, { h: "Part" }, { h: "Manufacturer / P/N" }, { h: "Qty", cls: "num" }, { h: "Supply" }, { h: "Mass", cls: "num" }, { h: "Verification" }], bomRows, { split: true, caption: "Bill of materials", cls: "bomtable", foot: "Rows as generated by scripts/bom.ts (generated/bom.json). Mass is the part's stated weight; — = not in the model. A = assumption traits." })}</div>`);
+  out.push(`<div class="bom">${table([{ h: "#", cls: "num" }, { h: "Part" }, { h: "Manufacturer / P/N" }, { h: "Qty", cls: "num" }, { h: "Supply" }, { h: "Mass", cls: "num" }, { h: "Verification" }], bomRows, { split: true, caption: "Bill of materials", cls: "bomtable", foot: "Rows as generated by scripts/bom.ts (generated/bom.json). Mass per piece: the part's stated weight, else CAD volume × declared material density (derived); — = no mass in the model. A = assumption traits." })}</div>`);
 
   // ---------------------------------------------------------------- 09 evidence
   out.push(sec("09", "Evidence and assumptions", "", ' data-break="before"'));
@@ -431,7 +478,8 @@ export function provenanceSection(env: BuildEnv): string {
       `<sup class="mk mk-${v.status}">${MARKERS[v.status]?.mark ?? ""}</sup> ${esc(MARKERS[v.status]?.label ?? v.status)}`,
       esc(v.text),
       `<code class="q">${esc(v.q)}</code>`,
-      esc([v.formula, v.note, v.inputs?.length ? `inputs: ${v.inputs.length}` : "", v.source && v.status !== "derived" ? v.source : ""].filter(Boolean).join(" · ")).slice(0, 260),
+      // allow breaks after "/" so long source URLs wrap inside the column
+      esc([v.formula, v.note, v.inputs?.length ? `inputs: ${v.inputs.length}` : "", v.source && v.status !== "derived" ? v.source : ""].filter(Boolean).join(" · ")).slice(0, 260).replace(/\//g, "/\u200b"),
     ]);
   return `${sec("10", "Value provenance", "", ' data-break="before"')}
   <p class="prose">This document shows ${vals.length} bound values. Each is a query into the UHD model, re-resolved and compared by <code>uhd-tech-docs-verify</code>; the full list with sources is in <code>${esc(env.doc.meta.docId.toLowerCase())}.values.json</code> next to the document.</p>
@@ -574,3 +622,5 @@ function systemDiagram(env: BuildEnv): string {
   parts.push(`<line x1="78" x2="100" y1="${ly}" y2="${ly}" stroke="${ACCENT}" stroke-width="1.2"/><text x="106" y="${ly + 2.6}" font-size="7" fill="#1b1b1b">signal / data</text>`);
   return `<svg class="sysdiag" viewBox="-2 0 ${Wd + 4} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="inherit">${parts.join("")}</svg>`;
 }
+
+const shortDefName = (d: ModuleDef) => d.name.replace(/\s*\((included[^)]*|custom)\)/gi, "").replace(/, ISO 4762.*$/, "");

@@ -104,6 +104,10 @@ class Artifact:
             "toolVersion": bd.__version__,
             "sourceDigest": digest(self.generator, Path(__file__)),
             "units": "mm",
+            # PB-797: solid volume of the body (feature pads excluded), so a
+            # module's mass can be computed as volume x declared material density
+            "volume_mm3": round(sum(p.volume for p in self.parts), 3),
+            "bodies": {p.label: round(p.volume, 3) for p in self.parts},
             "features": {n: signature(f) for n, f in self.features.items()},
         }
         (self.out / f"{self.name}.manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

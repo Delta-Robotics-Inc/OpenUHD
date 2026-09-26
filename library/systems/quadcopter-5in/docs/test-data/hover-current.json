@@ -18,27 +18,25 @@
     },
     {
       "name": "All-up weight (estimate)",
-      "value": 550,
+      "value": 604,
       "unit": "g"
     }
   ],
   "provenance": {
-    "method": "Stand-in: hover thrust = AUW / motors; motor power from P ~ T^1.5 anchored at the maker's 50 % point; plus avionics.",
+    "method": "Stand-in: hover thrust = AUW / motors; motor power interpolated from the maker's thrust table at that thrust; plus avionics.",
     "derivedFrom": [
-      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
-      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
-      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
-      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
-      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.power_W",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].propeller",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].supply_V",
       "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
       "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
-      "derived:mass.known_total"
+      "derived:mass.all_up"
     ],
     "assumptions": [
-      "power laws through the maker's 50 % and 100 % points: thrust ~ throttle^1.155, current ~ throttle^2.048",
-      "maker's test used the MEPS SZ5145 prop at 25.2 V, not the fitted propeller",
+      "motor figures interpolate linearly between the 10 rows of the maker's table (0 at 0 % throttle); pack current = table electrical power ÷ 22.2 V nominal",
+      "maker's table used the MEPS SZ4942 prop at 25.2 V, not the fitted propeller",
       "avionics: DJI O4 minimum supply power 10 W, GNSS 50 mA at 5 V, FC + receiver 2.5 W (assumed), BEC efficiency 85 % (assumed)",
-      "all-up weight = 425.1 g of stated masses + 125 g assumed for the 67 parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)"
+      "all-up weight = 584 g from systemMass (derived:mass.all_up, of which 151.2 g is CAD volume × assumed material) + 20 g assumed for the 4 parts with no mass in the model (FC/ESC SH1.0 8-pin cable, Panasonic EEU-FR1V471 470 µF 35 V low-ESR electrolytic capacitor, XT60 battery lead (12 AWG), DJI O4 3-in-1 cable)"
     ],
     "generator": "scripts/docs/lib/standins/multirotor.ts",
     "generatedAt": "2026-09-26"
@@ -67,59 +65,59 @@
   ],
   "rows": [
     [
-      450,
-      113,
-      3.33,
-      74
+      504,
+      126,
+      7.02,
+      156
     ],
     [
-      500,
-      125,
-      3.78,
-      84
+      554,
+      139,
+      7.73,
+      172
     ],
     [
-      550,
-      138,
-      4.26,
-      95
+      604,
+      151,
+      8.45,
+      188
     ],
     [
-      600,
-      150,
-      4.76,
-      106
+      654,
+      164,
+      9.16,
+      203
     ],
     [
-      650,
-      163,
-      5.28,
-      117
+      704,
+      176,
+      9.87,
+      219
     ],
     [
-      700,
-      175,
-      5.82,
-      129
+      754,
+      189,
+      10.58,
+      235
     ]
   ],
   "summary": [
     {
       "id": "auw_g",
       "label": "All-up weight (estimate)",
-      "value": 550,
+      "value": 604,
       "unit": "g"
     },
     {
       "id": "hover_current_A",
       "label": "Hover current",
-      "value": 4.3,
+      "value": 8.4,
       "unit": "A"
     },
     {
       "id": "hover_power_W",
       "label": "Hover power",
-      "value": 95,
+      "value": 188,
       "unit": "W"
     },
     {

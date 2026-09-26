@@ -15,6 +15,9 @@ import { matTranslation, worldFrame, type SceneBody } from "../model.js";
 import type { RenderBody } from "../render/renderer.js";
 import type { StepGroupSpec } from "../types.js";
 import { coverPage, figNum, thumbnail, type BuildEnv } from "./common.js";
+import { systemTools, toolLabel, toolsFor } from "../../../../src/system/tools.js";
+import { propMounts } from "../../../../src/system/rotation.js";
+import { jointTorques } from "../../../../src/system/fasteners.js";
 
 const W = 178;
 
@@ -139,24 +142,25 @@ export async function buildAssemblyGuide(env: BuildEnv): Promise<string> {
   );
 
   // ---------------------------------------------------------------- 01 before you begin
-  const tools = new Set<string>();
-  for (const h of scene.hardware) {
-    const tags = new Set(h.def.tags ?? []);
-    const size = [...tags].find((t) => /^m\d$/.test(t))?.toUpperCase();
-    if (tags.has("screw")) tools.add(`Hex key for ${size} socket head (ISO 4762)`);
-    if (tags.has("nut")) tools.add(`Nut driver or spanner for ${size} nyloc`);
+  // tool sizes from the fasteners themselves (src/system/tools.ts)
+  const tools: string[] = [];
+  for (const t of systemTools(ctx.sys.system, ctx.sys.lookup)) {
+    const names = [...new Set(t.parts.map((id) => shortName(ctx.sys.lookup(id)!)))];
+    const why = t.use === "hold" ? "to hold" : "for";
+    const basis = t.basis === "standard" ? " (ISO 4762 socket size)" : "";
+    tools.push(`<b>${esc(toolLabel(t))}</b> <span class="muted small">${why} ${esc(names.join(", "))}${esc(basis)}</span>`);
   }
   const solder = ctx.wiring.some((w) => {
     const e = parseEnd(w.a);
     const l = leafOf(ctx.sys.system, ctx.sys.lookup, e.path, e.iface);
     return (l && /solder|bare_wire/.test(connectorOf(l.def, l.iface.id) ?? "")) || Boolean(w.harness && /xt60/.test(w.harness));
   });
-  if (solder) tools.add("Soldering iron, solder, heat-shrink");
+  if (solder) tools.push(esc("Soldering iron, solder, heat-shrink"));
   out.push(`<div class="block">${sec("01", "Before you begin")}<div class="cols-60"><div>
     ${sub("Contents")}<ol class="toc">${["Before you begin", "Kit contents", "Hardware", ...plans.map((p) => p.spec.title), "Coverage"].map((t, i) => `<li><span class="toc-n">${String(i + 1).padStart(2, "0")}</span><span class="toc-t">${esc(t)}</span><span class="toc-dots"></span><span class="toc-p">00</span></li>`).join("")}</ol>
   </div><div>
-    ${sub("Tools")}<ul class="plain">${[...tools].map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-    <p class="small muted">Derived from the hardware in the model (thread size and head type). Key sizes and tightening torques are not in the model.</p>
+    ${sub("Tools")}<ul class="plain">${tools.map((t) => `<li>${t}</li>`).join("")}</ul>
+    <p class="small muted">Derived from the fasteners in the model: hex keys from each screw's stated socket or the ISO 4762 socket size for its thread, drivers and spanners from each nut's and standoff's across-flats.</p>
     ${sub("Reading the figures")}
     <div class="keyrow"><span class="sw sw-ctx"></span>Already assembled</div>
     <div class="keyrow"><span class="sw sw-new"></span>Fitted in this step</div>
@@ -165,7 +169,7 @@ export async function buildAssemblyGuide(env: BuildEnv): Promise<string> {
     <p class="small muted">Parts are drawn exploded along each joint's axis in stacking order, from the model's fastener stacks and mate gaps.</p>
   </div></div>
   ${note("warning", "Remove the propellers for any work with the battery connected. Fit them last (step " + (plans.findIndex((p) => p.spec.id.includes("prop")) + 1 || plans.length) + ").")}
-  ${note("info", "Tightening torques are <b>not in the model</b> for any joint; the torque line of each step says so. Use thread-locker on metal-to-metal threads only.")}</div>`);
+  ${note("info", `Each step's torque line gives the tightening torque of the part turned, from the harness's fastener stack. ${doc.v("sys:checks.diagnostics[id=fastener_torque:summary].details.assumed", undefined, { marker: false })} of them are <b>assumptions</b> (marked A): no frame, motor or DJI source states a torque, so they are derated from supplier tables for the screw grade into steel. Threadlocker is only advised where a harness says so (steel into aluminium).`)}</div>`);
 
   // ---------------------------------------------------------------- 02 kit
   const kitItems: string[] = [];
@@ -189,13 +193,14 @@ export async function buildAssemblyGuide(env: BuildEnv): Promise<string> {
     hwRows.push([
       `<b>${esc(hdef.name)}</b>${hpaths.length > 1 ? ` <span class="accent-q">×${hpaths.length}</span>` : ""}<br><span class="muted small">joint ${esc([...new Set(items.map((h) => h.linkId))].join(", "))}</span>`,
       [...byChild.values()].map((hs) => `${hs.length} × ${esc(shortName(hs[0].def))}`).join("<br>"),
+      jointTorques(hdef, ctx.sys.lookup).map((t) => `${doc.v(`def:${hdef.id}:fastenerStack[${t.index}].torque.torqueNm`, "u=N·m")} <span class="muted small">${esc(shortName(t.part ?? hdef))}</span>`).join("<br>") || '<span class="v st-gap">—</span>',
       steps.length ? steps.map((n) => `Step ${n}`).join(", ") : '<span class="x-flag">none</span>',
     ]);
     if (hdef.fastenerStack?.length) stackSvgs.push(stackDiagram(env, hdef, items.filter((h) => h.harness === hpaths[0])));
     void hid;
   }
   out.push(`<div class="block" data-break="before">${sec("03", "Hardware", "fastener stacks")}<p class="prose">Every screw, spacer, standoff and nut is placed by a harness's <code>fastenerStack</code>. The sections below are drawn from those positions and the mate gaps: one hole of each joint, to one scale, millimetres from the structure face.</p></div>`);
-  out.push(table([{ h: "Harness" }, { h: "Parts placed" }, { h: "Used in" }], hwRows, { split: true, caption: "Hardware by harness", cls: "dense hwtable" }));
+  out.push(table([{ h: "Harness" }, { h: "Parts placed" }, { h: "Torque", cls: "num" }, { h: "Used in" }], hwRows, { split: true, caption: "Hardware by harness", cls: "dense hwtable" }));
   for (let i = 0; i < stackSvgs.length; i += 2) out.push(`<div class="block keep"><div class="cols">${stackSvgs.slice(i, i + 2).join("")}</div></div>`);
 
   // ---------------------------------------------------------------- steps
@@ -318,6 +323,29 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
 
   // ---- actions (generated), per joint in stacking order: parts behind the structure face first, then outward
   const actions: string[] = jointActions(env, p);
+  // props: which handed variant goes on which motor, from the resolved spins (PB-797)
+  const mounts = propMounts(ctx.sys.system, ctx.sys.lookup).filter((m) => p.mates.some((x) => x.linkId === m.linkId));
+  if (mounts.length) {
+    const motorNo = (armPath: string) => {
+      for (const l of ctx.sys.system.links ?? []) {
+        const ends = [l.a, l.b];
+        if (!ends.some((e) => "child" in e && e.child === armPath.split("/")[0])) continue;
+        const other = ends.find((e) => "child" in e && e.child !== armPath.split("/")[0]);
+        const n = other && /motor_(\d+)$/.exec(other.interfaceId)?.[1];
+        if (n) return `M${n}`;
+      }
+      return undefined;
+    };
+    for (const m of mounts) {
+      const arm = m.motor.setAt ?? m.motor.path.split("/")[0];
+      const armName = ctx.sys.system.children?.find((c) => c.id === arm.split("/")[0])?.name ?? arm;
+      const n = motorNo(m.motor.path);
+      const spinQ = `sys:system.children[id=${arm.split("/")[0]}].spin`;
+      actions.push(
+        `${esc(armName)}${n ? ` (${n})` : ""}: motor spins ${doc.v(spinQ, "upper")} from above, so fit a <b>${doc.v(spinQ, "upper", { marker: false })}</b> ${esc(shortName(m.prop.def))}.`,
+      );
+    }
+  }
   if (p.placed.length) for (const b of p.placed) actions.push(`Place the ${esc(shortName(b.def))} as shown. It has no mechanical interface in the model; the figure places it by ${esc(b.via?.replace(/^hint:/, "") ?? "a hint")}.`);
   for (const x of p.extras.filter((x) => !p.wiring.length)) actions.push(`Fit the ${esc(shortName(x.def))}.`);
   const wireTable: string[][] = [];
@@ -359,8 +387,8 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
   for (const b of [...p.moving, ...p.placed]) noteDefs.set(b.def.id, b.def);
   for (const x of p.extras) noteDefs.set(x.def.id, x.def);
   for (const d of noteDefs.values()) {
-    const un = (d.traits ?? []).filter((t) => t.type === "usage_note" && d.kind === "harness").slice(0, 1);
-    for (const t of un) notes.push(note("info", `${esc(String(t.params?.note ?? ""))} <span class="muted small">— ${esc(d.id)}</span>`));
+    const un = (d.traits ?? []).filter((t) => t.type === "usage_note" && d.kind === "harness").slice(0, 2);
+    for (const t of un) notes.push(note(t.params?.threadlocker ? "tip" : "info", `${esc(String(t.params?.note ?? ""))} <span class="muted small">— ${esc(d.id)}</span>`));
     const cooling = (d.traits ?? []).find((t) => t.type === "operating_conditions")?.params?.cooling;
     if (cooling) notes.push(note("caution", `${esc(String(cooling).split(". ").slice(0, 3).join(". "))}. <span class="muted small">— ${esc(d.id)}</span>`));
     const mounting = (d.domains?.find((x) => x.domain === "mechanical")?.metadata as any)?.mounting;
@@ -378,6 +406,18 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
     p.wiring.length ? `links: ${p.wiring.map((w) => w.linkId).join(", ")}` : "",
   ].filter(Boolean).join(" · ");
   const hasHw = p.hardware.length > 0;
+  // torque per harness used in this step, as model queries (the fastenerStack item that is turned)
+  const stepHarnessDefs = [...new Map(p.hardware.map((h) => ctx.instances.get(h.harness!)).filter((d): d is ModuleDef => Boolean(d)).map((d) => [d.id, d])).values()];
+  const torqueText = stepHarnessDefs
+    .flatMap((hd) => {
+      const ts = jointTorques(hd, ctx.sys.lookup);
+      const seen = new Set<number>();
+      return ts
+        .filter((t) => (seen.has(t.torque.torqueNm) ? false : (seen.add(t.torque.torqueNm), true)))
+        .map((t) => `${doc.v(`def:${hd.id}:fastenerStack[${t.index}].torque.torqueNm`, "u=N·m")} <span class="muted small">${esc(shortName(t.part ?? hd))}${stepHarnessDefs.length > 1 ? ` · ${esc(hd.name)}` : ""}</span>`);
+    })
+    .join("; ");
+  const stepTools = toolsFor([...new Map(p.hardware.map((h) => [h.def.id, h.def])).values()]);
   const attrs = `data-step="${esc(s.id)}" data-mates="${esc(p.mates.map((m) => m.linkId).join(" "))}" data-wiring="${esc(p.wiring.map((w) => w.linkId).join(" "))}" data-hardware="${esc(p.hardware.map((h) => h.key).join(" "))}"`;
   const blocks = [
     `<div class="step step-top block keep-next"${p.n === 1 ? ' data-break="before"' : ""} ${attrs}>
@@ -386,7 +426,7 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
   ${fig}</div>`,
     `<div class="step-cont block"><ol class="actions">${actions.map((a) => `<li>${a}</li>`).join("")}</ol></div>`,
     wireTable.length ? table([{ h: "Link" }, { h: "From" }, { h: "To" }, { h: "" }, { h: "Termination" }, { h: "DRC" }], wireTable, { cls: "dense wiretable split", caption: s.title }) : "",
-    `<div class="step-cont block"><div class="step-meta">${hasHw ? `<span><b>Torque</b> <span class="v st-gap">—</span><sup class="mk mk-gap">—</sup> not in model</span>` : ""}<span><b>Step</b> ${p.n} of ${total}</span></div></div>`,
+    `<div class="step-cont block"><div class="step-meta">${hasHw ? `<span><b>Torque</b> ${torqueText || '<span class="v st-gap">—</span><sup class="mk mk-gap">—</sup> not in model'}</span>` : ""}${stepTools.length ? `<span><b>Tools</b> ${esc(stepTools.map(toolLabel).join(", "))}</span>` : ""}<span><b>Step</b> ${p.n} of ${total}</span></div></div>`,
     ...notes.map((n, i) => `<div class="step-cont block${i === notes.length - 1 ? " step-end" : ""}">${n}</div>`),
   ];
   if (!notes.length) blocks[blocks.length - 1] = blocks[blocks.length - 1].replace('class="step-cont block"', 'class="step-cont block step-end"');

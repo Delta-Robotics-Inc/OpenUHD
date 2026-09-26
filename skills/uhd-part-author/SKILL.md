@@ -87,6 +87,8 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
 | `source_discrepancy` | Sources disagree: `{ field, values, sources, resolution }`. |
 | `data_gap` | A fact the model would want but no source gives. |
 | `usage_note` | Wiring, firmware, or configuration notes from the source. |
+| `supplied_from` | A power output that branches from another output on the same module (e.g. 4.5 V pads behind the 5 V BEC): `{ interfaceId, via?, source? \| assumption? }` (`SuppliedFromTrait`). Its loads are budgeted on the parent. |
+| `handedness` | A part sold in rotation-handed variants (propellers): `{ variants: ["cw", "ccw"], pack?, source }` (`HandednessTrait`). The fitted variant is chosen per instance with `ChildModuleRef.spin`. |
 
 - Every trait that states a fact carries `source: SRC.<key>` (or several).
 

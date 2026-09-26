@@ -10,6 +10,8 @@
  */
 import type { InterfaceDef, ModuleDef, TraitDef } from "../../../src/types/index.js";
 import { validateLinks, type LinkResult, type ModuleLookup, type ResolvedEndpoint } from "../../../src/system/index.js";
+import { resolveSpins } from "../../../src/system/rotation.js";
+import type { SpinDirection } from "../../../src/types/index.js";
 
 /** serialPortFunction_e values (betaflight-reference.md §1). */
 const FUNCTION = { MSP: 1, GPS: 2, RX_SERIAL: 64, VTX_MSP: 131072 } as const;
@@ -141,6 +143,32 @@ export function betaflightConfig(system: ModuleDef, lookup: ModuleLookup): Betaf
     if (expected[n] && corner && expected[n] !== corner) {
       warnings.push(`motor ${n} is wired to arm_${corner}; Betaflight Quad-X expects arm_${expected[n]} (remap with the resource command or rewire)`);
     }
+  }
+
+  // Motor direction (betaflight-reference.md §3a): Quad-X "props in" is
+  // M1 CW, M2 CCW, M3 CCW, M4 CW from above with yaw_motors_reversed OFF
+  // (the default); "props out" is every motor reversed with it ON.
+  const propsIn: Record<number, SpinDirection> = { 1: "cw", 2: "ccw", 3: "ccw", 4: "cw" };
+  const spins = resolveSpins(system, lookup);
+  const motorSpin = new Map<number, SpinDirection | undefined>();
+  for (const r of phaseLinks) {
+    const escSide = param(r.a.iface, "max_current") ? r.a : r.b;
+    const armSide = escSide === r.a ? r.b : r.a;
+    const n = Number(/(\d+)$/.exec(escSide.iface.id)?.[1]);
+    const armPath = armSide.path.split(":")[0];
+    const motor = [...spins.values()].find((x) => x.path.startsWith(`${armPath}/`) && x.def.id === armSide.owner.id) ?? spins.get(armPath);
+    motorSpin.set(n, motor?.spin);
+  }
+  const known = [...motorSpin.entries()].filter(([n, sp]) => propsIn[n] && sp);
+  if (known.length && known.length === motorSpin.size) {
+    const inward = known.every(([n, sp]) => propsIn[n] === sp);
+    const outward = known.every(([n, sp]) => propsIn[n] !== sp);
+    const list = known.sort(([a], [b]) => a - b).map(([n, sp]) => `M${n} ${sp!.toUpperCase()}`).join(", ");
+    if (inward) lines.push({ text: "set yaw_motors_reversed = OFF", why: `motor spins in the model (${list}) are Quad-X "props in", the default` });
+    else if (outward) lines.push({ text: "set yaw_motors_reversed = ON", why: `motor spins in the model (${list}) are Quad-X "props out"` });
+    else warnings.push(`motor spins (${list}) are neither Quad-X props-in nor props-out: diagonal motors must turn the same way`);
+  } else if (phaseLinks.length) {
+    warnings.push("no spin direction on some motors: set ChildModuleRef.spin so the prop direction can be derived");
   }
 
   // --- current meter ----------------------------------------------------------

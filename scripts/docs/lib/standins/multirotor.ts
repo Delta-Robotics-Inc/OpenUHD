@@ -5,13 +5,14 @@
  * states each assumption the model could not supply. The build never
  * overwrites a file whose status is "measured".
  *
- * Model inputs: motor thrust tests (performance.thrust_tests: 50 % and 100 %
- * points), motor idle current, battery voltage / capacity / cell count, part
+ * Model inputs: the motor maker's full thrust table (performance.thrust_tests,
+ * interpolated row to row by src/system/propulsion.ts), motor idle current, battery voltage / capacity / cell count, part
  * masses, avionics supply figures (O4 min supply power, GNSS supply current).
  */
 import type { ModuleDef } from "../../../../src/types/index.js";
 import { category } from "../model.js";
-import { massBreakdown } from "../derived.js";
+import { modelMass } from "../derived.js";
+import { fullThrottle, thrustAtThrottle, thrustAtThrust, thrustTests } from "../../../../src/system/propulsion.js";
 import type { DocContext } from "../values.js";
 import type { TestData } from "../testdata.js";
 
@@ -28,8 +29,7 @@ export function standins(ctx: DocContext): TestData[] {
   const battery = first(ctx, "battery");
   if (!motor || !battery) return [];
   const motorCount = ctx.scene.assembly.instances.filter((i) => i.kind === "module" && category(i.def) === "motor").length;
-  const perf = motor.traits?.find((t) => t.type === "performance")?.params as any;
-  const test = perf?.thrust_tests?.[0];
+  const test = thrustTests(motor)[0];
   if (!test) return [];
   const bOut = battery.interfaces.find((i) => i.parameters?.some((p) => p.id === "capacity"))!;
   const bp = (id: string) => bOut.parameters!.find((p) => p.id === id)!.value as number;
@@ -39,16 +39,17 @@ export function standins(ctx: DocContext): TestData[] {
   const bq = (id: string) => `def:${battery.id}:interfaces[id=${bOut.id}].parameters[id=${id}].value`;
   const tq = (k: string) => `def:${motor.id}:traits[type=performance].params.thrust_tests[0].${k}`;
 
-  const Tfull = test.full_throttle.thrust_g;
-  const Ifull = test.full_throttle.current_A;
-  const Thalf = test.half_throttle.thrust_g;
-  const Ihalf = test.half_throttle.current_A;
-  const Phalf = test.half_throttle.power_W;
-  // power laws through the maker's 50 % and 100 % points (and the origin)
-  const kT = Math.log(Thalf / Tfull) / Math.log(0.5);
-  const kI = Math.log(Ihalf / Ifull) / Math.log(0.5);
-  const thrustAt = (t: number) => Tfull * t ** kT;
-  const currentAt = (t: number) => Ifull * t ** kI;
+  // everything propulsive comes from the maker's rows, interpolated linearly between them
+  const top = fullThrottle(test);
+  const Tfull = top.thrust_g;
+  const Ifull = top.current_A;
+  const at = (throttlePct: number) => thrustAtThrottle(test, throttlePct);
+  /** Pack current for all motors producing `thrustG` each: table power at that thrust over the pack's nominal voltage. */
+  const packCurrentFor = (thrustG: number) => {
+    const row = thrustAtThrust(test, thrustG);
+    return row ? (motorCount * row.power_W) / V : undefined;
+  };
+  const currentAt = (t: number) => at(t * 100).current_A;
 
   // avionics: O4 minimum supply power from the model; GNSS supply current; FC + RX assumed
   const o4 = first(ctx, "video");
@@ -60,17 +61,17 @@ export function standins(ctx: DocContext): TestData[] {
   const avionicsW = (o4W + (gnssmA / 1000) * 5 + FC_RX_W) / BEC_EFF;
   const avionicsA = avionicsW / V;
 
-  // mass: stated masses plus an assumed allowance for parts without one
-  const mb = massBreakdown(ctx);
-  const known = mb.filter((g) => g.weight !== undefined).reduce((s, g) => s + g.count * g.weight!, 0);
-  const missing = mb.filter((g) => g.weight === undefined);
-  const FRAME_ALLOWANCE_G = 125; // assumption: frame, top plate, hardware, wiring
-  const auw = known + FRAME_ALLOWANCE_G;
+  // mass: systemMass (stated weights, else CAD volume × material density), plus an
+  // assumed allowance for the parts the model has no mass for (cables, capacitor)
+  const sm = modelMass(ctx);
+  const known = sm.totalG;
+  const missing = sm.missing;
+  const UNKNOWN_ALLOWANCE_G = 20; // assumption: leads, cables and capacitor with no mass in the model
+  const auw = known + UNKNOWN_ALLOWANCE_G;
 
-  // hover: momentum-theory exponent (P ~ T^1.5) anchored at the 50 % point
+  // hover: the table's electrical power at thrust = AUW / motors (interpolated between rows)
   const hoverT = auw / motorCount;
-  const hoverPmotor = Phalf * (hoverT / Thalf) ** 1.5;
-  const hoverIprop = (motorCount * hoverPmotor) / V;
+  const hoverIprop = packCurrentFor(hoverT) ?? motorCount * Ifull;
   const hoverI = hoverIprop + avionicsA;
   const USABLE = 0.8; // assumption: usable fraction of rated capacity
   const minutes = (I: number) => ((cap / 1000) * USABLE * 60) / I;
@@ -80,12 +81,12 @@ export function standins(ctx: DocContext): TestData[] {
     status: "standin" as const,
     subject: { system, modules: [motor.id, battery.id] },
   };
-  const derivedFrom = [tq("full_throttle.thrust_g"), tq("full_throttle.current_A"), tq("half_throttle.thrust_g"), tq("half_throttle.current_A"), tq("half_throttle.power_W"), bq("voltage"), bq("capacity")];
+  const derivedFrom = [tq("rows"), tq("propeller"), tq("supply_V"), bq("voltage"), bq("capacity")];
   const assumptions = [
-    `power laws through the maker's 50 % and 100 % points: thrust ~ throttle^${kT.toFixed(3)}, current ~ throttle^${kI.toFixed(3)}`,
-    `maker's test used the ${test.propeller} prop at ${test.supply_V} V, not the fitted propeller`,
+    `motor figures interpolate linearly between the ${test.rows.length} rows of the maker's table (0 at 0 % throttle); pack current = table electrical power ÷ ${V} V nominal`,
+    `maker's table used the ${test.propeller} prop at ${test.supply_V} V, not the fitted propeller`,
     `avionics: DJI O4 minimum supply power ${o4W} W, GNSS ${gnssmA} mA at 5 V, FC + receiver ${FC_RX_W} W (assumed), BEC efficiency ${BEC_EFF * 100} % (assumed)`,
-    `all-up weight = ${r(known, 1)} g of stated masses + ${FRAME_ALLOWANCE_G} g assumed for the ${missing.reduce((s, g) => s + g.count, 0)} parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)`,
+    `all-up weight = ${r(known, 1)} g from systemMass (derived:mass.all_up, of which ${r(sm.assumedG, 1)} g is CAD volume × assumed material) + ${UNKNOWN_ALLOWANCE_G} g assumed for the ${missing.length} parts with no mass in the model (${missing.map((e) => e.def.name).join(", ")})`,
   ];
   const generatedAt = new Date().toISOString().slice(0, 10);
 
@@ -99,7 +100,7 @@ export function standins(ctx: DocContext): TestData[] {
       { name: "Propeller (maker's test)", value: test.propeller, unit: "" },
       { name: "Motors", value: motorCount, unit: "" },
     ],
-    provenance: { method: "Stand-in: power-law fit through the motor maker's 50 % and 100 % test points, scaled to all motors, plus avionics draw.", derivedFrom, assumptions, generator: GEN, generatedAt },
+    provenance: { method: "Stand-in: the motor maker's thrust table row by row, scaled to all motors, plus avionics draw.", derivedFrom, assumptions, generator: GEN, generatedAt },
     columns: [
       { id: "throttle", label: "Throttle", unit: "%" },
       { id: "thrust_motor", label: "Thrust per motor", unit: "g" },
@@ -110,8 +111,8 @@ export function standins(ctx: DocContext): TestData[] {
     ],
     rows: Array.from({ length: 11 }, (_, i) => {
       const t = i / 10;
-      const Tm = thrustAt(t);
-      const Im = t === 0 ? 0 : currentAt(t);
+      const Tm = at(t * 100).thrust_g;
+      const Im = currentAt(t);
       const It = motorCount * Im + avionicsA;
       return [i * 10, r(Tm, 0), r(Im, 2), r(motorCount * Tm, 0), r(It, 1), r(It * test.supply_V, 0)];
     }),
@@ -130,7 +131,7 @@ export function standins(ctx: DocContext): TestData[] {
       { name: "Battery nominal", value: V, unit: "V" },
       { name: "All-up weight (estimate)", value: r(auw, 0), unit: "g" },
     ],
-    provenance: { method: "Stand-in: hover thrust = AUW / motors; motor power from P ~ T^1.5 anchored at the maker's 50 % point; plus avionics.", derivedFrom: [...derivedFrom, "derived:mass.known_total"], assumptions, generator: GEN, generatedAt },
+    provenance: { method: "Stand-in: hover thrust = AUW / motors; motor power interpolated from the maker's thrust table at that thrust; plus avionics.", derivedFrom: [...derivedFrom, "derived:mass.all_up"], assumptions, generator: GEN, generatedAt },
     columns: [
       { id: "auw", label: "All-up weight", unit: "g" },
       { id: "thrust_motor", label: "Hover thrust per motor", unit: "g" },
@@ -139,7 +140,7 @@ export function standins(ctx: DocContext): TestData[] {
     ],
     rows: [-100, -50, 0, 50, 100, 150].map((d) => {
       const w = auw + d;
-      const I = (motorCount * Phalf * (w / motorCount / Thalf) ** 1.5) / V + avionicsA;
+      const I = (packCurrentFor(w / motorCount) ?? motorCount * Ifull) + avionicsA;
       return [r(w, 0), r(w / motorCount, 0), r(I, 2), r(I * V, 0)];
     }),
     summary: [
@@ -153,11 +154,11 @@ export function standins(ctx: DocContext): TestData[] {
   // 3 flight time
   const regimes: [string, number][] = [
     ["Hover", hoverI],
-    ["Cruise (1.5 × hover thrust)", (motorCount * Phalf * ((1.5 * hoverT) / Thalf) ** 1.5) / V + avionicsA],
+    ["Cruise (1.5 × hover thrust)", (packCurrentFor(1.5 * hoverT) ?? motorCount * Ifull) + avionicsA],
     ["Freestyle mix", 0],
     ["Full throttle", motorCount * Ifull + avionicsA],
   ];
-  const mix = 0.75 * regimes[1][1] + 0.2 * (motorCount * Ihalf + avionicsA) + 0.05 * regimes[3][1];
+  const mix = 0.75 * regimes[1][1] + 0.2 * (motorCount * at(50).current_A + avionicsA) + 0.05 * regimes[3][1];
   regimes[2][1] = mix;
   const flight: TestData = {
     ...base,
@@ -191,7 +192,7 @@ export function standins(ctx: DocContext): TestData[] {
       { name: "All-up weight (estimate)", value: r(auw, 0), unit: "g" },
       { name: "Reference supply (maker's test)", value: test.supply_V, unit: "V" },
     ],
-    provenance: { method: "Stand-in: static thrust scaled with (V / test V)² (thrust ~ rpm², rpm ~ V), divided by the AUW estimate.", derivedFrom: [...derivedFrom, "derived:mass.known_total"], assumptions, generator: GEN, generatedAt },
+    provenance: { method: "Stand-in: static thrust scaled with (V / test V)² (thrust ~ rpm², rpm ~ V), divided by the AUW estimate.", derivedFrom: [...derivedFrom, "derived:mass.all_up"], assumptions, generator: GEN, generatedAt },
     columns: [
       { id: "voltage", label: "Pack voltage", unit: "V" },
       { id: "thrust_total", label: "Total static thrust", unit: "g" },
@@ -229,7 +230,7 @@ export function standins(ctx: DocContext): TestData[] {
     ],
     provenance: {
       method: "Stand-in: lumped thermal model C·dT/dt = P − (T − ambient)/R with conduction and switching losses per channel.",
-      derivedFrom: [tq("full_throttle.current_A"), tq("half_throttle.current_A"), ...(esc ? [`def:${esc.id}:interfaces[id=motor_1].parameters[id=max_current].value`] : [])],
+      derivedFrom: [tq("rows"), ...(esc ? [`def:${esc.id}:interfaces[id=motor_1].parameters[id=max_current].value`] : [])],
       assumptions: [
         `thermal resistance ${RTH} K/W and capacity ${CTH} J/K (board in prop wash) — not in the model`,
         `effective conduction resistance ${RLOSS * 1000} mΩ per channel and ${SW} W switching loss per channel at full throttle — not in the model`,

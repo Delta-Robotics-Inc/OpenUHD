@@ -76,6 +76,13 @@ const ISO_10511_M3_NYLOC_NUT_BASE: ModuleDef = defineModule({
   domains: [
     {
       domain: "mechanical",
+      // PB-797: no stated weight, so mass = CAD volume x density (an assumption)
+      material: {
+        name: "A2 (304 / 1.4301) stainless steel",
+        density_g_cm3: 8.0,
+        source: "https://www.thyssenkrupp-materials.co.uk/stainless-steel-304-14301.html",
+        assumption: "The CAD body is library/cad/py/parts.py's nominal DIN 985 hex with the nylon insert counted as steel; Westfield states no weight.",
+      },
       dimensions_mm: { length: 6.01, width: 5.5, height: 4 },
       metadata: {
         thread: "M3 x 0.5",

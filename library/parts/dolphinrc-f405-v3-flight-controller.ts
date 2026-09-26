@@ -60,7 +60,7 @@
  *   - Verify warning "no thermal domain or operating_conditions trait" is
  *     intentional: no source gives an operating temperature (data_gap).
  */
-import type { InterfaceDef, ModuleDef, TraitDef } from "../../src/types/index.js";
+import type { InterfaceDef, ModuleDef, SuppliedFromTrait, TraitDef } from "../../src/types/index.js";
 import {
   BoltPattern,
   EscSignal,
@@ -221,6 +221,19 @@ const rail4v5 = withTraits(
         resolution: "modelled as 4.5-5 V; current limit not stated.",
       },
     },
+    // PB-797: no source gives this rail a current limit, so the supply check
+    // could not budget the GPS. The board runs the MATEKF405TE target, and on
+    // that design family the 4.5 V pads are the 5 V BEC behind a diode (so USB
+    // can also power them). Assumed here, not stated by DolphinRC: loads on
+    // this rail are budgeted against bec_5v.
+    {
+      type: "supplied_from",
+      params: {
+        interfaceId: "bec_5v",
+        via: "diode (assumed)",
+        assumption: "Not stated by DolphinRC. The 4.5 V receiver/GPS rail is taken to branch from the 5 V BEC through a diode, as on the Matek F405-TE design this board's Betaflight target (MATEKF405TE) comes from; its loads are budgeted against the 5 V 3 A BEC.",
+      },
+    } satisfies SuppliedFromTrait,
   ],
 );
 
@@ -603,6 +616,14 @@ const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER_BASE: ModuleDef = defineModule({
         values: ["SPL06-001 (hardware)", "USE_BARO_DPS310 (MATEKF405TE target)"],
         sources: [SRC.manual, SRC.bfTarget],
         resolution: "Hardware per manual; whether the target build detects the SPL06-001 is not stated.",
+      },
+    },
+    {
+      type: "assumption",
+      params: {
+        field: "4.5V rail supply",
+        value: "branch of bec_5v (5 V 3 A) via a diode",
+        reason: "No source states the 4.5 V rail's current limit or what feeds it; assumed from the MATEKF405TE target design so the GPS load can be budgeted. The data gap on the rail's own limit stays open.",
       },
     },
     {

@@ -48,6 +48,7 @@
  */
 import type { InterfaceDef, ModuleDef, TraitDef } from "../../src/types/index.js";
 import {
+  currentDrawA,
   defineModule,
   PowerIn,
   Ground,
@@ -100,7 +101,7 @@ function padFunction(description: string, source: string | string[]): TraitDef {
 // ---------------------------------------------------------------------------
 
 const vin = withTraits(
-  PowerIn({ id: "vin_5v", name: "5V", pin: "5V", voltageV: [4, 5.5], nominalV: 5 }),
+  PowerIn({ id: "vin_5v", name: "5V", pin: "5V", voltageV: [4, 5.5], nominalV: 5, parameters: [currentDrawA(0.05)] }),
   [
     padFunction(
       "5V — module supply input, 4~5.5 V (\"Input voltage range: 4~5.5V (5V pad/pin)\"); power consumption 50 mA. Wire to flight controller 4~5.5 V.",

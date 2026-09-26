@@ -16,6 +16,40 @@
  */
 import type { ModuleDef } from "../../../src/types/index.js";
 import { connectorTrait } from "../../../src/protocols/index.js";
+import type { FastenerTorque } from "../../../src/types/index.js";
+
+// ---------------------------------------------------------------------------
+// Tightening torques (PB-797). No frame, motor or DJI source states a torque
+// for any of these joints (searched: MEPS, T-Motor, iFlight, BrotherHobby,
+// ImpulseRC, TBS, GEPRC, DJI O4 manual, Westfield). So every value below is
+// an ASSUMPTION, derated from published supplier tables for the screw grade
+// into a steel nut, which do not apply to aluminium, nylon or PCB stacks:
+// ---------------------------------------------------------------------------
+
+const FASTENAL_A2 = "https://crafter.fastenal.com/static-assets/pdfs/technical-resources/Torque-Tension-Relationship-for-Metric-Stainless-Steel-Fasteners-A2-and-A4-70-Feb-2016.pdf";
+const NPF = "https://www.npfasteners.com/technical/tightening-torques.htm";
+const DJI_O4_MANUAL = "https://dl.djicdn.com/downloads/DJI_O4_Air_Unit_Series/UM/DJI_O4_Air_Unit_Series_User_Manual_v1.0_en.pdf";
+const XTEAM_THREADLOCK = "https://www.x-teamrc.com/fpv-motor-screws-falling-out-installation-and-thread-locking-tips-explained/";
+
+/** Supplier reference rows (steel nut or tapped steel; the tables' own caveat). */
+const REF = {
+  m3A2Dry: { torqueNm: 0.95, condition: "M3 A2-70, dry (K = 0.35), nut or tapped hole at least as strong as the bolt", source: FASTENAL_A2 },
+  m3A2Lub: { torqueNm: 0.81, condition: "M3 A2-70, lubricated (K = 0.16)", source: FASTENAL_A2 },
+  m3Class46: { torqueNm: 0.57, condition: "M3 steel class 4.6, 'generic reference values ... starting point'", source: NPF },
+  m2Class46: { torqueNm: 0.17, condition: "M2 steel class 4.6", source: NPF },
+  m2Class88: { torqueNm: 0.31, condition: "M2 steel class 8.8", source: NPF },
+};
+
+const torque = (torqueNm: number, assumption: string, reference: FastenerTorque["reference"]): FastenerTorque => ({ torqueNm, assumption, reference });
+
+const threadlockNote = (where: string) => ({
+  type: "usage_note",
+  params: {
+    note: `Threadlocker: medium strength (blue) on the ${where}. Steel into aluminium with no locking element, so vibration can back the screws out. Advice is from X-Team's motor-screw guide, a secondary source; no maker of these parts states it.`,
+    threadlocker: "medium",
+    source: XTEAM_THREADLOCK,
+  },
+});
 
 const end = (id: string, name: string, connector: string, mates: "a" | "b", note?: string) => ({
   id,
@@ -120,7 +154,11 @@ export const QUADCOPTER_5IN_STACK_HARDWARE: ModuleDef = {
     { child: "screws", atMm: -5 },
     { child: "spacers", atMm: 0 },
     { child: "spacers", atMm: 10 },
-    { child: "nuts", atMm: 20 },
+    {
+      child: "nuts",
+      atMm: 20,
+      torque: torque(0.3, "Snug only: the clamp is two soft ESC/FC grommets and nylon spacers, which a full A2 M3 torque would crush and so detune the gyro isolation. About a third of the dry A2-70 table value. The nyloc insert locks the nut, so no threadlocker.", [REF.m3A2Dry, REF.m3Class46]),
+    },
   ],
   traits: [
     { type: "usage_note", params: { note: "Per post, bottom to top: screw head under the 5 mm bottom plate, 6 mm spacer, ESC in its grommet (4 mm), 6 mm spacer, FC in its grommet (4 mm), nyloc nut; 1 mm of thread protrudes. Boards use the M3 x 8 grommets included with the DolphinRC stack. Stack-up worked out in the fastener parts' usage notes (assumes a 5 mm plate and 4 mm grommet clamp)." } },
@@ -152,7 +190,14 @@ export const QUADCOPTER_5IN_MOTOR_HARDWARE: ModuleDef = {
   children: [{ id: "screws", moduleDefId: "motor-screw-m3x8", name: "M3 x 8 motor screw", quantity: 4 }],
   interfaces: [bolts("bolts", "4 x M3 on 16 mm", 3, 16)],
   // from the pad top (z = 0): heads under the 5 mm arm + 0.5 mm pad
-  fastenerStack: [{ child: "screws", atMm: -5.5 }],
+  fastenerStack: [
+    {
+      child: "screws",
+      atMm: -5.5,
+      torque: torque(0.6, "An A2 M3 screw into the motor's aluminium base with about 2.5 mm of engagement. Derated from the dry A2-70 value (0.95 N·m, steel nut) for the short aluminium thread, which strips first. No motor maker states a torque.", [REF.m3A2Dry, REF.m3A2Lub]),
+    },
+  ],
+  traits: [threadlockNote("motor screws")],
 };
 
 /** Standoffs and screws joining the bottom and top plates. */
@@ -171,10 +216,20 @@ export const QUADCOPTER_5IN_FRAME_HARDWARE: ModuleDef = {
   interfaces: [bolts("bolts", "4 x M3 on 56 x 48 mm", 3, 56, 48)],
   // from the bottom plate's top face: screw from below, standoff 0–30, top plate 30–32, screw from above
   fastenerStack: [
-    { child: "screws", atMm: -5 },
+    {
+      child: "screws",
+      atMm: -5,
+      torque: torque(0.6, "An A2 M3 screw into an aluminium standoff's blind thread (3 mm engaged through the 5 mm plate), clamping carbon plate. Derated from the dry A2-70 value for the aluminium thread; hold the standoff with a spanner.", [REF.m3A2Dry, REF.m3Class46]),
+    },
     { child: "standoffs", atMm: 0 },
-    { child: "screws", atMm: 32, direction: -1 },
+    {
+      child: "screws",
+      atMm: 32,
+      direction: -1,
+      torque: torque(0.6, "As the lower screw: A2 M3 into the aluminium standoff (6 mm engaged through the 2 mm top plate).", [REF.m3A2Dry, REF.m3Class46]),
+    },
   ],
+  traits: [threadlockNote("standoff screws (lower and upper)")],
 };
 
 /** GPS: screws down through the board, spacers, nuts under the top plate. */
@@ -196,7 +251,12 @@ export const QUADCOPTER_5IN_GPS_HARDWARE: ModuleDef = {
   fastenerStack: [
     { child: "nuts", atMm: -2, direction: -1 },
     { child: "spacers", atMm: 0 },
-    { child: "screws", atMm: 5.62, direction: -1 },
+    {
+      child: "screws",
+      atMm: 5.62,
+      direction: -1,
+      torque: torque(0.1, "Snug only: an M2 screw clamping a 0.62 mm GPS PCB and nylon spacers into a nyloc nut. Well under the M2 class 4.6 steel value (0.17 N·m) so the board and spacers are not crushed. The nyloc locks it.", [REF.m2Class46, REF.m2Class88]),
+    },
   ],
 };
 
@@ -218,9 +278,15 @@ export const QUADCOPTER_5IN_VTX_HARDWARE: ModuleDef = {
   fastenerStack: [
     { child: "screws", atMm: -5 },
     { child: "spacers", atMm: 0 },
-    { child: "nuts", atMm: 9 },
+    {
+      child: "nuts",
+      atMm: 9,
+      torque: torque(0.1, "Snug only: M2 through nylon airflow spacers and the O4 module's plastic-mounted holes into a nyloc nut; well under the M2 class 4.6 steel value (0.17 N·m). DJI: 'DO NOT overtighten the screws to avoid stripping.'", [REF.m2Class46]),
+    },
   ],
 };
+
+const CAMERA_TORQUE = torque(0.1, "The O4 camera's own M2 x 5 screws into the camera body, whose thread material DJI does not state. DJI gives no value, only 'DO NOT overtighten the screws to avoid stripping.' Set well under the M2 class 4.6 steel value.", [REF.m2Class46]);
 
 /** O4 camera between the side plates: two screws per side (O4 manual p.6). */
 export const QUADCOPTER_5IN_CAMERA_HARDWARE: ModuleDef = {
@@ -235,8 +301,14 @@ export const QUADCOPTER_5IN_CAMERA_HARDWARE: ModuleDef = {
   interfaces: [bolts("bolts", "2 x M2 per side, 16 mm", 2, 16, 14)],
   // frame: mid-plane of the clamp, normal toward the left plate, y = up; plates' outer faces at ±9
   fastenerStack: [
-    { child: "screws", atMm: -9, positions: [[0, -8], [0, 8]] },
-    { child: "screws", atMm: 9, direction: -1, positions: [[0, -8], [0, 8]] },
+    { child: "screws", atMm: -9, positions: [[0, -8], [0, 8]], torque: CAMERA_TORQUE },
+    { child: "screws", atMm: 9, direction: -1, positions: [[0, -8], [0, 8]], torque: CAMERA_TORQUE },
+  ],
+  traits: [
+    {
+      type: "usage_note",
+      params: { note: "DJI O4 manual: 'DO NOT overtighten the screws to avoid stripping.' No threadlocker: the camera's thread material is not stated.", source: DJI_O4_MANUAL },
+    },
   ],
 };
 
