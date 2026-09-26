@@ -13,11 +13,11 @@
     "connector pin 1"
   ],
   "data_gaps": [
-    "{\"type\":\"data\",\"item\":\"pin 1 orientation of 8-pin SH connector\",\"reason\":\"silkscreen order only\"}",
-    "{\"type\":\"data\",\"item\":\"burst current duration (5 s vs 10 s)\",\"reason\":\"sources conflict\"}",
-    "{\"type\":\"data\",\"item\":\"operating temperature\",\"reason\":\"not stated\"}",
-    "{\"type\":\"data\",\"item\":\"VBAT passthrough current limit on connector V pin\",\"reason\":\"not stated\"}",
-    "{\"type\":\"data\",\"item\":\"current sensor output voltage range\",\"reason\":\"only Betaflight scale/offset given\"}"
+    "pin 1 orientation of 8-pin SH connector (silkscreen order only)",
+    "burst current duration (5 s vs 10 s) (sources conflict)",
+    "operating temperature (not stated)",
+    "VBAT passthrough current limit on connector V pin (not stated)",
+    "current sensor output voltage range (only Betaflight scale/offset given)"
   ],
   "vocabulary_gaps": []
 }

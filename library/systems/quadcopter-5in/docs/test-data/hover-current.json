@@ -1,0 +1,132 @@
+{
+  "$schema": "uhd-test-data/1",
+  "status": "standin",
+  "subject": {
+    "system": "quadcopter-5in",
+    "modules": [
+      "meps-neon-2207-v2-1950kv",
+      "cnhl-black-series-1100mah-6s-100c"
+    ]
+  },
+  "id": "hover-current",
+  "title": "Hover current and all-up-weight sensitivity",
+  "conditions": [
+    {
+      "name": "Battery nominal",
+      "value": 22.2,
+      "unit": "V"
+    },
+    {
+      "name": "All-up weight (estimate)",
+      "value": 550,
+      "unit": "g"
+    }
+  ],
+  "provenance": {
+    "method": "Stand-in: hover thrust = AUW / motors; motor power from P ~ T^1.5 anchored at the maker's 50 % point; plus avionics.",
+    "derivedFrom": [
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.power_W",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
+      "derived:mass.known_total"
+    ],
+    "assumptions": [
+      "power laws through the maker's 50 % and 100 % points: thrust ~ throttle^1.155, current ~ throttle^2.048",
+      "maker's test used the MEPS SZ5145 prop at 25.2 V, not the fitted propeller",
+      "avionics: DJI O4 minimum supply power 10 W, GNSS 50 mA at 5 V, FC + receiver 2.5 W (assumed), BEC efficiency 85 % (assumed)",
+      "all-up weight = 425.1 g of stated masses + 125 g assumed for the 67 parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)"
+    ],
+    "generator": "scripts/docs/lib/standins/multirotor.ts",
+    "generatedAt": "2026-09-26"
+  },
+  "columns": [
+    {
+      "id": "auw",
+      "label": "All-up weight",
+      "unit": "g"
+    },
+    {
+      "id": "thrust_motor",
+      "label": "Hover thrust per motor",
+      "unit": "g"
+    },
+    {
+      "id": "current_total",
+      "label": "Hover current",
+      "unit": "A"
+    },
+    {
+      "id": "power_total",
+      "label": "Hover power",
+      "unit": "W"
+    }
+  ],
+  "rows": [
+    [
+      450,
+      113,
+      3.33,
+      74
+    ],
+    [
+      500,
+      125,
+      3.78,
+      84
+    ],
+    [
+      550,
+      138,
+      4.26,
+      95
+    ],
+    [
+      600,
+      150,
+      4.76,
+      106
+    ],
+    [
+      650,
+      163,
+      5.28,
+      117
+    ],
+    [
+      700,
+      175,
+      5.82,
+      129
+    ]
+  ],
+  "summary": [
+    {
+      "id": "auw_g",
+      "label": "All-up weight (estimate)",
+      "value": 550,
+      "unit": "g"
+    },
+    {
+      "id": "hover_current_A",
+      "label": "Hover current",
+      "value": 4.3,
+      "unit": "A"
+    },
+    {
+      "id": "hover_power_W",
+      "label": "Hover power",
+      "value": 95,
+      "unit": "W"
+    },
+    {
+      "id": "avionics_current_A",
+      "label": "Avionics current",
+      "value": 0.68,
+      "unit": "A"
+    }
+  ]
+}

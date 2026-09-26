@@ -1,0 +1,2687 @@
+{
+ "document": "quadcopter-5in-datasheet.html",
+ "system": "library/systems/quadcopter-5in",
+ "docId": "UHD-QUAD5-DS",
+ "generated": "2026-09-26",
+ "values": [
+  {
+   "q": "derived:propulsion.thrust_full_total",
+   "f": "si|d1",
+   "text": "6.8 kg",
+   "status": "derived",
+   "unit": "g",
+   "formula": "motors × performance.thrust_tests[0].full_throttle.thrust_g",
+   "inputs": [
+    "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g"
+   ],
+   "note": "manufacturer test with MEPS SZ5145 at 25.2 V"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "22.2 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
+   "text": "1100 mAh",
+   "status": "source",
+   "unit": "mAh",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "sys:checks.diagnostics[rule=propulsion_current].details.totalPeak",
+   "f": "u=A|d1",
+   "text": "171.9 A",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "derived:mass.known_total",
+   "f": "d0",
+   "text": "425 g",
+   "status": "derived",
+   "unit": "g",
+   "formula": "∑ (count × domains[mechanical].weight_g) over leaf instances and placed hardware",
+   "inputs": [
+    "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
+    "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
+    "def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].weight_g",
+    "def:hqprop-ethix-s5:domains[domain=mechanical].weight_g",
+    "def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g",
+    "def:radiomaster-rp1-v2-elrs-2g4:domains[domain=mechanical].weight_g",
+    "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
+    "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
+    "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
+    "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g"
+   ]
+  },
+  {
+   "q": "def:dji-o4-air-unit:traits[type=performance].params.lowest_latency_ms.goggles_3",
+   "f": "u=ms",
+   "text": "20 ms",
+   "status": "source",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "sys:system.description",
+   "text": "Reference 5-inch 6S freestyle quadcopter: DolphinRC F405 V3 + AM32 60A stack, four MEPS NEON 2207 V2 1950KV motors with HQProp Ethix S5 props, CNHL 1100 mAh 6S pack, RadioMaster RP1 V2 ELRS receiver, DJI O4 Air Unit, Matek M9N-5883 GNSS/compass, custom frame.",
+   "status": "model",
+   "source": "UHD system"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:name",
+   "text": "5-inch quadcopter frame (custom)",
+   "status": "model",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-top-plate:name",
+   "text": "5-inch frame top plate (custom)",
+   "status": "model",
+   "source": "model: quadcopter-5in-top-plate"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-stack:name",
+   "text": "DolphinRC F405 V3 + AM32 60A stack",
+   "status": "model",
+   "source": "model: dolphinrc-f405-v3-stack"
+  },
+  {
+   "q": "def:quadcopter-5in-arm:name",
+   "text": "Arm (motor + propeller)",
+   "status": "model",
+   "source": "model: quadcopter-5in-arm"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:name",
+   "text": "CNHL Black Series 1100mAh 6S 22.2V 100C LiPo (XT60)",
+   "status": "source",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:name",
+   "text": "RadioMaster RP1 V2 ExpressLRS 2.4GHz Nano Receiver",
+   "status": "source",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "def:dji-o4-air-unit:name",
+   "text": "DJI O4 Air Unit",
+   "status": "source",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:matek-m9n-5883:name",
+   "text": "Matek M9N-5883 GNSS & Compass",
+   "status": "source",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:hglrc-kevlar-battery-strap-20x250mm:name",
+   "text": "HGLRC Kevlar battery strap 20x250mm",
+   "status": "source",
+   "source": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm"
+  },
+  {
+   "q": "def:panasonic-eeu-fr1v471:name",
+   "text": "Panasonic EEU-FR1V471 470 μF 35 V low-ESR electrolytic capacitor",
+   "status": "source",
+   "source": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1259.pdf"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].metadata.layout",
+   "text": "true-X, 5-inch",
+   "status": "model",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].metadata.wheelbase_mm",
+   "text": "225 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].metadata.plate_thickness_mm",
+   "text": "5 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].metadata.standoff_height_mm",
+   "text": "30 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:interfaces[id=stack_mount].parameters[id=hole_spacing].value",
+   "text": "30.5 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:interfaces[id=motor_mount_fl].parameters[id=hole_spacing].value",
+   "text": "16 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:name",
+   "text": "MEPS NEON 2207 V2 1950KV Brushless Motor",
+   "status": "source",
+   "source": "https://www.mepsking.shop/neon-2207-fpv-brushless-motor.html"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.kv_rpm_per_V",
+   "f": "u=rpm/V",
+   "text": "1950 rpm/V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.configuration",
+   "text": "12N14P",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.peak_current_A",
+   "text": "42.97 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.max_power_W",
+   "text": "1036 W",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].weight_g",
+   "text": "36 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:hqprop-ethix-s5:name",
+   "text": "HQProp Ethix S5 5x4x3 Propeller",
+   "status": "source",
+   "source": "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html"
+  },
+  {
+   "q": "def:hqprop-ethix-s5:domains[domain=mechanical].weight_g",
+   "text": "3.7 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=motor_1].parameters[id=max_current].value",
+   "text": "60 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=motor_1].parameters[id=burst_current].value",
+   "text": "65 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:traits[type=performance].params.firmware",
+   "text": "AM32 (32-bit); firmware target AT32DEVF421",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "derived:power.battery_energy_Wh",
+   "f": "d2",
+   "text": "24.42 Wh",
+   "status": "derived",
+   "unit": "Wh",
+   "formula": "battery voltage × capacity",
+   "inputs": [
+    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value"
+   ]
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=max_current].value",
+   "text": "110 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=burst_current].value",
+   "text": "220 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g",
+   "text": "211 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=bat_in].parameters[id=voltage].value",
+   "text": "6–30 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_5v].parameters[id=max_current].value",
+   "text": "3 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_10v].parameters[id=max_current].value",
+   "text": "2.5 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=rail_4v5].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "4.5–5.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:name",
+   "text": "DolphinRC F405 V3 Flight Controller",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:traits[type=performance].params.mcu",
+   "text": "STM32F405RGT6, Cortex-M4 @ 168MHz",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:traits[type=performance].params.imu",
+   "text": "ICM-42688-P",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:traits[type=performance].params.firmware_target",
+   "text": "Betaflight MATEKF405TE",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:traits[type=performance].params.uarts",
+   "text": "6",
+   "status": "source",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:traits[type=performance].params.protocol",
+   "text": "ExpressLRS",
+   "status": "source",
+   "source": "https://radiomasterrc.com/products/rp1-expresslrs-2-4ghz-nano-receiver"
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:interfaces[id=crsf].parameters[id=baud_rate].value",
+   "f": "u=Bd",
+   "text": "420 000 Bd",
+   "status": "source",
+   "unit": "Hz",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "def:dji-o4-air-unit:traits[type=performance].params.image_sensor",
+   "text": "1/2-inch CMOS",
+   "status": "source",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:dji-o4-air-unit:traits[type=performance].params.fov_deg",
+   "f": "u=deg",
+   "text": "117.6°",
+   "status": "source",
+   "unit": "deg",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:dji-o4-air-unit:traits[type=performance].params.max_bitrate_Mbps",
+   "f": "u=Mbit/s",
+   "text": "100 Mbit/s",
+   "status": "source",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:dji-o4-air-unit:interfaces[id=vcc].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "3.7–13.2 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:dji-o4-air-unit:traits[type=operating_conditions].params.operating_temperature_C",
+   "text": "−10–40 °C",
+   "status": "source",
+   "unit": "C",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:matek-m9n-5883:traits[type=performance].params.receiver",
+   "text": "u-blox NEO-M9N (concurrent reception of GPS, Galileo, GLONASS, BeiDou)",
+   "status": "source",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:matek-m9n-5883:interfaces[id=i2c_compass].parameters[id=i2c_address].value",
+   "f": "hex",
+   "text": "0x2C",
+   "status": "source",
+   "unit": "dimensionless",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:matek-m9n-5883:traits[type=operating_conditions].params.supply_current_mA",
+   "text": "50 mA",
+   "status": "source",
+   "unit": "mA",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "derived:frameDistance(frame.motor_mount_fl,frame.motor_mount_fr)",
+   "f": "d1",
+   "text": "159.1 mm",
+   "status": "derived",
+   "unit": "mm",
+   "formula": "|placement(a) · a.frame.origin − placement(b) · b.frame.origin| from assemble()",
+   "inputs": [
+    "inst:frame:interfaces[id=motor_mount_fl].geometry.frame.origin",
+    "inst:frame:interfaces[id=motor_mount_fr].geometry.frame.origin"
+   ]
+  },
+  {
+   "q": "derived:frameDistance(frame.motor_mount_rr,frame.motor_mount_fr)",
+   "f": "d1",
+   "text": "159.1 mm",
+   "status": "derived",
+   "unit": "mm",
+   "formula": "|placement(a) · a.frame.origin − placement(b) · b.frame.origin| from assemble()",
+   "inputs": [
+    "inst:frame:interfaces[id=motor_mount_rr].geometry.frame.origin",
+    "inst:frame:interfaces[id=motor_mount_fr].geometry.frame.origin"
+   ]
+  },
+  {
+   "q": "derived:frameDistance(frame.motor_mount_fl,frame.motor_mount_rl)",
+   "f": "d1",
+   "text": "159.1 mm",
+   "status": "derived",
+   "unit": "mm",
+   "formula": "|placement(a) · a.frame.origin − placement(b) · b.frame.origin| from assemble()",
+   "inputs": [
+    "inst:frame:interfaces[id=motor_mount_fl].geometry.frame.origin",
+    "inst:frame:interfaces[id=motor_mount_rl].geometry.frame.origin"
+   ]
+  },
+  {
+   "q": "def:hqprop-ethix-s5:domains[domain=mechanical].metadata.prop_diameter_in",
+   "f": "u=in",
+   "text": "5 in",
+   "status": "source",
+   "unit": "in",
+   "source": "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].metadata.diameter_mm",
+   "text": "28.3 mm",
+   "status": "source",
+   "unit": "mm",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].weight_g",
+   "text": "—",
+   "status": "gap",
+   "unit": "g"
+  },
+  {
+   "q": "def:quadcopter-5in-top-plate:domains[domain=mechanical].weight_g",
+   "text": "—",
+   "status": "gap",
+   "unit": "g"
+  },
+  {
+   "q": "inst:frame:interfaces[id=stack_mount].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=stack_mount].parameters[id=hole_spacing].value",
+   "text": "30.5 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=stack_mount].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "3 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=motor_mount_fr].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=motor_mount_fr].parameters[id=hole_spacing].value",
+   "text": "16 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=motor_mount_fr].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "3 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=vtx_mount].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=vtx_mount].parameters[id=hole_spacing].value",
+   "text": "25.5 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=vtx_mount].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "2 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=camera_mount].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=camera_mount].parameters[id=hole_spacing].value",
+   "text": "16 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=camera_mount].parameters[id=hole_spacing_y].value",
+   "text": "14 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=camera_mount].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "2 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=standoff_mount].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=standoff_mount].parameters[id=hole_spacing].value",
+   "text": "56 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=standoff_mount].parameters[id=hole_spacing_y].value",
+   "text": "48 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:frame:interfaces[id=standoff_mount].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "3 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-frame"
+  },
+  {
+   "q": "inst:top_plate:interfaces[id=gps_mount].parameters[id=hole_count].value",
+   "text": "4",
+   "status": "model",
+   "unit": "dimensionless",
+   "source": "model: quadcopter-5in-top-plate"
+  },
+  {
+   "q": "inst:top_plate:interfaces[id=gps_mount].parameters[id=hole_spacing].value",
+   "text": "26 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-top-plate"
+  },
+  {
+   "q": "inst:top_plate:interfaces[id=gps_mount].parameters[id=fastener_diameter].value",
+   "f": "u=mm",
+   "text": "2 mm",
+   "status": "model",
+   "unit": "mm",
+   "source": "model: quadcopter-5in-top-plate"
+  },
+  {
+   "q": "inst:receiver:interfaces[id=crsf].parameters[id=baud_rate].value",
+   "f": "u=Bd",
+   "text": "420 000 Bd",
+   "status": "source",
+   "unit": "Hz",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "inst:receiver:interfaces[id=vcc_5v].parameters[id=voltage].value",
+   "text": "5 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "inst:stack/fc:interfaces[id=bec_5v].parameters[id=max_current].value",
+   "text": "3 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "inst:video:interfaces[id=vcc].parameters[id=voltage].value",
+   "text": "3.7–13.2 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "inst:stack/fc:interfaces[id=bec_10v].parameters[id=max_current].value",
+   "text": "2.5 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "inst:video:interfaces[id=uart_osd].parameters[id=baud_rate].value",
+   "f": "u=Bd",
+   "text": "115 200 Bd",
+   "status": "source",
+   "unit": "Hz",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "inst:video:interfaces[id=uart_osd].parameters[id=voltage].value",
+   "text": "3.3 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "inst:gnss:interfaces[id=uart_gnss].parameters[id=baud_rate].value",
+   "f": "u=Bd",
+   "text": "38 400 Bd",
+   "status": "source",
+   "unit": "Hz",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "inst:gnss:interfaces[id=i2c_compass].parameters[id=clock_freq].value",
+   "f": "si",
+   "text": "100–400 kHz",
+   "status": "source",
+   "unit": "Hz",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "inst:gnss:interfaces[id=i2c_compass].parameters[id=i2c_address].value",
+   "f": "hex",
+   "text": "0x2C",
+   "status": "source",
+   "unit": "dimensionless",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "inst:gnss:interfaces[id=vin_5v].parameters[id=voltage].value",
+   "text": "5 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_5v].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "5.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_5v].details.capacityW",
+   "f": "u=W",
+   "text": "15 W",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_5v].details.loadW",
+   "f": "u=W",
+   "text": "0 W",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_10v].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "10.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_10v].details.capacityW",
+   "f": "u=W",
+   "text": "25 W",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_10v].details.loadW",
+   "f": "u=W",
+   "text": "10 W",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=vbat_in].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "6.0–30.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=bat_in].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "6.0–30.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:interfaces[id=vcc_5v].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "5.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "def:dji-o4-air-unit:interfaces[id=vcc].parameters[id=min_supply_power].value",
+   "text": "10 W",
+   "status": "source",
+   "unit": "W",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:matek-m9n-5883:interfaces[id=vin_5v].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "5.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:panasonic-eeu-fr1v471:interfaces[id=pos].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "0.0–35.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1259.pdf"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].propeller",
+   "text": "MEPS SZ5145",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].supply_V",
+   "text": "25.2 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
+   "f": "u=g",
+   "text": "763 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
+   "f": "u=A",
+   "text": "10.4 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
+   "f": "u=g",
+   "text": "1699 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
+   "f": "u=A|d1",
+   "text": "43.0 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.power_W",
+   "f": "u=W",
+   "text": "1036 W",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.rpm",
+   "f": "u=rpm",
+   "text": "30 342 rpm",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].propeller",
+   "text": "MEPS SZ4942",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].supply_V",
+   "text": "25.2 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].half_throttle.thrust_g",
+   "f": "u=g",
+   "text": "648 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].half_throttle.current_A",
+   "f": "u=A",
+   "text": "9.5 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.thrust_g",
+   "f": "u=g",
+   "text": "1584 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.current_A",
+   "f": "u=A|d1",
+   "text": "41.8 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.power_W",
+   "f": "u=W",
+   "text": "1009 W",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.rpm",
+   "f": "u=rpm",
+   "text": "31 973 rpm",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+  },
+  {
+   "q": "test:hover-current:summary[id=auw_g].value",
+   "text": "550 g",
+   "status": "standin",
+   "unit": "g",
+   "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
+  },
+  {
+   "q": "test:hover-current:summary[id=hover_current_A].value",
+   "f": "d1",
+   "text": "4.3 A",
+   "status": "standin",
+   "unit": "A",
+   "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
+  },
+  {
+   "q": "test:hover-current:summary[id=hover_power_W].value",
+   "text": "95 W",
+   "status": "standin",
+   "unit": "W",
+   "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
+  },
+  {
+   "q": "test:hover-current:summary[id=avionics_current_A].value",
+   "f": "d1",
+   "text": "0.7 A",
+   "status": "standin",
+   "unit": "A",
+   "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
+  },
+  {
+   "q": "test:throttle-sweep:summary[id=thrust_total_full].value",
+   "f": "si|d2",
+   "text": "6.80 kg",
+   "status": "standin",
+   "unit": "g",
+   "source": "library/systems/quadcopter-5in/docs/test-data/throttle-sweep.json"
+  },
+  {
+   "q": "test:throttle-sweep:summary[id=current_total_full].value",
+   "f": "d1",
+   "text": "172.7 A",
+   "status": "standin",
+   "unit": "A",
+   "source": "library/systems/quadcopter-5in/docs/test-data/throttle-sweep.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[0][0]",
+   "f": "d1",
+   "text": "25.2 V",
+   "status": "standin",
+   "unit": "V",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[0][2]",
+   "f": "d1|nounit",
+   "text": "12.4",
+   "status": "standin",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[1][0]",
+   "f": "d1",
+   "text": "22.2 V",
+   "status": "standin",
+   "unit": "V",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[1][2]",
+   "f": "d1|nounit",
+   "text": "9.6",
+   "status": "standin",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[2][0]",
+   "f": "d1",
+   "text": "21.0 V",
+   "status": "standin",
+   "unit": "V",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:thrust-to-weight:rows[2][2]",
+   "f": "d1|nounit",
+   "text": "8.6",
+   "status": "standin",
+   "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
+  },
+  {
+   "q": "test:flight-time:summary[id=hover_min].value",
+   "f": "d1",
+   "text": "12.4 min",
+   "status": "standin",
+   "unit": "min",
+   "source": "library/systems/quadcopter-5in/docs/test-data/flight-time.json"
+  },
+  {
+   "q": "test:flight-time:summary[id=mix_min].value",
+   "f": "d1",
+   "text": "2.3 min",
+   "status": "standin",
+   "unit": "min",
+   "source": "library/systems/quadcopter-5in/docs/test-data/flight-time.json"
+  },
+  {
+   "q": "test:esc-temp-punchout:summary[id=peak_C].value",
+   "f": "d1",
+   "text": "38.9 °C",
+   "status": "standin",
+   "unit": "°C",
+   "source": "library/systems/quadcopter-5in/docs/test-data/esc-temp-punchout.json"
+  },
+  {
+   "q": "derived:diagCount(nominal,error)",
+   "text": "0",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=nominal].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(nominal,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=nominal].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(nominal,info)",
+   "text": "3",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=nominal].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(o4-on-vbat,error)",
+   "text": "2",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=o4-on-vbat].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(o4-on-vbat,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=o4-on-vbat].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(o4-on-vbat,info)",
+   "text": "2",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=o4-on-vbat].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(frame-20mm-stack,error)",
+   "text": "2",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=frame-20mm-stack].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(frame-20mm-stack,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=frame-20mm-stack].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(frame-20mm-stack,info)",
+   "text": "3",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=frame-20mm-stack].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(gps-on-rx-uart,error)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=gps-on-rx-uart].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(gps-on-rx-uart,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=gps-on-rx-uart].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(gps-on-rx-uart,info)",
+   "text": "3",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=gps-on-rx-uart].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(legacy-m10q,error)",
+   "text": "0",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=legacy-m10q].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(legacy-m10q,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=legacy-m10q].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(legacy-m10q,info)",
+   "text": "3",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=legacy-m10q].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(two-compasses,error)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=two-compasses].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(two-compasses,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=two-compasses].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(two-compasses,info)",
+   "text": "3",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=two-compasses].diagnostics"
+   ]
+  },
+  {
+   "q": "sys:bom[line=1].line",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].name",
+   "text": "CNHL Black Series 1100mAh 6S 22.2V 100C LiPo (XT60)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].manufacturer",
+   "text": "CNHL (China Hobby Line)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].partNumber",
+   "text": "1101006BK",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].verification",
+   "text": "audited 18/18",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].assumptions",
+   "text": "3",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=1].openGaps",
+   "text": "7",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].line",
+   "text": "2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].name",
+   "text": "DJI O4 Air Unit",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].manufacturer",
+   "text": "DJI",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].partNumber",
+   "text": "DF3L2904",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
+   "text": "8.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "sys:bom[line=2].verification",
+   "text": "audited 32/34",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=2].openGaps",
+   "text": "5",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].line",
+   "text": "3",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].name",
+   "text": "DolphinRC AM32 60A 4-in-1 ESC",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].manufacturer",
+   "text": "DolphinRC (Shenzhen DolphinRC Model Technology Co., Ltd.)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].partNumber",
+   "text": "DolphinRC AM32 ESC 60A (F405 V3 stack, SKU DPDZ00041 option '60A ESC')",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
+   "text": "13.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "sys:bom[line=3].verification",
+   "text": "audited 18/18",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=3].openGaps",
+   "text": "5",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].line",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].name",
+   "text": "DolphinRC F405 V3 Flight Controller",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].manufacturer",
+   "text": "DolphinRC (Shenzhen DolphinRC Model Technology Co., Ltd.)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].partNumber",
+   "text": "DolphinRC F405 V3 (F405 V3 stack, SKU DPDZ00041 option 'F405-FC')",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
+   "text": "7.7 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "sys:bom[line=4].verification",
+   "text": "audited 28/30",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=4].openGaps",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].line",
+   "text": "5",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].name",
+   "text": "ETTINGER 005.83.060 M3 round spacer 6 mm, PA6 GF25",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].manufacturer",
+   "text": "ETTINGER",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].partNumber",
+   "text": "005.83.060",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].quantity",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g",
+   "text": "0.15 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.ettinger.de/en/p/round-spacer-oe3.4-6.0-x-6.0-pa-gf-black/005.83.060"
+  },
+  {
+   "q": "sys:bom[line=5].verification",
+   "text": "audited 12/12",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=5].openGaps",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].line",
+   "text": "6",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].name",
+   "text": "HGLRC Kevlar battery strap 20x250mm",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].manufacturer",
+   "text": "HGLRC",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].partNumber",
+   "text": "F.ZD.02.00010",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
+   "text": "8.3 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm"
+  },
+  {
+   "q": "sys:bom[line=6].verification",
+   "text": "audited 12/12",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=6].openGaps",
+   "text": "5",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].line",
+   "text": "7",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].name",
+   "text": "HQProp Ethix S5 5x4x3 Propeller",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].manufacturer",
+   "text": "HQProp",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].partNumber",
+   "text": "EthixS5-GR-PC",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].packQuantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].verification",
+   "text": "audited 14/14",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=7].openGaps",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].line",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].name",
+   "text": "M2 nyloc nut, DIN 985, A2 stainless",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].manufacturer",
+   "text": "Westfield Fasteners",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].partNumber",
+   "text": "WF16826",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].quantity",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=8].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].line",
+   "text": "9",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].name",
+   "text": "M2 nylon spacer, Ø2.7/4.0 x 3 mm",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].manufacturer",
+   "text": "Ettinger",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].partNumber",
+   "text": "007.02.403",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].packQuantity",
+   "text": "100",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=9].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].line",
+   "text": "10",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].name",
+   "text": "M2 nylon spacer, Ø2.7/4.0 x 5 mm",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].manufacturer",
+   "text": "Ettinger",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].partNumber",
+   "text": "007.02.405",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].packQuantity",
+   "text": "100",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=10].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].line",
+   "text": "11",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].name",
+   "text": "M2 x 12 mm socket head cap screw, ISO 4762",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].manufacturer",
+   "text": "Generic (ISO 4762 / DIN 912)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].partNumber",
+   "text": "WF2332",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=11].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].line",
+   "text": "12",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].name",
+   "text": "M2 x 18 mm socket head cap screw, ISO 4762",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].manufacturer",
+   "text": "Generic (ISO 4762 / DIN 912)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].partNumber",
+   "text": "WF17972",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=12].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].line",
+   "text": "13",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].name",
+   "text": "M3 aluminium standoff, 30 mm, female–female, 5.5 mm AF",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].manufacturer",
+   "text": "Ettinger",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].partNumber",
+   "text": "005.03.308",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].packQuantity",
+   "text": "100",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=13].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].line",
+   "text": "14",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].name",
+   "text": "M3 nyloc nut, ISO 10511 / DIN 985 Type T, A2 stainless",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].manufacturer",
+   "text": "Generic (ISO 10511 / DIN 985)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].partNumber",
+   "text": "WF1288",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].verification",
+   "text": "audited 12/12",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=14].openGaps",
+   "text": "2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].line",
+   "text": "15",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].name",
+   "text": "M3 x 30 mm socket head cap screw, ISO 4762, A2 stainless",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].manufacturer",
+   "text": "Generic (ISO 4762 / DIN 912)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].partNumber",
+   "text": "WF2352",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].verification",
+   "text": "audited 12/12",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=15].openGaps",
+   "text": "2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].line",
+   "text": "16",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].name",
+   "text": "M3 x 8 mm socket head cap screw, ISO 4762",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].manufacturer",
+   "text": "Generic (ISO 4762 / DIN 912)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].partNumber",
+   "text": "WF2344",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].quantity",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=16].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].line",
+   "text": "17",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].name",
+   "text": "Matek M9N-5883 GNSS & Compass",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].manufacturer",
+   "text": "Matek Systems",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].partNumber",
+   "text": "M9N-5883",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
+   "text": "14.5 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "sys:bom[line=17].verification",
+   "text": "audited 26/26",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].assumptions",
+   "text": "2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=17].openGaps",
+   "text": "8",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].line",
+   "text": "18",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].name",
+   "text": "MEPS NEON 2207 V2 1950KV Brushless Motor",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].manufacturer",
+   "text": "MEPS",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].partNumber",
+   "text": "NEON 2207 V2 1950KV",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].verification",
+   "text": "audited 20/20",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=18].openGaps",
+   "text": "7",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].line",
+   "text": "19",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].name",
+   "text": "Panasonic EEU-FR1V471 470 μF 35 V low-ESR electrolytic capacitor",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].manufacturer",
+   "text": "Panasonic Industry",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].partNumber",
+   "text": "EEU-FR1V471",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].verification",
+   "text": "audited 17/18",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].assumptions",
+   "text": "2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=19].openGaps",
+   "text": "3",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].line",
+   "text": "20",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].name",
+   "text": "RadioMaster RP1 V2 ExpressLRS 2.4GHz Nano Receiver",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].manufacturer",
+   "text": "RadioMaster",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].partNumber",
+   "text": "RP1 V2",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:domains[domain=mechanical].weight_g",
+   "text": "2.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "sys:bom[line=20].verification",
+   "text": "audited 21/21",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=20].openGaps",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].line",
+   "text": "21",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].name",
+   "text": "5-inch frame top plate (custom)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].manufacturer",
+   "text": "Delta Robotics (custom)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].partNumber",
+   "text": "QUAD5-TOP",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=21].openGaps",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].line",
+   "text": "22",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].name",
+   "text": "5-inch quadcopter frame (custom)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].manufacturer",
+   "text": "Delta Robotics (custom)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].partNumber",
+   "text": "QUAD5-FRAME",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=22].openGaps",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].line",
+   "text": "23",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].name",
+   "text": "DJI O4 3-in-1 cable",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].manufacturer",
+   "text": "DJI",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=23].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].line",
+   "text": "24",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].name",
+   "text": "FC/ESC SH1.0 8-pin cable",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].manufacturer",
+   "text": "DolphinRC",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=24].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].line",
+   "text": "25",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].name",
+   "text": "M2 x 5 mm camera screw (included with the O4)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].manufacturer",
+   "text": "Included (unbranded)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].quantity",
+   "text": "4",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=25].openGaps",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].line",
+   "text": "26",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].name",
+   "text": "M3 x 8 mm motor screw (included with the motor)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].manufacturer",
+   "text": "Included (unbranded)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].quantity",
+   "text": "16",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].assumptions",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=26].openGaps",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].line",
+   "text": "27",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].name",
+   "text": "XT60 battery lead (12 AWG)",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].manufacturer",
+   "text": "DolphinRC",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].quantity",
+   "text": "1",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].verification",
+   "text": "—",
+   "status": "gap",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].assumptions",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "sys:bom[line=27].openGaps",
+   "text": "0",
+   "status": "model",
+   "source": "UHD bom"
+  },
+  {
+   "q": "ver:cnhl-black-series-1100mah-6s-100c:audit.confirmed",
+   "text": "18",
+   "status": "model",
+   "source": "library/parts/cnhl-black-series-1100mah-6s-100c/verification.json"
+  },
+  {
+   "q": "ver:cnhl-black-series-1100mah-6s-100c:audit.checked",
+   "text": "18",
+   "status": "model",
+   "source": "library/parts/cnhl-black-series-1100mah-6s-100c/verification.json"
+  },
+  {
+   "q": "ver:dji-o4-air-unit:audit.confirmed",
+   "text": "32",
+   "status": "model",
+   "source": "library/parts/dji-o4-air-unit/verification.json"
+  },
+  {
+   "q": "ver:dji-o4-air-unit:audit.checked",
+   "text": "34",
+   "status": "model",
+   "source": "library/parts/dji-o4-air-unit/verification.json"
+  },
+  {
+   "q": "ver:dolphinrc-am32-60a-4in1-esc:audit.confirmed",
+   "text": "18",
+   "status": "model",
+   "source": "library/parts/dolphinrc-am32-60a-4in1-esc/verification.json"
+  },
+  {
+   "q": "ver:dolphinrc-am32-60a-4in1-esc:audit.checked",
+   "text": "18",
+   "status": "model",
+   "source": "library/parts/dolphinrc-am32-60a-4in1-esc/verification.json"
+  },
+  {
+   "q": "ver:dolphinrc-f405-v3-flight-controller:audit.confirmed",
+   "text": "28",
+   "status": "model",
+   "source": "library/parts/dolphinrc-f405-v3-flight-controller/verification.json"
+  },
+  {
+   "q": "ver:dolphinrc-f405-v3-flight-controller:audit.checked",
+   "text": "30",
+   "status": "model",
+   "source": "library/parts/dolphinrc-f405-v3-flight-controller/verification.json"
+  },
+  {
+   "q": "ver:ettinger-005-83-060-m3-nylon-spacer-6mm:audit.confirmed",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/ettinger-005-83-060-m3-nylon-spacer-6mm/verification.json"
+  },
+  {
+   "q": "ver:ettinger-005-83-060-m3-nylon-spacer-6mm:audit.checked",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/ettinger-005-83-060-m3-nylon-spacer-6mm/verification.json"
+  },
+  {
+   "q": "ver:hglrc-kevlar-battery-strap-20x250mm:audit.confirmed",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/hglrc-kevlar-battery-strap-20x250mm/verification.json"
+  },
+  {
+   "q": "ver:hglrc-kevlar-battery-strap-20x250mm:audit.checked",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/hglrc-kevlar-battery-strap-20x250mm/verification.json"
+  },
+  {
+   "q": "ver:hqprop-ethix-s5:audit.confirmed",
+   "text": "14",
+   "status": "model",
+   "source": "library/parts/hqprop-ethix-s5/verification.json"
+  },
+  {
+   "q": "ver:hqprop-ethix-s5:audit.checked",
+   "text": "14",
+   "status": "model",
+   "source": "library/parts/hqprop-ethix-s5/verification.json"
+  },
+  {
+   "q": "ver:iso-10511-m3-nyloc-nut:audit.confirmed",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/iso-10511-m3-nyloc-nut/verification.json"
+  },
+  {
+   "q": "ver:iso-10511-m3-nyloc-nut:audit.checked",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/iso-10511-m3-nyloc-nut/verification.json"
+  },
+  {
+   "q": "ver:iso-4762-m3x30-socket-head-cap-screw:audit.confirmed",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/iso-4762-m3x30-socket-head-cap-screw/verification.json"
+  },
+  {
+   "q": "ver:iso-4762-m3x30-socket-head-cap-screw:audit.checked",
+   "text": "12",
+   "status": "model",
+   "source": "library/parts/iso-4762-m3x30-socket-head-cap-screw/verification.json"
+  },
+  {
+   "q": "ver:matek-m9n-5883:audit.confirmed",
+   "text": "26",
+   "status": "model",
+   "source": "library/parts/matek-m9n-5883/verification.json"
+  },
+  {
+   "q": "ver:matek-m9n-5883:audit.checked",
+   "text": "26",
+   "status": "model",
+   "source": "library/parts/matek-m9n-5883/verification.json"
+  },
+  {
+   "q": "ver:meps-neon-2207-v2-1950kv:audit.confirmed",
+   "text": "20",
+   "status": "model",
+   "source": "library/parts/meps-neon-2207-v2-1950kv/verification.json"
+  },
+  {
+   "q": "ver:meps-neon-2207-v2-1950kv:audit.checked",
+   "text": "20",
+   "status": "model",
+   "source": "library/parts/meps-neon-2207-v2-1950kv/verification.json"
+  },
+  {
+   "q": "ver:panasonic-eeu-fr1v471:audit.confirmed",
+   "text": "17",
+   "status": "model",
+   "source": "library/parts/panasonic-eeu-fr1v471/verification.json"
+  },
+  {
+   "q": "ver:panasonic-eeu-fr1v471:audit.checked",
+   "text": "18",
+   "status": "model",
+   "source": "library/parts/panasonic-eeu-fr1v471/verification.json"
+  },
+  {
+   "q": "ver:radiomaster-rp1-v2-elrs-2g4:audit.confirmed",
+   "text": "21",
+   "status": "model",
+   "source": "library/parts/radiomaster-rp1-v2-elrs-2g4/verification.json"
+  },
+  {
+   "q": "ver:radiomaster-rp1-v2-elrs-2g4:audit.checked",
+   "text": "21",
+   "status": "model",
+   "source": "library/parts/radiomaster-rp1-v2-elrs-2g4/verification.json"
+  }
+ ]
+}

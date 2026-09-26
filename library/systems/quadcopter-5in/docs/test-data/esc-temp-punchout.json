@@ -1,0 +1,438 @@
+{
+  "$schema": "uhd-test-data/1",
+  "status": "standin",
+  "subject": {
+    "system": "quadcopter-5in",
+    "modules": [
+      "dolphinrc-am32-60a-4in1-esc",
+      "meps-neon-2207-v2-1950kv"
+    ]
+  },
+  "id": "esc-temp-punchout",
+  "title": "ESC board temperature over a 4 s punch-out",
+  "conditions": [
+    {
+      "name": "Ambient",
+      "value": 25,
+      "unit": "°C"
+    },
+    {
+      "name": "Punch-out",
+      "value": "100 % from 2 s to 6 s, 35 % otherwise",
+      "unit": ""
+    }
+  ],
+  "provenance": {
+    "method": "Stand-in: lumped thermal model C·dT/dt = P − (T − ambient)/R with conduction and switching losses per channel.",
+    "derivedFrom": [
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
+      "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=motor_1].parameters[id=max_current].value"
+    ],
+    "assumptions": [
+      "thermal resistance 2 K/W and capacity 20 J/K (board in prop wash) — not in the model",
+      "effective conduction resistance 4 mΩ per channel and 1.5 W switching loss per channel at full throttle — not in the model",
+      "starting 8 °C above ambient after the previous flight segment"
+    ],
+    "generator": "scripts/docs/lib/standins/multirotor.ts",
+    "generatedAt": "2026-09-26"
+  },
+  "columns": [
+    {
+      "id": "time",
+      "label": "Time",
+      "unit": "s"
+    },
+    {
+      "id": "throttle",
+      "label": "Throttle",
+      "unit": "%"
+    },
+    {
+      "id": "current_channel",
+      "label": "Current per channel",
+      "unit": "A"
+    },
+    {
+      "id": "temperature",
+      "label": "ESC temperature",
+      "unit": "°C"
+    }
+  ],
+  "rows": [
+    [
+      0,
+      35,
+      5,
+      33
+    ],
+    [
+      0.5,
+      35,
+      5,
+      33
+    ],
+    [
+      1,
+      35,
+      5,
+      32.9
+    ],
+    [
+      1.5,
+      35,
+      5,
+      32.9
+    ],
+    [
+      2,
+      100,
+      43,
+      33.7
+    ],
+    [
+      2.5,
+      100,
+      43,
+      34.5
+    ],
+    [
+      3,
+      100,
+      43,
+      35.2
+    ],
+    [
+      3.5,
+      100,
+      43,
+      36
+    ],
+    [
+      4,
+      100,
+      43,
+      36.7
+    ],
+    [
+      4.5,
+      100,
+      43,
+      37.5
+    ],
+    [
+      5,
+      100,
+      43,
+      38.2
+    ],
+    [
+      5.5,
+      100,
+      43,
+      38.9
+    ],
+    [
+      6,
+      35,
+      5,
+      38.8
+    ],
+    [
+      6.5,
+      35,
+      5,
+      38.7
+    ],
+    [
+      7,
+      35,
+      5,
+      38.6
+    ],
+    [
+      7.5,
+      35,
+      5,
+      38.5
+    ],
+    [
+      8,
+      35,
+      5,
+      38.4
+    ],
+    [
+      8.5,
+      35,
+      5,
+      38.3
+    ],
+    [
+      9,
+      35,
+      5,
+      38.2
+    ],
+    [
+      9.5,
+      35,
+      5,
+      38.1
+    ],
+    [
+      10,
+      35,
+      5,
+      38
+    ],
+    [
+      10.5,
+      35,
+      5,
+      37.9
+    ],
+    [
+      11,
+      35,
+      5,
+      37.8
+    ],
+    [
+      11.5,
+      35,
+      5,
+      37.7
+    ],
+    [
+      12,
+      35,
+      5,
+      37.6
+    ],
+    [
+      12.5,
+      35,
+      5,
+      37.5
+    ],
+    [
+      13,
+      35,
+      5,
+      37.4
+    ],
+    [
+      13.5,
+      35,
+      5,
+      37.3
+    ],
+    [
+      14,
+      35,
+      5,
+      37.2
+    ],
+    [
+      14.5,
+      35,
+      5,
+      37.1
+    ],
+    [
+      15,
+      35,
+      5,
+      37
+    ],
+    [
+      15.5,
+      35,
+      5,
+      37
+    ],
+    [
+      16,
+      35,
+      5,
+      36.9
+    ],
+    [
+      16.5,
+      35,
+      5,
+      36.8
+    ],
+    [
+      17,
+      35,
+      5,
+      36.7
+    ],
+    [
+      17.5,
+      35,
+      5,
+      36.6
+    ],
+    [
+      18,
+      35,
+      5,
+      36.5
+    ],
+    [
+      18.5,
+      35,
+      5,
+      36.5
+    ],
+    [
+      19,
+      35,
+      5,
+      36.4
+    ],
+    [
+      19.5,
+      35,
+      5,
+      36.3
+    ],
+    [
+      20,
+      35,
+      5,
+      36.2
+    ],
+    [
+      20.5,
+      35,
+      5,
+      36.1
+    ],
+    [
+      21,
+      35,
+      5,
+      36.1
+    ],
+    [
+      21.5,
+      35,
+      5,
+      36
+    ],
+    [
+      22,
+      35,
+      5,
+      35.9
+    ],
+    [
+      22.5,
+      35,
+      5,
+      35.8
+    ],
+    [
+      23,
+      35,
+      5,
+      35.8
+    ],
+    [
+      23.5,
+      35,
+      5,
+      35.7
+    ],
+    [
+      24,
+      35,
+      5,
+      35.6
+    ],
+    [
+      24.5,
+      35,
+      5,
+      35.5
+    ],
+    [
+      25,
+      35,
+      5,
+      35.5
+    ],
+    [
+      25.5,
+      35,
+      5,
+      35.4
+    ],
+    [
+      26,
+      35,
+      5,
+      35.3
+    ],
+    [
+      26.5,
+      35,
+      5,
+      35.3
+    ],
+    [
+      27,
+      35,
+      5,
+      35.2
+    ],
+    [
+      27.5,
+      35,
+      5,
+      35.1
+    ],
+    [
+      28,
+      35,
+      5,
+      35.1
+    ],
+    [
+      28.5,
+      35,
+      5,
+      35
+    ],
+    [
+      29,
+      35,
+      5,
+      35
+    ],
+    [
+      29.5,
+      35,
+      5,
+      34.9
+    ],
+    [
+      30,
+      35,
+      5,
+      34.8
+    ]
+  ],
+  "summary": [
+    {
+      "id": "peak_C",
+      "label": "Peak temperature",
+      "value": 38.9,
+      "unit": "°C"
+    }
+  ]
+}

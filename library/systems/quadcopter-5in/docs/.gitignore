@@ -1,0 +1,3 @@
+# build byproducts (scripts/docs)
+.review/
+images/.render-cache.json

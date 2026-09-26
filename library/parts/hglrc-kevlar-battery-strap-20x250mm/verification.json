@@ -20,6 +20,6 @@
     "frame top-plate thickness and slot width"
   ],
   "vocabulary_gaps": [
-    "{\"type\":\"vocabulary\",\"field\":\"battery strap interface\",\"detail\":\"No strap/zip-tie protocol or builder exists (vocabulary.md 'Not yet covered'). The strap loop is modelled as protocol type \\\"custom\\\" role \\\"peer\\\" with parameters strap_width (mm) and strap_length (mm), plus usage notes. The mating features are the frame's strap slots (quadcopter-5in-frame, not yet an interface there) and the pack body (cnhl-black-series-1100mah-6s-100c, no interface). Proposed vocabulary: battery_strap with roles strap / structure (frame slot) / payload (pack), matching strap_width <= slot width and strap_length >= wrapped perimeter (capacity-style semantics, not range overlap).\",\"escalate\":true}"
+    "battery strap interface"
   ]
 }

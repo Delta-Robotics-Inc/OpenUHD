@@ -24,8 +24,8 @@
     "balance connector pinout / position count"
   ],
   "vocabulary_gaps": [
-    "{\"type\":\"vocabulary\",\"field\":\"balance lead protocol\",\"detail\":\"No protocol builder for a battery balance/cell-tap connector (JST-XH, 7 positions for 6S). Modelled as protocol type \\\"custom\\\" role \\\"peer\\\" with connectorTrait(\\\"jst_xh_7\\\") and usage_note. Proposed vocabulary: battery_balance (pack: source / charger or cell checker: sink) with cell_count parameter matching.\",\"escalate\":true}",
-    "{\"type\":\"vocabulary\",\"field\":\"battery strap interface\",\"detail\":\"Pack has no mounting feature; it is held by a strap around the 75 x 39.5 x 35 mm body. No strap/zip-tie builder exists (listed under 'Not yet covered'). Not modelled as an interface; recorded here and in modelling notes.\",\"escalate\":true}",
-    "{\"type\":\"vocabulary\",\"field\":\"burst_current DRC semantics\",\"detail\":\"src/drc/param-check.ts range-overlaps burst_current (it is not in CAPACITY_PARAM_IDS). A 220 A pack burst vs an ESC input declaring e.g. burst_current 70 A yields param_range_disjoint (verified with a stand-in PowerIn). Supply-vs-sink burst ratings need capacity semantics; escalate to integrator.\",\"escalate\":true}"
+    "balance lead protocol",
+    "battery strap interface",
+    "burst_current DRC semantics"
   ]
 }

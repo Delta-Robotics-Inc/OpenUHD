@@ -33,6 +33,12 @@ async function main() {
   const def = Object.values(mod).find((v): v is ModuleDef => typeof v === "object" && v !== null && (v as ModuleDef).id === id);
   const traits = def ? [def, ...def.interfaces].flatMap((x) => x.traits ?? []) : [];
 
+  // gap files use several shapes ({field}, {item, reason}, {note}); record a readable line, never raw JSON
+  const describeGap = (g: Record<string, unknown>) => {
+    const what = g.field ?? g.item ?? g.term ?? g.description ?? g.note;
+    if (what === undefined) return JSON.stringify(g);
+    return g.reason && g.reason !== what ? `${what} (${g.reason})` : String(what);
+  };
   const record = {
     partId: id,
     recorded_at: new Date().toISOString(),
@@ -51,7 +57,7 @@ async function main() {
       .map((t) => (t.params as Record<string, unknown>)?.field ?? (t.params as Record<string, unknown>)?.note ?? "assumption"),
     data_gaps: gaps
       .filter((g) => g.type === "data")
-      .map((g) => g.field ?? g.note ?? g.description ?? JSON.stringify(g)),
+      .map((g) => describeGap(g)),
     vocabulary_gaps: gaps
       .filter((g) => g.type === "vocabulary")
       .map((g) => g.term ?? g.note ?? g.description ?? JSON.stringify(g)),

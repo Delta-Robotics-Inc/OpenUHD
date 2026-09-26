@@ -19,6 +19,6 @@
     "supercapacitor capacity / backup duration"
   ],
   "vocabulary_gaps": [
-    "{\"type\":\"vocabulary\",\"field\":\"GNSS PPS LED / reset strap\",\"reason\":\"No builder for an indicator LED; the reset pad is modelled as a digital input Pin. The LED is recorded as a usage_note only.\"}"
+    "GNSS PPS LED / reset strap (No builder for an indicator LED; the reset pad is modelled as a digital input Pin. The LED is recorded as a usage_note only.)"
   ]
 }

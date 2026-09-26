@@ -1,0 +1,105 @@
+{
+  "$schema": "uhd-test-data/1",
+  "status": "standin",
+  "subject": {
+    "system": "quadcopter-5in",
+    "modules": [
+      "meps-neon-2207-v2-1950kv",
+      "cnhl-black-series-1100mah-6s-100c"
+    ]
+  },
+  "id": "flight-time",
+  "title": "Flight-time estimate by regime",
+  "conditions": [
+    {
+      "name": "Capacity",
+      "value": 1100,
+      "unit": "mAh"
+    },
+    {
+      "name": "Usable fraction (assumed)",
+      "value": 80,
+      "unit": "%"
+    },
+    {
+      "name": "Freestyle mix",
+      "value": "75 % cruise, 20 % half throttle, 5 % full",
+      "unit": ""
+    }
+  ],
+  "provenance": {
+    "method": "Stand-in: time = capacity × usable fraction ÷ average current. Static-thrust currents: pessimistic for forward flight.",
+    "derivedFrom": [
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.power_W",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
+      "test:hover-current:summary[id=hover_current_A].value"
+    ],
+    "assumptions": [
+      "power laws through the maker's 50 % and 100 % points: thrust ~ throttle^1.155, current ~ throttle^2.048",
+      "maker's test used the MEPS SZ5145 prop at 25.2 V, not the fitted propeller",
+      "avionics: DJI O4 minimum supply power 10 W, GNSS 50 mA at 5 V, FC + receiver 2.5 W (assumed), BEC efficiency 85 % (assumed)",
+      "all-up weight = 425.1 g of stated masses + 125 g assumed for the 67 parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)",
+      "usable capacity 80 % of rated"
+    ],
+    "generator": "scripts/docs/lib/standins/multirotor.ts",
+    "generatedAt": "2026-09-26"
+  },
+  "columns": [
+    {
+      "id": "regime",
+      "label": "Regime",
+      "unit": ""
+    },
+    {
+      "id": "current",
+      "label": "Average current",
+      "unit": "A"
+    },
+    {
+      "id": "minutes",
+      "label": "Flight time",
+      "unit": "min"
+    }
+  ],
+  "rows": [
+    [
+      "Hover",
+      4.3,
+      12.4
+    ],
+    [
+      "Cruise (1.5 × hover thrust)",
+      7.3,
+      7.3
+    ],
+    [
+      "Freestyle mix",
+      22.5,
+      2.3
+    ],
+    [
+      "Full throttle",
+      172.7,
+      0.3
+    ]
+  ],
+  "summary": [
+    {
+      "id": "hover_min",
+      "label": "Hover",
+      "value": 12.4,
+      "unit": "min"
+    },
+    {
+      "id": "mix_min",
+      "label": "Freestyle mix",
+      "value": 2.3,
+      "unit": "min"
+    }
+  ]
+}

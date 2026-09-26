@@ -1,0 +1,88 @@
+{
+  "$schema": "uhd-test-data/1",
+  "status": "standin",
+  "subject": {
+    "system": "quadcopter-5in",
+    "modules": [
+      "meps-neon-2207-v2-1950kv",
+      "cnhl-black-series-1100mah-6s-100c"
+    ]
+  },
+  "id": "thrust-to-weight",
+  "title": "Thrust-to-weight ratio vs pack voltage",
+  "conditions": [
+    {
+      "name": "All-up weight (estimate)",
+      "value": 550,
+      "unit": "g"
+    },
+    {
+      "name": "Reference supply (maker's test)",
+      "value": 25.2,
+      "unit": "V"
+    }
+  ],
+  "provenance": {
+    "method": "Stand-in: static thrust scaled with (V / test V)² (thrust ~ rpm², rpm ~ V), divided by the AUW estimate.",
+    "derivedFrom": [
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
+      "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.power_W",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
+      "derived:mass.known_total"
+    ],
+    "assumptions": [
+      "power laws through the maker's 50 % and 100 % points: thrust ~ throttle^1.155, current ~ throttle^2.048",
+      "maker's test used the MEPS SZ5145 prop at 25.2 V, not the fitted propeller",
+      "avionics: DJI O4 minimum supply power 10 W, GNSS 50 mA at 5 V, FC + receiver 2.5 W (assumed), BEC efficiency 85 % (assumed)",
+      "all-up weight = 425.1 g of stated masses + 125 g assumed for the 67 parts without a mass (frame, top plate, hardware; see derived:mass.missing_count)"
+    ],
+    "generator": "scripts/docs/lib/standins/multirotor.ts",
+    "generatedAt": "2026-09-26"
+  },
+  "columns": [
+    {
+      "id": "voltage",
+      "label": "Pack voltage",
+      "unit": "V"
+    },
+    {
+      "id": "thrust_total",
+      "label": "Total static thrust",
+      "unit": "g"
+    },
+    {
+      "id": "twr",
+      "label": "Thrust-to-weight",
+      "unit": ""
+    }
+  ],
+  "rows": [
+    [
+      25.2,
+      6796,
+      12.4
+    ],
+    [
+      22.2,
+      5274,
+      9.6
+    ],
+    [
+      21,
+      4719,
+      8.6
+    ]
+  ],
+  "summary": [
+    {
+      "id": "twr_nominal",
+      "label": "Thrust-to-weight at nominal voltage",
+      "value": 9.6,
+      "unit": ""
+    }
+  ]
+}

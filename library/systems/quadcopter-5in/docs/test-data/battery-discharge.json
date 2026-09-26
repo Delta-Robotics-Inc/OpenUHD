@@ -1,0 +1,141 @@
+{
+  "$schema": "uhd-test-data/1",
+  "status": "standin",
+  "subject": {
+    "system": "quadcopter-5in",
+    "modules": [
+      "cnhl-black-series-1100mah-6s-100c"
+    ]
+  },
+  "id": "battery-discharge",
+  "title": "Pack voltage vs capacity used",
+  "conditions": [
+    {
+      "name": "Cells",
+      "value": 6,
+      "unit": ""
+    },
+    {
+      "name": "Hover current (stand-in)",
+      "value": 4.3,
+      "unit": "A"
+    },
+    {
+      "name": "Freestyle average (stand-in)",
+      "value": 22.5,
+      "unit": "A"
+    }
+  ],
+  "provenance": {
+    "method": "Stand-in: generic LiPo open-circuit curve per cell minus I·R sag, scaled to the pack.",
+    "derivedFrom": [
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=cell_count].value",
+      "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value",
+      "test:hover-current:summary[id=hover_current_A].value"
+    ],
+    "assumptions": [
+      "generic LiPo open-circuit voltage curve",
+      "internal resistance 4 mΩ per cell — not in the model"
+    ],
+    "generator": "scripts/docs/lib/standins/multirotor.ts",
+    "generatedAt": "2026-09-26"
+  },
+  "columns": [
+    {
+      "id": "used",
+      "label": "Capacity used",
+      "unit": "mAh"
+    },
+    {
+      "id": "v_rest",
+      "label": "Open circuit",
+      "unit": "V"
+    },
+    {
+      "id": "v_hover",
+      "label": "At hover current",
+      "unit": "V"
+    },
+    {
+      "id": "v_mix",
+      "label": "At freestyle average",
+      "unit": "V"
+    }
+  ],
+  "rows": [
+    [
+      0,
+      25.2,
+      25.1,
+      24.66
+    ],
+    [
+      110,
+      24.48,
+      24.38,
+      23.94
+    ],
+    [
+      220,
+      23.88,
+      23.78,
+      23.34
+    ],
+    [
+      330,
+      23.4,
+      23.3,
+      22.86
+    ],
+    [
+      440,
+      23.04,
+      22.94,
+      22.5
+    ],
+    [
+      550,
+      22.8,
+      22.7,
+      22.26
+    ],
+    [
+      660,
+      22.62,
+      22.52,
+      22.08
+    ],
+    [
+      770,
+      22.44,
+      22.34,
+      21.9
+    ],
+    [
+      880,
+      22.2,
+      22.1,
+      21.66
+    ],
+    [
+      990,
+      21.72,
+      21.62,
+      21.18
+    ],
+    [
+      1100,
+      20.7,
+      20.6,
+      20.16
+    ]
+  ],
+  "summary": [
+    {
+      "id": "sag_mix_V",
+      "label": "Sag at freestyle average",
+      "value": 0.54,
+      "unit": "V"
+    }
+  ]
+}

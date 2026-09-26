@@ -1,0 +1,33 @@
+{
+  "$schema": "uhd-test-data/1",
+  "id": "hover-current",
+  "title": "Hover current and all-up-weight sensitivity",
+  "status": "measured",
+  "subject": { "system": "quadcopter-5in", "modules": ["meps-neon-2207-v2-1950kv", "cnhl-black-series-1100mah-6s-100c"] },
+  "conditions": [
+    { "name": "Battery nominal", "value": 22.2, "unit": "V" },
+    { "name": "All-up weight (weighed)", "value": 0, "unit": "g" },
+    { "name": "Ambient", "value": 0, "unit": "°C" },
+    { "name": "Firmware", "value": "Betaflight 2025.12.x", "unit": "" }
+  ],
+  "provenance": {
+    "method": "EXAMPLE ONLY — replace every 0 with a measurement. Hover in still air for 60 s per ballast step; current from the FC current sensor (calibrated against a clamp meter), averaged over the steady 40 s.",
+    "date": "YYYY-MM-DD",
+    "operator": "name",
+    "instruments": ["DolphinRC F405 V3 current sensor (Blackbox)", "clamp meter model"],
+    "rawFiles": ["blackbox/LOG00001.BFL"]
+  },
+  "columns": [
+    { "id": "auw", "label": "All-up weight", "unit": "g" },
+    { "id": "thrust_motor", "label": "Hover thrust per motor", "unit": "g" },
+    { "id": "current_total", "label": "Hover current", "unit": "A" },
+    { "id": "power_total", "label": "Hover power", "unit": "W" }
+  ],
+  "rows": [[0, 0, 0, 0]],
+  "summary": [
+    { "id": "auw_g", "label": "All-up weight", "value": 0, "unit": "g" },
+    { "id": "hover_current_A", "label": "Hover current", "value": 0, "unit": "A" },
+    { "id": "hover_power_W", "label": "Hover power", "value": 0, "unit": "W" },
+    { "id": "avionics_current_A", "label": "Avionics current", "value": 0, "unit": "A" }
+  ]
+}
