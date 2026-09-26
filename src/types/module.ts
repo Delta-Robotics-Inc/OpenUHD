@@ -22,7 +22,19 @@ export interface ChildModuleRef {
    */
   exposedInterfaces?: string[];
   overrides?: Record<string, unknown>;
+  /**
+   * Rotation sense of this instance (PB-797), viewed from the output end of
+   * the shaft, i.e. from above on a multirotor. On a motor: the direction it
+   * is configured to turn. On a handed part (a propeller with a `handedness`
+   * trait): the variant fitted, a "cw" prop being the one made to turn
+   * clockwise. On a group or assembly (an arm): applies to every descendant
+   * that does not set its own. Checked by the prop_handedness system rule.
+   */
+  spin?: SpinDirection;
 }
+
+/** Clockwise or counter-clockwise, viewed from the shaft's output end. */
+export type SpinDirection = "cw" | "ccw";
 
 /**
  * What a module definition represents (viewer design D2, D8).

@@ -206,6 +206,18 @@ Motor pin defaults (`CFG#L39-L46`):
 
 M5 to M8 are PB11, PB10, PB3 and PA15. The pins are loaded into `motorConfig->dev.ioTags[]` (`BF src/main/pg/motor.c#L81-L104`). **No `resource` changes are needed** unless the ESC harness order differs. In that case remap with `resource MOTOR n <pin>`, or use the Motors tab reorder (`motorOutputReordering`, `pg/motor.c#L109-L110`).
 
+### 3a. Motor spin direction (added PB-797, fetched 2026-09-26 from `master`)
+
+Quad-X default, viewed from above: **M1 rear-right CW, M2 front-right CCW, M3 rear-left CCW, M4 front-left CW** ("props in"). `set yaw_motors_reversed = ON` reverses every motor ("props out").
+
+- `yaw_motors_reversed` is an OFF/ON setting on `mixerConfig_t` (`BF src/main/cli/settings.c`, `{ "yaw_motors_reversed", VAR_INT8 | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_MIXER_CONFIG, ... }`). The default comes from `#define YAW_MOTORS_REVERSED 0` (`BF src/main/flight/mixer_init.c#L50-L51`), and `configs/MATEKF405TE/config.h` does not override it. So the default is OFF.
+- `mixerQuadX[]` yaw column (`mixer_init.c#L84-L89`): REAR_R −1, FRONT_R +1, REAR_L +1, FRONT_L −1. In the same file, `mixerY4[]` labels its rows `// REAR_TOP CW` (yaw −1) and `// REAR_BOTTOM CCW` (yaw +1). With that sign convention, M1 and M4 turn CW and M2 and M3 turn CCW. Source file sha256 `0b080d762403ca067fc4c5728d9dd5651a68311bcc1407f2ade9a6cf278d8418`.
+- Docs, motors tab (https://github.com/betaflight/betaflight.com, `docs/wiki/app/motors-tab.md`): "The normal setting assumes your props will spin in towards the camera at the front of your quad "props in"".
+- Docs, reversed motor direction (`docs/wiki/guides/current/Reversed-motor-direction.md`): "Reversed motors would be spinning outwards (contrary to the standard inwards), that is the front left spins counterclockwise, front right clockwise". The default is the opposite: front-left CW, front-right CCW. Diagonal motors share a direction.
+- The setup guide's props-in/props-out diagram is `static/img/betaflight_props_in_out.png` in the same repo.
+
+The UHD model records direction as `ChildModuleRef.spin` on each arm instance. `betaflight.ts` emits `yaw_motors_reversed` from it, and the `prop_handedness` check compares it with the prop variant on each motor.
+
 ---
 
 ## 4. Target defaults, compatibility, gotchas

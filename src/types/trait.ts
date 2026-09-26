@@ -51,3 +51,20 @@ export interface SuppliedFromTrait extends TraitDef {
     assumption?: string;
   };
 }
+
+/**
+ * A part made in rotation-handed variants under one definition (PB-797),
+ * e.g. a propeller sold as a 2 CW + 2 CCW pack. Which variant an instance is
+ * comes from `ChildModuleRef.spin`; the prop_handedness check compares it
+ * with the spin of the motor the part is mounted on.
+ */
+export interface HandednessTrait extends TraitDef {
+  type: "handedness";
+  params: {
+    variants: ("cw" | "ccw")[];
+    /** How the variants are sold together, e.g. { cw: 2, ccw: 2 } per pack. */
+    pack?: { cw: number; ccw: number };
+    source?: string;
+    note?: string;
+  };
+}

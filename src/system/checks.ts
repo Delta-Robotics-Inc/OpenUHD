@@ -10,6 +10,7 @@
  *   interface_reuse     a non-shareable interface linked more than once
  *   unpowered           a power input with no link
  *   harness_connector   harness end connectors vs the interfaces they mate
+ *   prop_handedness     each motor's spin vs the handed prop on it (rotation.ts)
  *
  * Each diagnostic names canonical paths (`child:interface`, `link:<id>`) so
  * a viewer can select what it refers to.
@@ -25,6 +26,7 @@ import {
   type ModuleLookup,
   type ResolvedEndpoint,
 } from "./index.js";
+import { propHandednessRule } from "./rotation.js";
 
 export type SystemRule =
   | "link_state"
@@ -33,7 +35,8 @@ export type SystemRule =
   | "bus_address"
   | "interface_reuse"
   | "unpowered"
-  | "harness_connector";
+  | "harness_connector"
+  | "prop_handedness";
 
 export interface SystemDiagnostic {
   id: string;
@@ -419,6 +422,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
     ...reuseRule(links),
     ...unpoweredRule(def, links, lookup),
     ...harnessConnectorRule(def, links, lookup),
+    ...propHandednessRule(def, lookup),
   ].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
   return { links, diagnostics };
 }

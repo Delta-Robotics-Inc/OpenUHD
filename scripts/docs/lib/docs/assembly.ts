@@ -16,6 +16,7 @@ import type { RenderBody } from "../render/renderer.js";
 import type { StepGroupSpec } from "../types.js";
 import { coverPage, figNum, thumbnail, type BuildEnv } from "./common.js";
 import { systemTools, toolLabel, toolsFor } from "../../../../src/system/tools.js";
+import { propMounts } from "../../../../src/system/rotation.js";
 
 const W = 178;
 
@@ -320,6 +321,29 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
 
   // ---- actions (generated), per joint in stacking order: parts behind the structure face first, then outward
   const actions: string[] = jointActions(env, p);
+  // props: which handed variant goes on which motor, from the resolved spins (PB-797)
+  const mounts = propMounts(ctx.sys.system, ctx.sys.lookup).filter((m) => p.mates.some((x) => x.linkId === m.linkId));
+  if (mounts.length) {
+    const motorNo = (armPath: string) => {
+      for (const l of ctx.sys.system.links ?? []) {
+        const ends = [l.a, l.b];
+        if (!ends.some((e) => "child" in e && e.child === armPath.split("/")[0])) continue;
+        const other = ends.find((e) => "child" in e && e.child !== armPath.split("/")[0]);
+        const n = other && /motor_(\d+)$/.exec(other.interfaceId)?.[1];
+        if (n) return `M${n}`;
+      }
+      return undefined;
+    };
+    for (const m of mounts) {
+      const arm = m.motor.setAt ?? m.motor.path.split("/")[0];
+      const armName = ctx.sys.system.children?.find((c) => c.id === arm.split("/")[0])?.name ?? arm;
+      const n = motorNo(m.motor.path);
+      const spinQ = `sys:system.children[id=${arm.split("/")[0]}].spin`;
+      actions.push(
+        `${esc(armName)}${n ? ` (${n})` : ""}: motor spins ${doc.v(spinQ, "upper")} from above, so fit a <b>${doc.v(spinQ, "upper", { marker: false })}</b> ${esc(shortName(m.prop.def))}.`,
+      );
+    }
+  }
   if (p.placed.length) for (const b of p.placed) actions.push(`Place the ${esc(shortName(b.def))} as shown. It has no mechanical interface in the model; the figure places it by ${esc(b.via?.replace(/^hint:/, "") ?? "a hint")}.`);
   for (const x of p.extras.filter((x) => !p.wiring.length)) actions.push(`Fit the ${esc(shortName(x.def))}.`);
   const wireTable: string[][] = [];

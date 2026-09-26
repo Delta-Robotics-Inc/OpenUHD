@@ -6,7 +6,7 @@
 import type { InterfaceLink, ModuleDef } from "../../../src/types/index.js";
 import type { ModuleLookup } from "../../../src/system/index.js";
 import { BoltPattern } from "../../../src/protocols/index.js";
-import { QUADCOPTER_5IN, QUADCOPTER_5IN_FRAME, lookupQuadcopterModule } from "./index.js";
+import { QUADCOPTER_5IN, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME, lookupQuadcopterModule } from "./index.js";
 
 export interface Scenario {
   id: string;
@@ -33,6 +33,13 @@ const frame20mm: ModuleDef = {
       ? BoltPattern({ id: "stack_mount", name: "Stack mount (20 x 20)", role: "structure", shape: "square", spacingMm: 20, holeCount: 4, fastener: "M2", fastenerDiameterMm: 2 })
       : i,
   ),
+};
+
+/** An arm whose prop is the CW variant whatever the arm's spin: the builder took the wrong prop from the pack. */
+const armCwProp: ModuleDef = {
+  ...QUADCOPTER_5IN_ARM,
+  id: "quadcopter-5in-arm-cw-prop",
+  children: (QUADCOPTER_5IN_ARM.children ?? []).map((c) => (c.id === "prop" ? { ...c, spin: "cw" as const } : c)),
 };
 
 export const SCENARIOS: Scenario[] = [
@@ -74,6 +81,16 @@ export const SCENARIOS: Scenario[] = [
       links: (QUADCOPTER_5IN.links ?? []).filter((l) => l.id !== "gps_mount"),
     },
     lookup: lookupQuadcopterModule,
+  },
+  {
+    id: "prop-reversed",
+    label: "One prop on backwards",
+    description: "The front-right motor (M2) spins CCW, but a CW prop from the pack is fitted on it.",
+    system: {
+      ...QUADCOPTER_5IN,
+      children: (QUADCOPTER_5IN.children ?? []).map((c) => (c.id === "arm_fr" ? { ...c, moduleDefId: armCwProp.id } : c)),
+    },
+    lookup: withLookup([armCwProp]),
   },
   {
     id: "two-compasses",

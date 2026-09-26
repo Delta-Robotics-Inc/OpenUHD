@@ -19,6 +19,7 @@ set gps_auto_config = ON                   # auto-config sets the module's baud/
 set motor_pwm_protocol = DSHOT600          # highest DShot rate both dolphinrc-f405-v3-flight-controller and dolphinrc-am32-60a-4in1-esc state (600 kbit/s)
 set dshot_bidir = ON                       # both dolphinrc-f405-v3-flight-controller and dolphinrc-am32-60a-4in1-esc state bidirectional DShot (source: DolphinRC review blog only — verify)
 set motor_poles = 14                       # meps-neon-2207-v2-1950kv: 12N14P stator (14 magnet poles)
+set yaw_motors_reversed = OFF              # motor spins in the model (M1 CW, M2 CCW, M3 CCW, M4 CW) are Quad-X "props in", the default
 set current_meter = ADC                    # dolphinrc-am32-60a-4in1-esc: analog current sensor on the FC connector
 set ibata_scale = 150                      # dolphinrc-am32-60a-4in1-esc: manufacturer current scale
 set ibata_offset = 0                       # dolphinrc-am32-60a-4in1-esc: manufacturer current offset

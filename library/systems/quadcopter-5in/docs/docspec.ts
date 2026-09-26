@@ -94,7 +94,7 @@ const config: DocConfig = {
           { label: "BEC 10 V rating", q: p(F405, "bec_10v", "max_current") },
           { label: "GPS rail", q: p(F405, "rail_4v5", "voltage"), f: "d1" },
           { label: "GPS rail fed from", q: `def:${F405}:interfaces[id=rail_4v5].traits[type=supplied_from].params.interfaceId`, sub: "assumed branch" },
-          { label: "GNSS draw", q: p(GNSS, "vin_5v", "current_draw"), f: "si" },
+          { label: "GNSS draw", q: p(GNSS, "vin_5v", "current_draw") },
         ],
       },
       {
@@ -165,7 +165,7 @@ const config: DocConfig = {
         title: "Solder the motor leads",
         wiring: ["m*_phases"],
         figure: "wiring",
-        notes: [{ kind: "tip", text: "Any two leads of a motor may be swapped to reverse it; set direction in the ESC configurator rather than by re-soldering." }],
+        notes: [{ kind: "tip", text: "Any two leads of a motor may be swapped to reverse it. Set each motor to the spin given in the propeller step, in the ESC configurator rather than by re-soldering." }],
       },
       {
         id: "power",
@@ -223,7 +223,7 @@ const config: DocConfig = {
           { kind: "warning", text: "Fit propellers last, after configuration and a motor-direction check with the props off." },
           {
             kind: "caution",
-            text: "A pack holds {{def:hqprop-ethix-s5:traits[type=performance].params.pack_split.cw}} CW and {{def:hqprop-ethix-s5:traits[type=performance].params.pack_split.ccw}} CCW props. The model does not say which motor spins which way: match each prop to the motor direction set in the flight controller.",
+            text: "A pack holds {{def:hqprop-ethix-s5:traits[type=handedness].params.pack.cw}} CW and {{def:hqprop-ethix-s5:traits[type=handedness].params.pack.ccw}} CCW props; the steps above say which goes on each motor. The directions are Betaflight's Quad-X default, props in (generated/betaflight-cli.txt sets yaw_motors_reversed to match). Check each motor's direction with the props off before fitting them.",
           },
         ],
       },

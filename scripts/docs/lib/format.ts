@@ -12,6 +12,7 @@
  *   pct         multiply by 100, unit %
  *   hex         integer as 0x..
  *   x           "×" join for arrays          ([45, 41, 6] -> 45 × 41 × 6)
+ *   upper       upper-case a string          (ccw -> CCW)
  */
 
 export const NBSP = " ";
@@ -82,6 +83,7 @@ export interface FormatOpts {
   pct?: boolean;
   hex?: boolean;
   x?: boolean;
+  upper?: boolean;
 }
 
 export function parseFormat(f?: string): FormatOpts {
@@ -94,6 +96,7 @@ export function parseFormat(f?: string): FormatOpts {
     else if (part === "pct") o.pct = true;
     else if (part === "hex") o.hex = true;
     else if (part === "x") o.x = true;
+    else if (part === "upper") o.upper = true;
     else if (part.startsWith("u=")) o.unit = part.slice(2);
     else throw new Error(`unknown format token "${part}"`);
   }
@@ -118,7 +121,7 @@ export function formatValue(value: unknown, unit?: string, f?: string): string {
 
   if (value === undefined || value === null) return "—";
   if (typeof value === "boolean") return value ? "yes" : "no";
-  if (typeof value === "string") return glyphSafe(value);
+  if (typeof value === "string") return glyphSafe(o.upper ? value.toUpperCase() : value);
   if (typeof value === "number") {
     if (o.si && u && !o.pct) {
       for (const [k, p] of SI) {

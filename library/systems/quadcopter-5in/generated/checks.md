@@ -10,6 +10,7 @@ The reference quadcopter as designed.
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.23 W of 15 W (5 V × 3 A, 2%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
 
 ## O4 wired to raw 6S (`o4-on-vbat`)
 
@@ -20,6 +21,7 @@ The DJI O4 power lead is soldered to the battery instead of the 10 V BEC.
 - **warning** · propulsion_current — 4 motors can peak at 171.88 A together, above the battery continuous rating 110 A but within its burst rating 220 A. Sustained full throttle will exceed the pack rating.
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.23 W of 15 W (5 V × 3 A, 2%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
 
 ## 20 × 20 frame for a 30.5 stack (`frame-20mm-stack`)
 
@@ -31,6 +33,7 @@ The frame's stack mount is cut for a 20 × 20 mm M2 stack.
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.23 W of 15 W (5 V × 3 A, 2%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
 
 ## GPS on the receiver's UART (`gps-on-rx-uart`)
 
@@ -41,6 +44,7 @@ The GNSS UART is wired to UART2, which the ELRS receiver already uses.
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.23 W of 15 W (5 V × 3 A, 2%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
 
 ## Legacy GNSS (M10Q-5883, EOL) (`legacy-m10q`)
 
@@ -50,6 +54,18 @@ The EOL Matek M10Q-5883 in place of the M9N-5883: same interface ids, so only th
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.06 W of 15 W (5 V × 3 A, 0%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
+
+## One prop on backwards (`prop-reversed`)
+
+The front-right motor (M2) spins CCW, but a CW prop from the pack is fitted on it.
+
+- **error** · prop_handedness — arm_fr/prop_on_shaft: CW prop on a motor spinning CCW (arm_fr/motor); it would push air the wrong way. Fit the CCW prop.
+- **warning** · propulsion_current — 4 motors can peak at 171.88 A together, above the battery continuous rating 110 A but within its burst rating 220 A. Sustained full throttle will exceed the pack rating.
+- **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.23 W of 15 W (5 V × 3 A, 2%); 1 load(s) state no draw: receiver:vcc_5v.
+- **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
+- **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 1 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 3 prop(s) match their motor's spin: arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
 
 ## Two compasses on one I2C bus (`two-compasses`)
 
@@ -60,3 +76,4 @@ A second M9N-5883 (compass at 0x2C) is added on the same I2C bus.
 - **info** · supply_budget — stack:bec_5v (including stack:rail_4v5): known loads need 0.45 W of 15 W (5 V × 3 A, 3%); 1 load(s) state no draw: receiver:vcc_5v.
 - **info** · supply_budget — stack:bec_10v: known loads need 10 W of 25 W (10 V × 2.5 A, 40%).
 - **info** · supply_budget — stack:rail_4v5: branch of stack:bec_5v via diode (assumed); its 2 load(s) are budgeted there (assumed relation, not a cited source).
+- **info** · prop_handedness — 4 prop(s) match their motor's spin: arm_fr/motor CCW, arm_rr/motor CW, arm_rl/motor CCW, arm_fl/motor CW.
