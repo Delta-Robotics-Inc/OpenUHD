@@ -27,15 +27,16 @@ def main() -> None:
     src = open(ts).read()
 
     def repl(m: re.Match) -> str:
-        name, old = m.group(1), m.group(2)
+        fn, name, old = m.group(1), m.group(2), m.group(3)
         if name not in features or (only and name not in only):
             return m.group(0)
         new = fmt(features[name])
         if new != old:
             print(f"  {name}: {old} -> {new}")
-        return f'feature("{name}", {new}'
+        return f'{fn}("{name}", {new}'
 
-    out = re.sub(r'feature\("([^"]+)", (\{ area_mm2: [^}]*\})', repl, src)
+    # feature(...) for generated CAD, vendorFeature(...) for vendor CAD (PB-796)
+    out = re.sub(r'\b(feature|vendorFeature)\("([^"]+)", (\{ area_mm2: [^}]*\})', repl, src)
     open(ts, "w").write(out)
 
 
