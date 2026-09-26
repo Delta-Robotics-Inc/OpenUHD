@@ -1,0 +1,27 @@
+{
+  "partId": "rev-41-1300-core-hex-motor",
+  "recorded_at": "2026-09-26T22:30:46.217Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 17,
+    "confirmed": 17,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "hex across-flats 5.006->5.00 mm (STEP measured); CAD licence text now records REV IP Policy (non-commercial CC BY-NC-SA 4.0, commercial needs licence)",
+  "assumptions": [
+    "encoder supply voltage range",
+    "fastener / threaded",
+    "fastener / threaded"
+  ],
+  "data_gaps": [
+    "continuous current / free current",
+    "encoder supply range and current",
+    "connector pin 1",
+    "motion pattern thread",
+    "operating temperature"
+  ],
+  "vocabulary_gaps": [
+    "No builders; power input leaves with capability motor_in and a custom-protocol encoder bundle (sparkfun-rob-28633 convention)."
+  ]
+}

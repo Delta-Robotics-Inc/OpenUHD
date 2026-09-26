@@ -1,0 +1,23 @@
+{
+  "partId": "ctre-talon-srx",
+  "recorded_at": "2026-09-26T22:30:33.412Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 21,
+    "confirmed": 21,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "can_bus role peer->transceiver (library CAN convention; now mates rev-spark-max/PDH); CAD licence record expanded (zip, Device-CADs repo, ToS); manifest note Ø4.47->Ø4.44",
+  "assumptions": [
+    "bolt pattern shape"
+  ],
+  "data_gaps": [
+    "operating temperature"
+  ],
+  "vocabulary_gaps": [
+    "No CAN builder in src/protocols; CAN modelled with the existing 'can' protocol type. PB-796 audit: composed can_bus uses role 'transceiver' (library convention: rev-spark-max, rev-power-distribution-hub, pjrc-teensy-4-1); CAN_H/CAN_L leaves use role 'peer'. REV leaves use role 'data', which roles.ts does not pair with 'peer' (reported by the lead auditor).",
+    "BoltPattern has no two-hole line shape; modelled as shape 'circle' with holeCount 2 (exact hole positions).",
+    "No builder; power output leaves with capability motor_out (ti-l293dne / sparkfun-rob-28633 convention)."
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "artifact": "rev-41-1300-core-hex-motor-vendor",
+  "tool": "manufacturer STEP, converted with build123d (library/cad/py/vendor_step.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "0c3c08c954263d01a50caed13f2cda78e495c42caff0e08c81d64de0687970f3",
+  "source": {
+    "file": "REV-41-1300.STEP",
+    "url": "https://www.revrobotics.com/content/cad/REV-41-1300.STEP",
+    "licence": "no licence at the STEP link; REV IP Policy: non-commercial use per CC BY-NC-SA 4.0, commercial use needs a licence (not redistributed)"
+  },
+  "units": "mm",
+  "bbox": {
+    "min": [
+      -83.52,
+      -16.483,
+      -18.25
+    ],
+    "max": [
+      16.483,
+      19.983,
+      16.35
+    ]
+  },
+  "features": {
+    "mount_a": {
+      "area_mm2": 252.716,
+      "centroid": [
+        0.0,
+        0.0,
+        13.525
+      ],
+      "faces": 12,
+      "centres": [
+        [
+          -8.0,
+          0.0,
+          13.525
+        ],
+        [
+          -4.0,
+          -6.928,
+          13.525
+        ],
+        [
+          -4.0,
+          6.928,
+          13.525
+        ],
+        [
+          4.0,
+          -6.928,
+          13.525
+        ],
+        [
+          4.0,
+          6.928,
+          13.525
+        ],
+        [
+          8.0,
+          0.0,
+          13.525
+        ]
+      ],
+      "diameter_mm": 2.46
+    },
+    "mount_b": {
+      "area_mm2": 252.716,
+      "centroid": [
+        0.0,
+        0.0,
+        -15.525
+      ],
+      "faces": 12,
+      "centres": [
+        [
+          -6.928,
+          -4.0,
+          -15.525
+        ],
+        [
+          -6.928,
+          4.0,
+          -15.525
+        ],
+        [
+          0.0,
+          -8.0,
+          -15.525
+        ],
+        [
+          0.0,
+          8.0,
+          -15.525
+        ],
+        [
+          6.928,
+          -4.0,
+          -15.525
+        ],
+        [
+          6.928,
+          4.0,
+          -15.525
+        ]
+      ],
+      "diameter_mm": 2.46
+    },
+    "face_a": {
+      "area_mm2": 1637.672,
+      "centroid": [
+        -27.388,
+        1.966,
+        16.25
+      ],
+      "faces": 2,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "face_b": {
+      "area_mm2": 1650.593,
+      "centroid": [
+        -27.197,
+        2.074,
+        -18.25
+      ],
+      "faces": 2,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "hex_bore": {
+      "area_mm2": 588.897,
+      "centroid": [
+        0.0,
+        0.0,
+        -0.65
+      ],
+      "faces": 6
+    },
+    "output_hub": {
+      "area_mm2": 325.155,
+      "centroid": [
+        0.0,
+        0.0,
+        -0.552
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          0.0,
+          0.0,
+          -0.675
+        ]
+      ],
+      "diameter_mm": 9.0
+    },
+    "rear_end": {
+      "area_mm2": 484.421,
+      "centroid": [
+        -79.245,
+        3.134,
+        -1.0
+      ],
+      "faces": 15
+    }
+  },
+  "vendorComponents": [
+    "REV-41-1300"
+  ],
+  "notes": [
+    "No transform: output axis = Z axis at the origin; mounting faces z = +16.25 (face_a) and z = -18.25 (face_b).",
+    "mount_a: 6 x Ø2.46 on a Ø16 circle at 0/60/120/180/240/300 deg; mount_b: 6 x Ø2.46 on Ø16 at 30/90/.../330 deg (drawing: Ø16, Ø2.46).",
+    "hex_bore: 5 mm female hex through the output, flats 5.00 mm apart (2.50 mm from the axis).",
+    "Body 34.50 x 36.47 mm (drawing); the output axis is 16.48 mm from the output-end edge (drawing).",
+    "rear_end: motor end cap (x < -79) where the power and encoder connectors are; the connectors are not modelled separately."
+  ]
+}

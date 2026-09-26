@@ -1,0 +1,97 @@
+[
+  {
+    "id": "src_docs",
+    "title": "REV Robotics documentation: Smart Robot Servo V1 (REV Crossover)",
+    "url": "https://docs.revrobotics.com/rev-crossover-products/servo/srs",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "fc9bf685b7edeb008643844040ae748fa77ed05082c27b146f5a35f10661d691",
+    "supports": [
+      "REV-41-1097 is the Smart Robot Servo V1 (a V2 exists as a separate product)",
+      "25T output spline",
+      "default 270 deg over 500-2500 us, 1500 us centre",
+      "mechanical specs: stall torque 13.5 kg-cm / 187.8 oz-in at 6 V, 0.13 s/60 deg at 6 V, 270 deg max range, brass gears, 25T spline, 40.2 x 20.0 x 38.0 mm, 2.05 oz",
+      "electrical specs: 4.8 / 6.0 / 7.4 V min/typ/max, stall current 2.0 A max at 6 V, input pulse 500 / 1500 / 2500 us",
+      "continuous and angular-limit modes via SRS Programmer (REV-31-1108)",
+      "kit: servo, horn assortment, horn mounting hardware"
+    ]
+  },
+  {
+    "id": "src_manual",
+    "title": "REV-41-1097-UM-01 Smart Robot Servo User's Manual (2015)",
+    "url": "https://revrobotics.ca/content/docs/REV-41-1097-UM.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "5b5ae8e74a53de6a4c5b16d15d82785ef38001bb878ac9ee959fd673bddf6308",
+    "supports": [
+      "Table 1-1: stall torque 13.5 kg-cm at 6 V, 0.13 s/60 deg, max angular range 180 deg, metal gears, 25T spline, 40.2 x 20.0 x 38.0 mm, 2.05 oz; 4.8/6.0/7.4 V; stall 2.0 A at 6 V; pulse 500/1500/2500 us",
+      "default operation 180 deg over 500-2500 us (2015 manual; later sources say 270 deg)",
+      "continuous rotation pulse mapping (500 full CCW, 1500 stop, 2500 full CW)",
+      "angular limits at least 20 deg from centre",
+      "kit: servo, mounting hardware, horn assortment"
+    ]
+  },
+  {
+    "id": "src_drawing",
+    "title": "REV-41-1097-DR-00 Smart Robot Servo drawing (2017)",
+    "url": "https://www.revrobotics.com/content/docs/REV-41-1097-DR.pdf",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "3ce81b47dd4fecabe252adb1e3613bb3a0589ce14fa2bfa5c4be8408c50d2d6f",
+    "supports": [
+      "54 mm over the flanges",
+      "body 39.80 x 18.80 mm (top view) / 20.06 mm",
+      "43.70 mm overall height, 39.33 mm to the case top",
+      "spline Ø6.05",
+      "flange slot ends R2.25"
+    ]
+  },
+  {
+    "id": "src_store_ca",
+    "title": "REV Robotics Canada store page for REV-41-1097",
+    "url": "https://revrobotics.ca/rev-41-1097/",
+    "type": "documentation",
+    "authority": "distributor",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "14dd835d78e4726a9c895cf7965c6e2b06ee5597f18ed1be1112a7d2771cc9fe",
+    "supports": [
+      "REV Robotics Canada regional store (footer: REV Robotics - Canada, Thornhill ON); lists the product as Discontinued, V2 as related product",
+      "speed 0.14 s/60 deg at 6 V for current inventory (vs 0.13 previously stated)",
+      "maximum programmable range in angular mode 280 deg",
+      "gear material metal",
+      "spline internal thread M3, 6 mm deep, do not exceed",
+      "links the REV-41-1097 STEP file, Onshape and drawing"
+    ]
+  },
+  {
+    "id": "src_cad",
+    "title": "REV Robotics REV-41-1097 STEP model",
+    "url": "https://www.revrobotics.com/content/cad/REV-41-1097.STEP",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "2ae8de8a60ea26b95021ca04b3a71c2f0a68ec0f3b7cafd27d5b0353f536afb2",
+    "licence": "No licence text on the product page or beside the CAD link (REV Canada store 'CAD & Drawings'; www.revrobotics.com/rev-41-1097/ is 404). REV's site-wide Intellectual Property Policy (https://www.revrobotics.com/ip-policy/, last updated 11/30/2023, linked from the page footer) permits non-commercial use of REV IP under the guidelines of CC BY-NC-SA 4.0 and requires a REV licence for commercial use; it does not name CAD files specifically. Not redistributed: kept in .research/cad.",
+    "supports": [
+      "STEP: four open flange slots with R2.25 ends centred at (±5, ±24.75) mm, i.e. the 10 x 49.5 mm mounting pattern (measured from the STEP; not dimensioned on the drawing or in any datasheet)",
+      "STEP: flange thickness 2.8 mm, underside 26.4-26.6 mm above the case bottom",
+      "STEP: 25T spline, tooth tips Ø6.0, spline axis 10.05 mm from the body centre",
+      "STEP: body 20.15 x 40.1 mm, 54 mm over flanges, 43.55 mm tall"
+    ]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart rev-41-1097-smart-robot-servo definition.json",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/rev-41-1097-smart-robot-servo/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T22:00:00Z",
+    "sha256": "ce52c5649518202f05e518430ec0f5f07f5a460fa3a0116f8c0f4a984f4934b3",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]
