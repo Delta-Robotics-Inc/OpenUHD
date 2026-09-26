@@ -17,8 +17,8 @@ brief → research → author ↻ verify → audit → register
 
 | Skill | When | Reads | Writes |
 | --- | --- | --- | --- |
-| [`uhd-part-research`](uhd-part-research/SKILL.md) | After a brief names the part | brief | `library/parts/<id>/sources.json`, `.research/` notes |
-| [`uhd-part-author`](uhd-part-author/SKILL.md) | After research | research notes, vocabulary | `library/parts/<id>.ts` |
+| [`uhd-part-research`](uhd-part-research/SKILL.md) | After a brief names the part | brief | `library/parts/<id>/sources.json`, `.research/` notes, `.research/cad/` downloads |
+| [`uhd-part-author`](uhd-part-author/SKILL.md) | After research | research notes, vocabulary, CAD | `library/parts/<id>.ts`, `library/cad/py/catalog/<id>.py`, CAD manifest |
 | [`uhd-part-verify`](uhd-part-verify/SKILL.md) | After authoring; loops with author | part file, sources | `.research/acceptance.json`, `.research/gaps.json` |
 
 **Register** (done by whoever integrates, not the per-part agent): export the
@@ -33,9 +33,14 @@ part from `library/parts/index.ts`, run `npm test`, `npm run type-check`, and
 | `library/parts/<id>/sources.json` | yes | Every source used: URL, type, what it supported, fetch time, sha256 of downloaded bytes. |
 | `library/parts/<id>/verification.json` | yes | Committed evidence record: audit counts, repairs, assumptions, open data and vocabulary gaps (`npx tsx scripts/record-verification.ts <id>`). |
 | `library/parts/<id>/artifacts/thumbnail.png` | optional | Product thumbnail, if its licence allows redistribution. |
+| `library/cad/py/catalog/<id>.py` | yes | The part's CAD script: vendor STEP binding (`vendor_step.py`) or generated geometry (`partkit.py`). |
+| `library/parts/<id>/artifacts/cad/<id>-vendor.manifest.json` | yes | Vendor CAD: named features, signatures, hole axes, bbox, licence. |
+| `library/parts/<id>/artifacts/cad/vendor/` | no (gitignored) | GLB converted from the vendor STEP. |
+| `library/parts/<id>/artifacts/cad/<name>.{step,glb,manifest.json}` | yes | Generated geometry (representative, from the drawing). |
 | `library/parts/<id>/.research/` | no (gitignored) | Downloads, extracted notes, gaps, acceptance report. Working memory. |
 
-Datasheet PDFs are **not** committed (redistribution rights vary). The part
+Datasheet PDFs and vendor STEP files are **not** committed unless their
+licence clearly permits redistribution (redistribution rights vary). The part
 links them through `artifacts[].url`, and `sources.json` records the sha256
 of the bytes that were read, so a later reader can tell if the document
 changed.
@@ -55,6 +60,9 @@ changed.
 - **Vocabulary is not invented silently.** New protocol types or roles go to
   `gaps.json` and are escalated, not quietly added to a part.
 - **State lives on disk,** so work survives context compaction.
+- **Every part has geometry** (PB-796): manufacturer CAD when it exists,
+  representative geometry from the drawing when it doesn't, with every
+  physical interface bound to it by a frame and refs.
 
 ## Differences from ProtoPart
 
