@@ -1,0 +1,25 @@
+{
+  "partId": "rev-spark-flex",
+  "recorded_at": "2026-09-26T22:34:17.821Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 24,
+    "confirmed": 24,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "CAN leaf role data->peer (coordinator); documented CAD extraction and sha256 provenance; extended op-temperature data_gap note",
+  "assumptions": [
+    "bolt pattern subset"
+  ],
+  "data_gaps": [
+    "operating temperature",
+    "dock sensor connector pinout",
+    "phase contact labels",
+    "CAN bit rate / termination"
+  ],
+  "vocabulary_gaps": [
+    "CAN conductor leaves use protocol 'can' role 'peer' (library convention, as ctre-talon-srx); composed can_bus role 'transceiver'. Changed from 'data' by the PB-796 coordinator.",
+    "custom leaf; no vocabulary for a dock connector."
+  ]
+}

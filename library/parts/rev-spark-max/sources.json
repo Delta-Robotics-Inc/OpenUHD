@@ -1,0 +1,181 @@
+[
+  {
+    "id": "src_product",
+    "title": "REV SPARK MAX Motor Controller (REV-11-2158) product page",
+    "url": "https://www.revrobotics.com/rev-11-2158/",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "76e4ed47d0925773e02b476621a6bf3f1f97092ea8eebe2088a3875302341ab7",
+    "local": ".research/downloads/product-page.html",
+    "supports": [
+      "identity REV-11-2158",
+      "12 V nominal, 5.5-24 V operating, 30 V absolute max",
+      "60 A continuous, 100 A 2 s surge",
+      "70 x 35 x 25.5 mm, 113.3 g",
+      "motor and power wires 150 mm 12 AWG",
+      "PWM/CAN/USB control, USB-C",
+      "data port: analog input, limit switch inputs, quadrature encoder with index",
+      "brushless sensor connector: 3-phase hall + motor temperature",
+      "kit: CAN cable V2 REV-11-1880 (4-pin JST-PH), PWM cable REV-11-1274"
+    ]
+  },
+  {
+    "id": "src_specs",
+    "title": "SPARK MAX Specifications (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/specs",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "345eab74e6953733071a0dd2b74b6f40149c8d125d540cc3e7c919642c13e634",
+    "local": ".research/downloads/brushless_spark-max_specs.md",
+    "supports": [
+      "operating voltage 5.5/12/24 V, absolute max 30 V",
+      "continuous 60 A, 100 A 2 s surge, 20 kHz output",
+      "PWM input 1000/1500/2000 us, 500-2500 us valid, 50-200 Hz, 50 ms timeout",
+      "data port and encoder port: digital 0-5 V, VIH 1.85 V, VIL 1.36 V, analog 0-3.3 V, 5 V 100 mA, 3.3 V 30 mA, total 100 mA, 5 V shared between ports",
+      "mechanical 70 x 35 x 25.5 mm, 113.3 g, 12 AWG 15 cm wires"
+    ]
+  },
+  {
+    "id": "src_power_motor",
+    "title": "SPARK MAX Power and Motor Connections (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/specs/power-and-motor-connections",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "0508debf5806c1f6c77fd6d5a4b7ab32b0b23e2cdc5433ce048212166655abbc",
+    "local": ".research/downloads/brushless_spark-max_specs_power-and-motor-connections.md",
+    "supports": [
+      "motor outputs A (red), B (black), C (white)",
+      "power input V+ (red), V- (black)",
+      "5.5-24 V, brown-out below 5.5 V, 30 V max",
+      "60 A for 3 minutes, 100 A for 2 s",
+      "12 AWG ~15 cm silicone wires"
+    ]
+  },
+  {
+    "id": "src_control",
+    "title": "SPARK MAX Control Connections (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/specs/control-connections",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "261260270e8c3a97cb4922ec52338e500b9a6d916cf4aea2bf425dadc2c1dcbc",
+    "local": ".research/downloads/brushless_spark-max_specs_control-connections.md",
+    "supports": [
+      "CAN/PWM port pinout: 1 CAN High/Signal, 2 CAN Low/Ground, 3 CAN High/Signal, 4 CAN Low/Ground",
+      "mating JST PHR-4",
+      "identical pins connected internally (CAN daisy chain)",
+      "USB-C: USB 2.0, powers MCU only"
+    ]
+  },
+  {
+    "id": "src_encoder_port",
+    "title": "SPARK MAX Encoder Port (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/specs/encoder-port",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "ab38ff9bf47d2432898234db0d7bf78fbe6a147f8fdbc56485ea1819e25fa90e",
+    "local": ".research/downloads/brushless_spark-max_specs_encoder-port.md",
+    "supports": [
+      "6-pin encoder port pinout: 1 Ground, 2 Encoder C/Index, 3 Encoder B, 4 Encoder A, 5 Motor Temperature (analog), 6 +5V",
+      "mating JST PHR-6",
+      "accepts the NEO built-in hall encoder"
+    ]
+  },
+  {
+    "id": "src_data_port",
+    "title": "SPARK MAX Data Port (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/specs/data-port",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "337d79acb03964cb6ec190d8c98a555595801e80639f765259c599b881c362cb",
+    "local": ".research/downloads/brushless_spark-max_specs_data-port.md",
+    "supports": [
+      "data port pinout 1 +3.3V, 2 +5V, 3 Analog Input, 4 Forward Limit, 5 Encoder B, 6 Multi-function, 7 Encoder A, 8 Reverse Limit, 9 Encoder C/Index, 10 Ground",
+      "10-pin 1.27 mm pitch",
+      "limit switches active when grounded by default",
+      "encoder signals not pulled up",
+      "analog 0-3.3 V 12-bit"
+    ]
+  },
+  {
+    "id": "src_overview",
+    "title": "SPARK MAX Overview (REV docs)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/overview",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "8cc26ad9cac3a4d6d716fb92635abd72c5ecdf4ee03d3acf252a52ea8aae0c74",
+    "local": ".research/downloads/brushless_spark-max_overview.md",
+    "supports": [
+      "PWM/CAN locking keyed 4-pin JST-PH",
+      "encoder port locking keyed 6-pin JST-PH",
+      "12 AWG ultra-flexible silicone wire",
+      "passive cooling",
+      "kit contents"
+    ]
+  },
+  {
+    "id": "src_wiring",
+    "title": "Wiring the SPARK MAX (REV docs; the ProtoPart datasheet_url)",
+    "url": "https://docs.revrobotics.com/brushless/spark-max/gs/wiring",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "ba3f3d0e88dfb1dfee253df2a8d4820449b81b6319314cf6a5745898a4d853fe",
+    "local": ".research/downloads/brushless_spark-max_gs_wiring.md",
+    "supports": [
+      "NEO red/black/white to A/B/C",
+      "NEO encoder cable to the ENCODER port; required for brushless operation",
+      "brushed motors on A and B, C insulated"
+    ]
+  },
+  {
+    "id": "src_drawing",
+    "title": "REV-11-2158 SPARK MAX drawing",
+    "url": "https://www.revrobotics.com/content/docs/REV-11-2158-DR.pdf",
+    "type": "datasheet",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "1f3af92dff68cc80a1be3f19db0eefbed6b9203d2fb8f2d9e4b4664ac629df42",
+    "local": ".research/downloads/REV-11-2158-DR.pdf",
+    "supports": [
+      "69.3 x 34.5 x 25.0 mm body",
+      "zip-tie notches 44.0 mm apart, 6.0 mm wide; 33.3 mm",
+      "USB-C and 4-pin JST PH on the power end, 6-pin JST PH on the motor end"
+    ]
+  },
+  {
+    "id": "src_cad",
+    "title": "REV-11-2158 SPARK MAX STEP model",
+    "url": "https://www.revrobotics.com/content/cad/REV-11-2158.STEP",
+    "type": "cad",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "b8b374fc3dbb3bfa07ed10c9bdbc2ee407591a35bbe42035ddda87a0dcfa7e4d",
+    "local": ".research/cad/REV-11-2158.STEP",
+    "supports": [
+      "overall body 69.3 x 34.5 x 24.95 mm",
+      "connector openings (CAN/PWM, USB-C, ENCODER, Data Port) positions",
+      "lead exit positions",
+      "no mounting holes"
+    ],
+    "licence": "Not stated by REV Robotics on the product page or the download (site footer: (c) REV Robotics). Not redistributed: kept in .research/cad."
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition rev-spark-max",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/rev-spark-max/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:05:00Z",
+    "sha256": "679e5d43339be172761f64d8d0861927c28bdc3dd836f55128fff75bb54abfbb",
+    "supports": [
+      "starting point; values re-verified against manufacturer sources"
+    ]
+  }
+]

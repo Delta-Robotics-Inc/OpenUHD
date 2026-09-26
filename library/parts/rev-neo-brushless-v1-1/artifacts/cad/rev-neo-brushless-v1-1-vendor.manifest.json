@@ -1,0 +1,140 @@
+{
+  "artifact": "rev-neo-brushless-v1-1-vendor",
+  "tool": "manufacturer STEP, converted with build123d (library/cad/py/vendor_step.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "50fb9445ae07465fbd10605e48009649316d376e8194451b7fc97959d17003a9",
+  "source": {
+    "file": "REV-21-1650-V1.1.STEP",
+    "url": "https://revrobotics.com/content/cad/REV-21-1650-V1.1.STEP",
+    "licence": "not stated by REV Robotics (not redistributed)"
+  },
+  "units": "mm",
+  "bbox": {
+    "min": [
+      -38.141,
+      -29.991,
+      -58.35
+    ],
+    "max": [
+      29.991,
+      38.021,
+      35.0
+    ]
+  },
+  "features": {
+    "face_holes": {
+      "area_mm2": 444.067,
+      "centroid": [
+        2.566,
+        -2.566,
+        -2.5
+      ],
+      "faces": 14,
+      "centres": [
+        [
+          -25.4,
+          0.0,
+          -2.5
+        ],
+        [
+          -17.961,
+          -17.961,
+          -2.5
+        ],
+        [
+          0.0,
+          -25.4,
+          -2.5
+        ],
+        [
+          0.0,
+          25.4,
+          -2.5
+        ],
+        [
+          17.961,
+          -17.961,
+          -2.5
+        ],
+        [
+          17.961,
+          17.961,
+          -2.5
+        ],
+        [
+          25.4,
+          0.0,
+          -2.5
+        ]
+      ],
+      "diameter_mm": 4.039
+    },
+    "shaft": {
+      "area_mm2": 731.477,
+      "centroid": [
+        0.0,
+        -0.258,
+        19.065
+      ],
+      "faces": 2,
+      "centres": [
+        [
+          0.0,
+          0.0,
+          19.07
+        ]
+      ],
+      "diameter_mm": 8.0
+    },
+    "pilot": {
+      "area_mm2": 179.542,
+      "centroid": [
+        0.0,
+        0.0,
+        1.5
+      ],
+      "faces": 2,
+      "centres": [
+        [
+          0.0,
+          0.0,
+          1.5
+        ]
+      ],
+      "diameter_mm": 19.05
+    },
+    "front_face": {
+      "area_mm2": 2357.646,
+      "centroid": [
+        -0.098,
+        0.098,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "leads": {
+      "area_mm2": 468.686,
+      "centroid": [
+        -30.08,
+        27.265,
+        -5.484
+      ],
+      "faces": 10
+    }
+  },
+  "vendorComponents": [
+    "REV-21-1650_V1_1"
+  ],
+  "notes": [
+    "No transform: front (mounting) face at z = 0, shaft axis +Z through the origin.",
+    "face_holes: 7 x Φ4.04 (tapped #10-32 minor diameter as modelled, 5 mm deep) on a 50.8 mm circle at 0/45/90/180/225/270/315 deg; none at 135 deg, where the leads exit.",
+    "shaft: Φ8.0 from z = 3.5 to 34.5 (+0.5 chamfer), 2 mm keyway; tapped #10-32 hole in the shaft end (Φ4.04, z 19.9-35).",
+    "pilot: Φ19.05 x 3.5 mm. Rear tapped #10-32 hole at z = -58.25 (pinion-pressing support).",
+    "leads: the STEP cuts the phase leads and sensor cable just outside the can (x -38 .. -27, y 18 .. 38)."
+  ]
+}
