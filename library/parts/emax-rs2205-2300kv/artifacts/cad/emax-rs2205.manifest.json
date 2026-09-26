@@ -1,0 +1,126 @@
+{
+  "artifact": "emax-rs2205",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "d8779b5d8541a5e6cfc51468df1f2d7f181a8bef03f738d1887652c9633d9c2a",
+  "units": "mm",
+  "features": {
+    "base_mount": {
+      "area_mm2": 47.124,
+      "centroid": [
+        0.0,
+        0.0,
+        1.5
+      ],
+      "faces": 2,
+      "centres": [
+        [
+          -5.657,
+          5.657,
+          1.5
+        ],
+        [
+          5.657,
+          -5.657,
+          1.5
+        ]
+      ],
+      "diameter_mm": 2.5
+    },
+    "base_mount_19": {
+      "area_mm2": 47.124,
+      "centroid": [
+        0.0,
+        0.0,
+        1.5
+      ],
+      "faces": 2,
+      "centres": [
+        [
+          -6.718,
+          -6.718,
+          1.5
+        ],
+        [
+          6.718,
+          6.718,
+          1.5
+        ]
+      ],
+      "diameter_mm": 2.5
+    },
+    "base_face": {
+      "area_mm2": 520.633,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "shaft": {
+      "area_mm2": 235.619,
+      "centroid": [
+        0.0,
+        0.0,
+        24.2
+      ],
+      "faces": 1,
+      "centres": [
+        [
+          0.0,
+          0.0,
+          24.2
+        ]
+      ],
+      "diameter_mm": 5.0
+    },
+    "phases_a": {
+      "area_mm2": 2.011,
+      "centroid": [
+        24.95,
+        -2.0,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "phases_b": {
+      "area_mm2": 2.011,
+      "centroid": [
+        24.95,
+        0.0,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "phases_c": {
+      "area_mm2": 2.011,
+      "centroid": [
+        24.95,
+        2.0,
+        1.5
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "partId": "arduino-uno-rev3",
+  "recorded_at": "2026-09-26T22:31:32.960Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 17,
+    "confirmed": 17,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "mount remodelled to the UNO R3 shield diagonal pair (rectangle 61.657x0, structure, +Z) plus mount_bottom (-Z, component); CAD mount feature h1/h4 rebuilt",
+  "assumptions": [
+    "generated geometry and USB lower bound",
+    "modelled mounting holes"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "maximum power consumption",
+    "5V pin current budget",
+    "connector body sizes (USB-B, DC jack), PCB thickness",
+    "weight"
+  ],
+  "vocabulary_gaps": []
+}

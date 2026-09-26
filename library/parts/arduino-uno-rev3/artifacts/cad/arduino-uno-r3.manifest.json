@@ -1,0 +1,147 @@
+{
+  "artifact": "arduino-uno-r3",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "67233acd2cbca108ee57e65b6aa7594483ea54914fd42033dff558790ccba85f",
+  "units": "mm",
+  "features": {
+    "mount": {
+      "area_mm2": 32.17,
+      "centroid": [
+        5.715,
+        -7.62,
+        0.8
+      ],
+      "faces": 2,
+      "centres": [
+        [
+          -20.32,
+          -24.13,
+          0.8
+        ],
+        [
+          31.75,
+          8.89,
+          0.8
+        ]
+      ],
+      "diameter_mm": 3.2
+    },
+    "mount_all": {
+      "area_mm2": 64.34,
+      "centroid": [
+        6.033,
+        -2.54,
+        0.8
+      ],
+      "faces": 4,
+      "centres": [
+        [
+          -20.32,
+          -24.13,
+          0.8
+        ],
+        [
+          -19.05,
+          24.13,
+          0.8
+        ],
+        [
+          31.75,
+          -19.05,
+          0.8
+        ],
+        [
+          31.75,
+          8.89,
+          0.8
+        ]
+      ],
+      "diameter_mm": 3.2
+    },
+    "header_iol": {
+      "area_mm2": 51.613,
+      "centroid": [
+        20.32,
+        24.13,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "header_ioh": {
+      "area_mm2": 64.516,
+      "centroid": [
+        -4.064,
+        24.13,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "header_power": {
+      "area_mm2": 51.613,
+      "centroid": [
+        2.54,
+        -24.13,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "header_ad": {
+      "area_mm2": 38.71,
+      "centroid": [
+        22.86,
+        -24.13,
+        10.1
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "usb": {
+      "area_mm2": 130.8,
+      "centroid": [
+        -40.64,
+        11.43,
+        7.05
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "dc_jack": {
+      "area_mm2": 99.0,
+      "centroid": [
+        -36.09,
+        -18.288,
+        7.1
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

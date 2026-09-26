@@ -1,0 +1,26 @@
+{
+  "partId": "sparkfun-rob-28633",
+  "recorded_at": "2026-09-26T22:29:53.519Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 20,
+    "confirmed": 20,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "none",
+  "assumptions": [
+    "generated geometry"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "mounting holes",
+    "section lengths (gearbox / motor / encoder), D-flat depth, shaft offset",
+    "operating temperature",
+    "encoder output type and current"
+  ],
+  "vocabulary_gaps": [
+    "No builder or library type for a quadrature A/B encoder link; modelled as a custom-typed composed interface with digital output leaves.",
+    "No builder for a brushed DC motor pair; modelled as power input leaves plus a composed power input (mirrors l298n dc_motor_output)."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "partId": "emax-rs2205-2300kv",
+  "recorded_at": "2026-09-26T22:32:00.530Z",
+  "audit": {
+    "method": "independent agent re-fetched cited sources (skills/uhd-part-verify stage 2)",
+    "checked": 19,
+    "confirmed": 19,
+    "wrong": 0,
+    "unsupported": 0
+  },
+  "repairs": "Mount pattern re-read as the 16 x 19 cross (diagonal pairs 16/19 mm), not a rectangle: CAD holes regenerated, base_mount split into base_mount (16) + base_mount_19 (19), frames rebound",
+  "assumptions": [
+    "generated geometry dimensions",
+    "mount pattern orientation",
+    "threaded holes",
+    "mount pattern orientation",
+    "threaded holes"
+  ],
+  "data_gaps": [
+    "manufacturer CAD",
+    "continuous / peak current rating",
+    "operating temperature",
+    "base flange thickness, mount hole depth, screw lengths",
+    "mount pattern angle relative to lead exit",
+    "internal resistance, idle current"
+  ],
+  "vocabulary_gaps": [
+    "The 16 x 19 motor pattern is two perpendicular diagonal hole pairs (16 mm and 19 mm apart). BoltPattern shapes are square/rectangle/circle only, so it is modelled as two 2-hole circle patterns (base_mount = 16 mm pair, base_mount_19 = 19 mm pair). A 'cross' shape (or per-pair diameters) in src/protocols/mechanical.ts + boltPatternHoles would let one interface carry it."
+  ]
+}
