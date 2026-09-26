@@ -2,7 +2,7 @@
   "artifact": "quadcopter-5in-top-plate",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "498855be0efb4bdc73ee4b243d5856432ae496e31ad1ca9bbdb1a3b9a207da93",
+  "sourceDigest": "40dc5461f90a831f90ede053029f1c3f70a4e5c90dc68159a63a6f4b1fd5a84c",
   "units": "mm",
   "features": {
     "standoff_mount": {

@@ -264,7 +264,7 @@ export const QUADCOPTER_5IN_TOP_PLATE: ModuleDef = withGeometry(
     },
   },
   cadArtifacts({
-    dir: "library/systems/quadcopter-5in/artifacts/cad",
+    dir: "library/systems/quadcopter-5in/artifacts/cad/top-plate",
     name: "quadcopter-5in-top-plate",
     generator: "library/cad/py/frame.py",
     tool: "build123d 0.13.0",

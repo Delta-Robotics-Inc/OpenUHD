@@ -131,7 +131,8 @@ def build() -> dict:
     a.write()
 
     # ---- top plate: its own module; origin at the standoff centre, underside
-    t = Artifact("quadcopter-5in-top-plate", system_dir("quadcopter-5in"), HERE)
+    # its own folder: the frame and the top plate both have a standoff_mount interface artifact
+    t = Artifact("quadcopter-5in-top-plate", system_dir("quadcopter-5in") / "top-plate", HERE)
     with BuildPart() as top:
         with Locations(Pos(-10, 0, 0)):
             Box(120, 56, TOP_T, align=MIN)  # x -70 … 50
@@ -167,7 +168,7 @@ def build() -> dict:
         "standoff_mount": {"origin": [0, 0, 0], "normal": [0, 0, -1], "xAxis": [1, 0, 0], "symmetryDeg": 180},
         "gps_mount": {"origin": [GPS_X, 0, TOP_T], "normal": [0, 0, 1], "xAxis": [1, 0, 0], "symmetryDeg": 90},
     }
-    (system_dir("quadcopter-5in") / "quadcopter-5in-top-plate.frames.json").write_text(json.dumps(top_frames, indent=2) + "\n")
+    (system_dir("quadcopter-5in") / "top-plate" / "quadcopter-5in-top-plate.frames.json").write_text(json.dumps(top_frames, indent=2) + "\n")
     return frames
 
 
