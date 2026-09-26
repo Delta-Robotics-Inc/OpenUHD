@@ -11,6 +11,7 @@
  *   unpowered           a power input with no link
  *   harness_connector   harness end connectors vs the interfaces they mate
  *   prop_handedness     each motor's spin vs the handed prop on it (rotation.ts)
+ *   fastener_torque     every fastener joint states a sourced or assumed torque (fasteners.ts)
  *
  * Each diagnostic names canonical paths (`child:interface`, `link:<id>`) so
  * a viewer can select what it refers to.
@@ -27,6 +28,7 @@ import {
   type ResolvedEndpoint,
 } from "./index.js";
 import { propHandednessRule } from "./rotation.js";
+import { fastenerTorqueRule } from "./fasteners.js";
 
 export type SystemRule =
   | "link_state"
@@ -36,7 +38,8 @@ export type SystemRule =
   | "interface_reuse"
   | "unpowered"
   | "harness_connector"
-  | "prop_handedness";
+  | "prop_handedness"
+  | "fastener_torque";
 
 export interface SystemDiagnostic {
   id: string;
@@ -423,6 +426,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
     ...unpoweredRule(def, links, lookup),
     ...harnessConnectorRule(def, links, lookup),
     ...propHandednessRule(def, lookup),
+    ...fastenerTorqueRule(def, lookup),
   ].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
   return { links, diagnostics };
 }

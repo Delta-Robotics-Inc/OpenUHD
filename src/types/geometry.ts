@@ -115,4 +115,31 @@ export interface FastenerStackItem {
   direction?: 1 | -1;
   /** In-plane hole positions in the frame's x/y (mm); default: the bolt pattern's holes. */
   positions?: [number, number][];
+  /**
+   * Tightening torque for this item (PB-797), set on the part that is turned
+   * (the screw, or the nut when the screw is held). Omit on parts that are
+   * not turned (spacers).
+   */
+  torque?: FastenerTorque;
+}
+
+/**
+ * A tightening torque and where it comes from (PB-797). Exactly one of
+ * `source` (a maker or supplier statement for this joint) or `assumption`
+ * (why this value, when nobody states one) should be given; the
+ * fastener_torque check reports a torque with neither. Threadlocker advice
+ * is not part of the torque: it is a `usage_note` on the harness.
+ */
+export interface FastenerTorque {
+  /** Newton metres. */
+  torqueNm: number;
+  /** URL of a statement of this value for this joint. */
+  source?: string;
+  /** Why this value was chosen when no source states it. */
+  assumption?: string;
+  /**
+   * Published values the choice was made against (supplier tables for the
+   * screw grade into steel), so a reader can see how far it was derated.
+   */
+  reference?: { torqueNm: number; condition: string; source: string }[];
 }
