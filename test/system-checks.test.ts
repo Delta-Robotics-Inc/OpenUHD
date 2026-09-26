@@ -57,3 +57,35 @@ describe("fault scenarios", () => {
     expect(d?.severity).toBe("error");
   });
 });
+
+describe("harness checks", () => {
+  const nominal = SCENARIOS.find((s) => s.id === "nominal")!;
+
+  it("every link on the DJI cable, XT60 lead and stack hardware names its harness", () => {
+    const carried = (nominal.system.links ?? []).filter((l) => l.harness).map((l) => l.id);
+    expect(carried).toEqual(
+      expect.arrayContaining(["battery_pos", "battery_neg", "video_power", "video_gnd", "video_osd", "stack_mount", "fc_mount"]),
+    );
+  });
+
+  it("a JST-GH cable on the FC's DJI socket is a connector mismatch", async () => {
+    const { DJI_O4_3IN1_CABLE } = await import("../library/systems/quadcopter-5in/harnesses.js");
+    const { connectorTrait } = await import("../src/protocols/index.js");
+    const wrong = {
+      ...DJI_O4_3IN1_CABLE,
+      interfaces: DJI_O4_3IN1_CABLE.interfaces.map((i) =>
+        i.id === "end_fc" ? { ...i, traits: [connectorTrait("jst_gh_6", { mates: "a" })] } : i,
+      ),
+    };
+    const lookup = (id: string) => (id === wrong.id ? wrong : nominal.lookup(id));
+    const d = checkSystem(nominal.system, lookup).diagnostics.filter((x) => x.rule === "harness_connector");
+    expect(d.length).toBeGreaterThan(0);
+    expect(d[0].message).toMatch(/jst_gh_6/);
+  });
+
+  it("a link naming a harness that is not a child is reported", () => {
+    const system = { ...nominal.system, links: nominal.system.links!.map((l) => (l.id === "rx_crsf" ? { ...l, harness: "missing" } : l)) };
+    const d = checkSystem(system, nominal.lookup).diagnostics.find((x) => x.rule === "harness_connector");
+    expect(d?.message).toMatch(/not a child/);
+  });
+});

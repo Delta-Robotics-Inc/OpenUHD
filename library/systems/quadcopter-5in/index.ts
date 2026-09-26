@@ -13,6 +13,7 @@ import type { ModuleLookup } from "../../../src/system/index.js";
 import * as parts from "../../parts/index.js";
 import { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM } from "./assemblies.js";
 import { QUADCOPTER_5IN_FRAME } from "./frame.js";
+import { HARNESSES } from "./harnesses.js";
 
 const ARMS = [
   { id: "arm_fr", label: "Front-right arm", motor: 2 },
@@ -55,11 +56,15 @@ export const QUADCOPTER_5IN: ModuleDef = {
     { id: "receiver", moduleDefId: "radiomaster-rp1-v2-elrs-2g4", name: "ELRS receiver" },
     { id: "video", moduleDefId: "dji-o4-air-unit", name: "DJI O4 Air Unit" },
     { id: "gnss", moduleDefId: "matek-m10q-5883", name: "GNSS + compass" },
+    // harnesses carrying links
+    { id: "xt60_lead", moduleDefId: "dolphinrc-xt60-battery-lead", name: "XT60 battery lead" },
+    { id: "dji_cable", moduleDefId: "dji-o4-3in1-cable", name: "DJI 3-in-1 cable" },
+    { id: "stack_hardware", moduleDefId: "quadcopter-5in-stack-hardware", name: "Stack hardware" },
   ],
   links: [
     // Power
-    link("battery_pos", "VBAT", ["battery", "battery_out"], ["stack", "bat_in"]),
-    link("battery_neg", "Battery GND", ["battery", "battery_gnd"], ["stack", "bat_neg"]),
+    link("battery_pos", "VBAT", ["battery", "battery_out"], ["stack", "bat_in"], { harness: "xt60_lead" }),
+    link("battery_neg", "Battery GND", ["battery", "battery_gnd"], ["stack", "bat_neg"], { harness: "xt60_lead" }),
 
     // Propulsion: ESC channel -> arm (exports motor phases), arm -> frame
     ...ARMS.flatMap((arm) => [
@@ -68,7 +73,8 @@ export const QUADCOPTER_5IN: ModuleDef = {
     ]),
 
     // Stack to frame
-    link("stack_mount", "Stack standoffs", ["stack", "stack_mount"], ["frame", "stack_mount"]),
+    link("stack_mount", "ESC on frame", ["stack", "stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware" }),
+    link("fc_mount", "FC on frame", ["stack", "fc_stack_mount"], ["frame", "stack_mount"], { harness: "stack_hardware" }),
 
     // Receiver: CRSF on UART2, powered from the 5 V BEC
     link("rx_crsf", "CRSF", ["stack", "uart2"], ["receiver", "crsf"]),
@@ -76,9 +82,9 @@ export const QUADCOPTER_5IN: ModuleDef = {
     link("rx_gnd", "RX GND", ["stack", "gnd"], ["receiver", "gnd"]),
 
     // Video: DJI O4 on the 10 V BEC and UART5 (MSP DisplayPort)
-    link("video_power", "O4 10V", ["stack", "bec_10v"], ["video", "vcc"]),
-    link("video_gnd", "O4 GND", ["stack", "gnd"], ["video", "gnd"]),
-    link("video_osd", "MSP DisplayPort", ["stack", "uart5"], ["video", "uart_osd"]),
+    link("video_power", "O4 10V", ["stack", "bec_10v"], ["video", "vcc"], { harness: "dji_cable" }),
+    link("video_gnd", "O4 GND", ["stack", "gnd"], ["video", "gnd"], { harness: "dji_cable" }),
+    link("video_osd", "MSP DisplayPort", ["stack", "uart5"], ["video", "uart_osd"], { harness: "dji_cable" }),
     link("camera_mount", "Camera plates", ["video", "camera_mount"], ["frame", "camera_mount"]),
     link("vtx_mount", "Air unit mount", ["video", "tx_module_mount"], ["frame", "vtx_mount"]),
 
@@ -90,7 +96,7 @@ export const QUADCOPTER_5IN: ModuleDef = {
   ],
 };
 
-const ASSEMBLIES: ModuleDef[] = [QUADCOPTER_5IN, QUADCOPTER_5IN_FRAME, DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM];
+const ASSEMBLIES: ModuleDef[] = [QUADCOPTER_5IN, QUADCOPTER_5IN_FRAME, DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, ...HARNESSES];
 
 const BY_ID = new Map<string, ModuleDef>(
   [...(Object.values(parts) as ModuleDef[]), ...ASSEMBLIES].map((def) => [def.id, def]),
@@ -99,4 +105,4 @@ const BY_ID = new Map<string, ModuleDef>(
 /** Resolves every module definition the quadcopter system references. */
 export const lookupQuadcopterModule: ModuleLookup = (id) => BY_ID.get(id);
 
-export { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME };
+export { DOLPHINRC_F405_V3_STACK, QUADCOPTER_5IN_ARM, QUADCOPTER_5IN_FRAME, HARNESSES };

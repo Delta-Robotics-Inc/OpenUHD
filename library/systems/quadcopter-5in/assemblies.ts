@@ -24,6 +24,7 @@ export const DOLPHINRC_F405_V3_STACK: ModuleDef = {
   children: [
     { id: "fc", moduleDefId: "dolphinrc-f405-v3-flight-controller", name: "Flight controller" },
     { id: "esc", moduleDefId: "dolphinrc-am32-60a-4in1-esc", name: "4-in-1 ESC" },
+    { id: "sh8_cable", moduleDefId: "dolphinrc-sh8-fc-esc-cable", name: "SH1.0 8-pin cable" },
   ],
   links: [
     {
@@ -31,6 +32,7 @@ export const DOLPHINRC_F405_V3_STACK: ModuleDef = {
       name: "FC/ESC 8-pin cable",
       a: { child: "fc", interfaceId: "esc_port" },
       b: { child: "esc", interfaceId: "fc_port" },
+      harness: "sh8_cable",
     },
   ],
   exports: [
@@ -49,7 +51,8 @@ export const DOLPHINRC_F405_V3_STACK: ModuleDef = {
     { id: "uart5", name: "UART5 (DJI)", from: { child: "fc", interfaceId: "uart5" } },
     { id: "i2c1", name: "I2C1", from: { child: "fc", interfaceId: "i2c1" } },
     { id: "usb", name: "USB-C", from: { child: "fc", interfaceId: "usb" } },
-    { id: "stack_mount", name: "Stack mount", from: { child: "esc", interfaceId: "stack_mount" } },
+    { id: "stack_mount", name: "ESC mount", from: { child: "esc", interfaceId: "stack_mount" } },
+    { id: "fc_stack_mount", name: "FC mount", from: { child: "fc", interfaceId: "stack_mount" } },
   ],
 };
 

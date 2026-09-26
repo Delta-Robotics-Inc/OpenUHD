@@ -16,6 +16,11 @@ export interface ConnectorDetail {
   pinout?: string[];
   /** Free-form note citing the source for the connector details. */
   note?: string;
+  /**
+   * On a harness module's end: which end of the links it carries this
+   * connector mates with ("a" or "b"). Checked by the harness_connector rule.
+   */
+  mates?: "a" | "b";
 }
 
 /**
@@ -31,6 +36,7 @@ export function connectorTrait(connectorType: string, detail: ConnectorDetail = 
       ...(detail.positions !== undefined ? { positions: detail.positions } : {}),
       ...(detail.pinout !== undefined ? { pinout: detail.pinout } : {}),
       ...(detail.note !== undefined ? { note: detail.note } : {}),
+      ...(detail.mates !== undefined ? { mates: detail.mates } : {}),
     },
   };
 }

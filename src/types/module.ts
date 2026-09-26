@@ -112,6 +112,8 @@ export interface ModuleDef {
   name: string;
   /** Defaults to "module". */
   kind?: ModuleKind;
+  /** For kind "harness": how the carried links are arranged. */
+  topology?: "wire" | "bus" | "split" | "or";
   description?: string;
   version?: string;
 

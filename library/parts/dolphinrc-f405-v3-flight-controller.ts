@@ -162,6 +162,11 @@ const gnd = withTraits(Ground({ id: "gnd", name: "GND", pin: "GND" }), [
   padFunction("GND / G — ground (several pads and every socket's G pin).", SRC.manual),
   PAD,
   ESC_SH_8,
+  RC_SH_4,
+  GPS_SH_4,
+  VTX_SH_4,
+  DJI_6,
+  CAM_3,
 ]);
 
 const bec5v = withTraits(
