@@ -16,6 +16,8 @@ import { fileURLToPath, pathToFileURL } from "url";
 import type { InterfaceDef, ModuleDef } from "../src/types/index.js";
 import { validatePair } from "../src/drc/index.js";
 import * as library from "../library/parts/index.js";
+import { checkCad } from "../library/cad/checks.js";
+import { manifestLookup } from "../library/cad/manifests.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PARTS = join(ROOT, "library", "parts");
@@ -103,6 +105,7 @@ function check(def: ModuleDef, id: string): Finding[] {
 
   const sourcesFile = join(PARTS, id, "sources.json");
   let sourceUrls = new Set<string>();
+  let sourceRows: Array<Record<string, unknown>> = [];
   if (!existsSync(sourcesFile)) {
     err("citation", `missing library/parts/${id}/sources.json`);
   } else {
@@ -123,6 +126,7 @@ function check(def: ModuleDef, id: string): Finding[] {
         (standardPart ? warn : err)("citation", "no manufacturer-authority source in sources.json" + (standardPart ? " (standard part: supplier drawing of the cited standard accepted)" : ""));
       }
       sourceUrls = new Set(rows.map((r) => String(r.url)));
+      sourceRows = rows;
     } catch (e) {
       err("citation", `sources.json is not valid JSON: ${(e as Error).message}`);
     }
@@ -191,6 +195,26 @@ function check(def: ModuleDef, id: string): Finding[] {
     warn("coverage", "no thermal domain or operating_conditions trait — confirm the sources give no operating temperature");
   }
   if (!domains.has("mechanical")) warn("coverage", "no mechanical interfaces (mounting, shaft) — confirm this is intended");
+
+  // CAD (PB-796): a body, bindings, frames, frame plausibility, vendor licence
+  for (const issue of checkCad(def, manifestLookup(def))) {
+    (issue.severity === "error" ? err : warn)("cad", `${issue.interfaceId ? `interface ${issue.interfaceId}: ` : ""}${issue.message}`);
+  }
+  const vendorCad = (def.artifacts ?? []).filter((a) => a.type === "3d_model" && a.role === "source" && a.url);
+  for (const a of vendorCad) {
+    const row = sourceRows.find((r) => r.url === a.url);
+    if (!row) err("cad", `vendor CAD ${a.id} (${a.url}) is not in sources.json`);
+    else {
+      if (row.type !== "cad") err("cad", `sources.json row for ${a.url} should have type "cad"`);
+      if (!row.sha256) err("cad", `sources.json row for ${a.url} has no sha256`);
+      if (!row.licence) err("cad", `sources.json row for ${a.url} records no licence/terms ("licence")`);
+    }
+  }
+  const hasBody = (def.artifacts ?? []).some((a) => a.role === "body");
+  const cadGap = (def.traits ?? []).some((t) => t.type === "data_gap" && /manufacturer CAD/i.test(JSON.stringify(t.params ?? {})));
+  if (hasBody && !vendorCad.length && !cadGap) {
+    warn("cad", 'generated geometry without a data_gap trait for "manufacturer CAD" (say where you looked)');
+  }
 
   return out;
 }

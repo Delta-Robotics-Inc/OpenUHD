@@ -1,6 +1,7 @@
 """Matek M9N-5883: bind UHD interfaces to *vendor* CAD (PB-775, direction "vendor").
 
-Unlike the other generators this one does not model anything. It reads the
+The first vendor-CAD part; since PB-796 it is a thin configuration of
+vendor_step.py, the reusable version of this script. It reads the
 manufacturer's STEP (downloaded by the part research into .research/cad, not
 committed: redistribution terms are not stated), converts it to GLB for the
 viewer, and writes a manifest of the vendor's own named components so UHD
@@ -16,67 +17,36 @@ committed so bindings can be checked without the vendor file.
 """
 from __future__ import annotations
 
-import hashlib
-import json
-from pathlib import Path
+from vendor_step import VendorStep, build as build_vendor, holes, label, planar
 
-import build123d as bd
-from build123d import CenterOf, Compound, export_gltf, import_step
-
-from common import ROOT, part_dir, signature
-
-PART = "matek-m9n-5883"
-SOURCE = ROOT / "library/parts" / PART / ".research/cad/M9N-5883.step"
-ZIP = SOURCE.with_name("M9N-5883_step.zip")
-OUT = part_dir(PART) / "vendor"
-NAMED = ["GH6P-1", "GH6P-2", "MAG", "ANTENNA", "GPS"]
+STEP = VendorStep(
+    part_id="matek-m9n-5883",
+    step="M9N-5883.step",
+    archive="M9N-5883_step.zip",
+    name="M9N-5883",
+    url="https://www.mateksys.com/Downloads/other/M9N-5883_step.zip",
+    licence="not stated by Matek (not redistributed)",
+    features={
+        "GH6P-1": label("GH6P-1"),
+        "GH6P-2": label("GH6P-2"),
+        "MAG": label("MAG"),
+        "ANTENNA": label("ANTENNA"),
+        "GPS": label("GPS"),
+        "mount": holes(2.1, tol=0.1, within="Board"),
+        "component_side": planar((0, 0, 1), within="Board", min_area=500),
+    },
+    interfaces=["GH6P-1", "GH6P-2", "MAG", "mount"],
+    notes=[
+        "Board is 32 x 32 x 0.62 mm, top face at z = 0, components on +Z.",
+        "Mount holes: 4 x Φ2.1 on a 26 x 26 mm square centred on the board (±13, ±13).",
+        "The patch antenna is on -Z (z -5.12 … 1.03): the module mounts component side toward the frame, antenna up.",
+        "GH6P connectors reach z = 4.35 on the component side: the frame mount needs ≥ 4.5 mm standoffs.",
+    ],
+)
 
 
 def build() -> None:
-    if not SOURCE.exists():
-        print(f"  skipped: {SOURCE.relative_to(ROOT)} not present (download M9N-5883_step.zip from mateksys.com)")
-        return
-    shape = import_step(str(SOURCE))
-    by_label = {c.label: c for c in shape.children}
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "interfaces").mkdir(exist_ok=True)
-
-    features: dict[str, dict] = {}
-    for name in NAMED:
-        c = by_label[name]
-        features[name] = signature(list(c.faces()))
-    board = by_label["Board"]
-    holes = [f for f in board.faces() if f.geom_type == bd.GeomType.CYLINDER and abs(f.radius - 1.05) < 0.05]
-    features["mount"] = signature(holes)
-    top = [f for f in board.faces() if f.geom_type == bd.GeomType.PLANE and f.normal_at().Z > 0.9 and f.area > 500]
-    features["component_side"] = signature(top)
-
-    export_gltf(shape, str(OUT / "M9N-5883.glb"), binary=True, linear_deflection=0.02, angular_deflection=0.3)
-    for name in ["GH6P-1", "GH6P-2", "MAG"]:
-        export_gltf(Compound(label=name, children=[by_label[name]]), str(OUT / "interfaces" / f"{name}.glb"), binary=True)
-    export_gltf(
-        Compound(label="mount", children=[bd.Solid.thicken(f, 0.25) for f in holes]),
-        str(OUT / "interfaces" / "mount.glb"),
-        binary=True,
-    )
-
-    manifest = {
-        "artifact": "matek-m9n-5883-vendor",
-        "tool": "manufacturer STEP (Matek), converted with build123d",
-        "toolVersion": bd.__version__,
-        "sourceDigest": hashlib.sha256(ZIP.read_bytes()).hexdigest() if ZIP.exists() else None,
-        "units": "mm",
-        "features": features,
-        "vendorComponents": sorted(by_label),
-        "notes": [
-            "Board is 32 x 32 x 0.62 mm, top face at z = 0, components on +Z.",
-            "Mount holes: 4 x Φ2.1 on a 26 x 26 mm square centred on the board (±13, ±13).",
-            "The patch antenna is on -Z (z -5.12 … 1.03): the module mounts component side toward the frame, antenna up.",
-            "GH6P connectors reach z = 4.35 on the component side: the frame mount needs ≥ 4.5 mm standoffs.",
-        ],
-    }
-    (part_dir(PART) / "matek-m9n-5883-vendor.manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"  {OUT.relative_to(ROOT)}/M9N-5883.glb (gitignored) + manifest ({len(features)} features)")
+    build_vendor(STEP)
 
 
 if __name__ == "__main__":
