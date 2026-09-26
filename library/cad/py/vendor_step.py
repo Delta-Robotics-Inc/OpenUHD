@@ -92,7 +92,13 @@ def holes(diameter: float, tol: float = 0.08, within: str | None = None, axis=(0
     def sel(shape: Shape) -> list[Face]:
         out = []
         for f in _scope(shape, within).faces():
-            if f.geom_type != bd.GeomType.CYLINDER or abs(2 * f.radius - diameter) > tol:
+            if f.geom_type != bd.GeomType.CYLINDER:
+                continue
+            try:
+                r = f.radius
+            except Exception:  # some vendor cylinders carry no usable radius
+                continue
+            if r is None or abs(2 * r - diameter) > tol:
                 continue
             if not _parallel(f.axis_of_rotation.direction, axis):
                 continue
