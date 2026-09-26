@@ -478,7 +478,8 @@ export function provenanceSection(env: BuildEnv): string {
       `<sup class="mk mk-${v.status}">${MARKERS[v.status]?.mark ?? ""}</sup> ${esc(MARKERS[v.status]?.label ?? v.status)}`,
       esc(v.text),
       `<code class="q">${esc(v.q)}</code>`,
-      esc([v.formula, v.note, v.inputs?.length ? `inputs: ${v.inputs.length}` : "", v.source && v.status !== "derived" ? v.source : ""].filter(Boolean).join(" · ")).slice(0, 260),
+      // allow breaks after "/" so long source URLs wrap inside the column
+      esc([v.formula, v.note, v.inputs?.length ? `inputs: ${v.inputs.length}` : "", v.source && v.status !== "derived" ? v.source : ""].filter(Boolean).join(" · ")).slice(0, 260).replace(/\//g, "/\u200b"),
     ]);
   return `${sec("10", "Value provenance", "", ' data-break="before"')}
   <p class="prose">This document shows ${vals.length} bound values. Each is a query into the UHD model, re-resolved and compared by <code>uhd-tech-docs-verify</code>; the full list with sources is in <code>${esc(env.doc.meta.docId.toLowerCase())}.values.json</code> next to the document.</p>

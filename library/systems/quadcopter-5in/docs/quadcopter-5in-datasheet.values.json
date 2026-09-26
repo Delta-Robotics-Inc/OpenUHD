@@ -7,14 +7,14 @@
   {
    "q": "derived:propulsion.thrust_full_total",
    "f": "si|d1",
-   "text": "6.8 kg",
+   "text": "6.3 kg",
    "status": "derived",
    "unit": "g",
-   "formula": "motors × performance.thrust_tests[0].full_throttle.thrust_g",
+   "formula": "motors × thrust_g of the top (100 %) row of the first thrust table",
    "inputs": [
-    "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g"
+    "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].thrust_g"
    ],
-   "note": "manufacturer test with MEPS SZ5145 at 25.2 V"
+   "note": "manufacturer table with MEPS SZ4942 at 25.2 V (not the fitted propeller)"
   },
   {
    "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
@@ -39,13 +39,15 @@
    "source": "UHD checks"
   },
   {
-   "q": "derived:mass.known_total",
+   "q": "derived:mass.all_up",
    "f": "d0",
-   "text": "425 g",
-   "status": "derived",
+   "text": "584 g",
+   "status": "assumption",
    "unit": "g",
-   "formula": "∑ (count × domains[mechanical].weight_g) over leaf instances and placed hardware",
+   "formula": "systemMass: ∑ quantity × (weight_g, else CAD volume × material density) over every instance; instances with neither are listed, not guessed",
    "inputs": [
+    "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3",
+    "def:quadcopter-5in-top-plate:domains[domain=mechanical].material.density_g_cm3",
     "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
     "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
     "def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].weight_g",
@@ -55,8 +57,20 @@
     "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
     "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
     "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
-    "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g"
-   ]
+    "def:iso-4762-m3x30-socket-head-cap-screw:domains[domain=mechanical].material.density_g_cm3",
+    "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g",
+    "def:iso-10511-m3-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:m3-aluminium-standoff-30mm:domains[domain=mechanical].weight_g",
+    "def:iso-4762-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:motor-screw-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x18:domains[domain=mechanical].material.density_g_cm3",
+    "def:m2-nylon-spacer-3mm:domains[domain=mechanical].weight_g",
+    "def:iso-10511-m2-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:o4-camera-screw-m2x5:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x12:domains[domain=mechanical].material.density_g_cm3",
+    "def:m2-nylon-spacer-5mm:domains[domain=mechanical].weight_g"
+   ],
+   "note": "excludes 4 part(s) with no mass: FC/ESC SH1.0 8-pin cable, Panasonic EEU-FR1V471 470 µF 35 V low-ESR electrolytic capacitor, XT60 battery lead (12 AWG), DJI O4 3-in-1 cable; 151.2 g of it is computed from assumed material/geometry"
   },
   {
    "q": "def:dji-o4-air-unit:traits[type=performance].params.lowest_latency_ms.goggles_3",
@@ -159,6 +173,18 @@
    "source": "model: quadcopter-5in-frame"
   },
   {
+   "q": "derived:mass.module(quadcopter-5in-frame)",
+   "f": "d1",
+   "text": "91.0 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "59.86 cm³ × 1.52 g/cm³ (3K woven carbon fibre / epoxy laminate); assumption: DragonPlate's woven quasi-isotropic row is taken for 3K woven plate; the table does not name the tow size, and a real plate's resin content varies. The CAD body is the design geometry (no chamfers, countersinks or cutting kerf)."
+  },
+  {
    "q": "def:quadcopter-5in-frame:interfaces[id=stack_mount].parameters[id=hole_spacing].value",
    "text": "30.5 mm",
    "status": "model",
@@ -247,68 +273,6 @@
    "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
   },
   {
-   "q": "derived:power.battery_energy_Wh",
-   "f": "d2",
-   "text": "24.42 Wh",
-   "status": "derived",
-   "unit": "Wh",
-   "formula": "battery voltage × capacity",
-   "inputs": [
-    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
-    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value"
-   ]
-  },
-  {
-   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=max_current].value",
-   "text": "110 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
-  },
-  {
-   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=burst_current].value",
-   "text": "220 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
-  },
-  {
-   "q": "def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g",
-   "text": "211 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
-  },
-  {
-   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=bat_in].parameters[id=voltage].value",
-   "text": "6–30 V",
-   "status": "source",
-   "unit": "V",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
-  },
-  {
-   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_5v].parameters[id=max_current].value",
-   "text": "3 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
-  },
-  {
-   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_10v].parameters[id=max_current].value",
-   "text": "2.5 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
-  },
-  {
-   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=rail_4v5].parameters[id=voltage].value",
-   "f": "d1",
-   "text": "4.5–5.0 V",
-   "status": "source",
-   "unit": "V",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
-  },
-  {
    "q": "def:dolphinrc-f405-v3-flight-controller:name",
    "text": "DolphinRC F405 V3 Flight Controller",
    "status": "source",
@@ -389,6 +353,102 @@
    "source": "https://www.dji.com/o4-air-unit/specs"
   },
   {
+   "q": "derived:power.battery_energy_Wh",
+   "f": "d2",
+   "text": "24.42 Wh",
+   "status": "derived",
+   "unit": "Wh",
+   "formula": "battery voltage × capacity",
+   "inputs": [
+    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=voltage].value",
+    "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=capacity].value"
+   ]
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=max_current].value",
+   "text": "110 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:interfaces[id=battery_out].parameters[id=burst_current].value",
+   "text": "220 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g",
+   "text": "211 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://chinahobbyline.com/products/cnhl-black-series-1100mah-22-2v-6s-100c-lipo-battery-with-xt60-plug"
+  },
+  {
+   "q": "derived:mass.all_up",
+   "f": "d1",
+   "text": "584.0 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "systemMass: ∑ quantity × (weight_g, else CAD volume × material density) over every instance; instances with neither are listed, not guessed",
+   "inputs": [
+    "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3",
+    "def:quadcopter-5in-top-plate:domains[domain=mechanical].material.density_g_cm3",
+    "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
+    "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
+    "def:meps-neon-2207-v2-1950kv:domains[domain=mechanical].weight_g",
+    "def:hqprop-ethix-s5:domains[domain=mechanical].weight_g",
+    "def:cnhl-black-series-1100mah-6s-100c:domains[domain=mechanical].weight_g",
+    "def:radiomaster-rp1-v2-elrs-2g4:domains[domain=mechanical].weight_g",
+    "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
+    "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
+    "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
+    "def:iso-4762-m3x30-socket-head-cap-screw:domains[domain=mechanical].material.density_g_cm3",
+    "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g",
+    "def:iso-10511-m3-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:m3-aluminium-standoff-30mm:domains[domain=mechanical].weight_g",
+    "def:iso-4762-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:motor-screw-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x18:domains[domain=mechanical].material.density_g_cm3",
+    "def:m2-nylon-spacer-3mm:domains[domain=mechanical].weight_g",
+    "def:iso-10511-m2-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:o4-camera-screw-m2x5:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x12:domains[domain=mechanical].material.density_g_cm3",
+    "def:m2-nylon-spacer-5mm:domains[domain=mechanical].weight_g"
+   ],
+   "note": "excludes 4 part(s) with no mass: FC/ESC SH1.0 8-pin cable, Panasonic EEU-FR1V471 470 µF 35 V low-ESR electrolytic capacitor, XT60 battery lead (12 AWG), DJI O4 3-in-1 cable; 151.2 g of it is computed from assumed material/geometry"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:interfaces[id=bat_in].parameters[id=voltage].value",
+   "text": "6–30 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_5v].parameters[id=max_current].value",
+   "text": "3 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=bec_10v].parameters[id=max_current].value",
+   "text": "2.5 A",
+   "status": "source",
+   "unit": "A",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=rail_4v5].parameters[id=voltage].value",
+   "f": "d1",
+   "text": "4.5–5.0 V",
+   "status": "source",
+   "unit": "V",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
    "q": "def:matek-m9n-5883:traits[type=performance].params.receiver",
    "text": "u-blox NEO-M9N (concurrent reception of GPS, Galileo, GLONASS, BeiDou)",
    "status": "source",
@@ -408,6 +468,13 @@
    "status": "source",
    "unit": "mA",
    "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:interfaces[id=rail_4v5].traits[type=supplied_from].params.interfaceId",
+   "text": "bec_5v",
+   "status": "assumption",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf",
+   "note": "assumption trait"
   },
   {
    "q": "derived:frameDistance(frame.motor_mount_fl,frame.motor_mount_fr)",
@@ -461,16 +528,231 @@
    "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
   },
   {
-   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].weight_g",
-   "text": "—",
-   "status": "gap",
-   "unit": "g"
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].material.name",
+   "text": "3K woven carbon fibre / epoxy laminate",
+   "status": "assumption",
+   "source": "https://dragonplate.com/carbon-fiber-sheets",
+   "note": "assumption trait"
   },
   {
-   "q": "def:quadcopter-5in-top-plate:domains[domain=mechanical].weight_g",
-   "text": "—",
-   "status": "gap",
-   "unit": "g"
+   "q": "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3",
+   "f": "u=g/cm³",
+   "text": "1.52 g/cm³",
+   "status": "assumption",
+   "source": "https://dragonplate.com/carbon-fiber-sheets",
+   "note": "assumption trait"
+  },
+  {
+   "q": "derived:mass.module(quadcopter-5in-top-plate)",
+   "f": "d1",
+   "text": "19.8 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:quadcopter-5in-top-plate:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "13.05 cm³ × 1.52 g/cm³ (3K woven carbon fibre / epoxy laminate); assumption: DragonPlate's woven quasi-isotropic row is taken for 3K woven plate; the table does not name the tow size, and a real plate's resin content varies. The CAD body is the design geometry (no chamfers, countersinks or cutting kerf)."
+  },
+  {
+   "q": "derived:mass.module(quadcopter-5in-frame)",
+   "text": "91 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "59.86 cm³ × 1.52 g/cm³ (3K woven carbon fibre / epoxy laminate); assumption: DragonPlate's woven quasi-isotropic row is taken for 3K woven plate; the table does not name the tow size, and a real plate's resin content varies. The CAD body is the design geometry (no chamfers, countersinks or cutting kerf)."
+  },
+  {
+   "q": "derived:mass.module(quadcopter-5in-top-plate)",
+   "text": "19.8 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:quadcopter-5in-top-plate:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "13.05 cm³ × 1.52 g/cm³ (3K woven carbon fibre / epoxy laminate); assumption: DragonPlate's woven quasi-isotropic row is taken for 3K woven plate; the table does not name the tow size, and a real plate's resin content varies. The CAD body is the design geometry (no chamfers, countersinks or cutting kerf)."
+  },
+  {
+   "q": "derived:mass.module(motor-screw-m3x8)",
+   "text": "0.91 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:motor-screw-m3x8:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.11 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: The maker does not state the screw material; steel (A2 density) and the generator's nominal ISO 4762 shape are assumed."
+  },
+  {
+   "q": "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
+   "text": "14.5 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
+  },
+  {
+   "q": "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
+   "text": "13.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "derived:mass.module(iso-4762-m3x30-socket-head-cap-screw)",
+   "text": "2.3 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-4762-m3x30-socket-head-cap-screw:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.28 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: The CAD body is library/cad/py/parts.py's nominal ISO 4762 shape (plain shank, no thread form), not a measured part; Westfield states no weight."
+  },
+  {
+   "q": "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
+   "text": "8.3 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm"
+  },
+  {
+   "q": "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
+   "text": "8.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.dji.com/o4-air-unit/specs"
+  },
+  {
+   "q": "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
+   "text": "7.7 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
+  },
+  {
+   "q": "derived:mass.module(iso-4762-m3x8)",
+   "text": "0.91 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-4762-m3x8:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.11 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: Volume is the generator's nominal shape (plain shank, no thread form), not a measured part."
+  },
+  {
+   "q": "def:m3-aluminium-standoff-30mm:domains[domain=mechanical].weight_g",
+   "text": "1.82 g",
+   "status": "model",
+   "unit": "g",
+   "source": "model: m3-aluminium-standoff-30mm"
+  },
+  {
+   "q": "derived:mass.module(iso-10511-m3-nyloc-nut)",
+   "text": "0.61 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-10511-m3-nyloc-nut:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.08 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: The CAD body is library/cad/py/parts.py's nominal DIN 985 hex with the nylon insert counted as steel; Westfield states no weight."
+  },
+  {
+   "q": "derived:mass.module(iso-4762-m2x18)",
+   "text": "0.57 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-4762-m2x18:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.07 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: Volume is the generator's nominal shape (plain shank, no thread form), not a measured part."
+  },
+  {
+   "q": "def:radiomaster-rp1-v2-elrs-2g4:domains[domain=mechanical].weight_g",
+   "text": "2.2 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
+  },
+  {
+   "q": "derived:mass.module(iso-10511-m2-nyloc-nut)",
+   "text": "0.24 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-10511-m2-nyloc-nut:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.03 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: Nominal hex nut shape with the nylon insert counted as steel (a slight over-estimate); not a measured part."
+  },
+  {
+   "q": "derived:mass.module(iso-4762-m2x12)",
+   "text": "0.43 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:iso-4762-m2x12:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.05 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: Volume is the generator's nominal shape (plain shank, no thread form), not a measured part."
+  },
+  {
+   "q": "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g",
+   "text": "0.15 g",
+   "status": "source",
+   "unit": "g",
+   "source": "https://www.ettinger.de/en/p/round-spacer-oe3.4-6.0-x-6.0-pa-gf-black/005.83.060"
+  },
+  {
+   "q": "derived:mass.module(o4-camera-screw-m2x5)",
+   "text": "0.27 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "weight_g if stated, else CAD body volume (generator manifest) × domains[mechanical].material.density_g_cm3",
+   "inputs": [
+    "def:o4-camera-screw-m2x5:domains[domain=mechanical].material.density_g_cm3"
+   ],
+   "note": "0.03 cm³ × 8 g/cm³ (A2 (304 / 1.4301) stainless steel); assumption: The maker does not state the screw material; steel (A2 density) and the generator's nominal ISO 4762 shape are assumed."
+  },
+  {
+   "q": "def:m2-nylon-spacer-3mm:domains[domain=mechanical].weight_g",
+   "text": "0.05 g",
+   "status": "model",
+   "unit": "g",
+   "source": "model: m2-nylon-spacer-3mm"
+  },
+  {
+   "q": "def:m2-nylon-spacer-5mm:domains[domain=mechanical].weight_g",
+   "text": "0.05 g",
+   "status": "model",
+   "unit": "g",
+   "source": "model: m2-nylon-spacer-5mm"
+  },
+  {
+   "q": "derived:mass.assumed",
+   "f": "d1",
+   "text": "151.2 g",
+   "status": "assumption",
+   "unit": "g",
+   "formula": "∑ systemMass entries whose material carries an assumption",
+   "inputs": [
+    "def:quadcopter-5in-frame:domains[domain=mechanical].material.density_g_cm3",
+    "def:quadcopter-5in-top-plate:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m3x30-socket-head-cap-screw:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-10511-m3-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:motor-screw-m3x8:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x18:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-10511-m2-nyloc-nut:domains[domain=mechanical].material.density_g_cm3",
+    "def:o4-camera-screw-m2x5:domains[domain=mechanical].material.density_g_cm3",
+    "def:iso-4762-m2x12:domains[domain=mechanical].material.density_g_cm3"
+   ]
   },
   {
    "q": "inst:frame:interfaces[id=stack_mount].parameters[id=hole_count].value",
@@ -717,8 +999,8 @@
   },
   {
    "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_5v].details.loadW",
-   "f": "u=W",
-   "text": "0 W",
+   "f": "u=W|s3",
+   "text": "0.225 W",
    "status": "model",
    "source": "UHD checks"
   },
@@ -739,8 +1021,14 @@
   },
   {
    "q": "sys:checks.diagnostics[id=supply_budget:stack:bec_10v].details.loadW",
-   "f": "u=W",
+   "f": "u=W|s3",
    "text": "10 W",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
+   "q": "sys:checks.diagnostics[id=supply_budget:stack:rail_4v5].details.suppliedFrom",
+   "text": "stack:bec_5v",
    "status": "model",
    "source": "UHD checks"
   },
@@ -792,128 +1080,816 @@
    "source": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1259.pdf"
   },
   {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].propeller",
-   "text": "MEPS SZ5145",
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=10].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.2",
    "status": "source",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=10].current_A",
+   "f": "d1|nounit",
+   "text": "0.3",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=10].rpm",
+   "f": "nounit",
+   "text": "4888",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=10].thrust_g",
+   "f": "nounit",
+   "text": "28",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=10].power_W",
+   "f": "nounit",
+   "text": "9",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=10].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.2",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=10].current_A",
+   "f": "d1|nounit",
+   "text": "0.4",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=10].rpm",
+   "f": "nounit",
+   "text": "4854",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=10].thrust_g",
+   "f": "nounit",
+   "text": "33",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=10].power_W",
+   "f": "nounit",
+   "text": "9",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=20].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.2",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=20].current_A",
+   "f": "d1|nounit",
+   "text": "1.3",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=20].rpm",
+   "f": "nounit",
+   "text": "9570",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=20].thrust_g",
+   "f": "nounit",
+   "text": "119",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=20].power_W",
+   "f": "nounit",
+   "text": "33",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=20].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.2",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=20].current_A",
+   "f": "d1|nounit",
+   "text": "1.4",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=20].rpm",
+   "f": "nounit",
+   "text": "9465",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=20].thrust_g",
+   "f": "nounit",
+   "text": "143",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=20].power_W",
+   "f": "nounit",
+   "text": "35",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=30].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.1",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=30].current_A",
+   "f": "d1|nounit",
+   "text": "3.3",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=30].rpm",
+   "f": "nounit",
+   "text": "14 157",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=30].thrust_g",
+   "f": "nounit",
+   "text": "277",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=30].power_W",
+   "f": "nounit",
+   "text": "83",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=30].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.1",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=30].current_A",
+   "f": "d1|nounit",
+   "text": "3.6",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=30].rpm",
+   "f": "nounit",
+   "text": "13 911",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=30].thrust_g",
+   "f": "nounit",
+   "text": "334",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=30].power_W",
+   "f": "nounit",
+   "text": "90",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=40].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.1",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=40].current_A",
+   "f": "d1|nounit",
+   "text": "5.8",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=40].rpm",
+   "f": "nounit",
+   "text": "17 710",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=40].thrust_g",
+   "f": "nounit",
+   "text": "452",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=40].power_W",
+   "f": "nounit",
+   "text": "145",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=40].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.0",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=40].current_A",
+   "f": "d1|nounit",
+   "text": "6.4",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=40].rpm",
+   "f": "nounit",
+   "text": "17 304",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=40].thrust_g",
+   "f": "nounit",
+   "text": "533",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=40].power_W",
+   "f": "nounit",
+   "text": "159",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=50].voltage_V",
+   "f": "d1|nounit",
+   "text": "25.0",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=50].current_A",
+   "f": "d1|nounit",
+   "text": "9.5",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=50].rpm",
+   "f": "nounit",
+   "text": "20 929",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=50].thrust_g",
+   "f": "nounit",
+   "text": "648",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=50].power_W",
+   "f": "nounit",
+   "text": "237",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=50].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.9",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=50].current_A",
+   "f": "d1|nounit",
+   "text": "10.4",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=50].rpm",
+   "f": "nounit",
+   "text": "20 457",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=50].thrust_g",
+   "f": "nounit",
+   "text": "763",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=50].power_W",
+   "f": "nounit",
+   "text": "260",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=60].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.9",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=60].current_A",
+   "f": "d1|nounit",
+   "text": "14.3",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=60].rpm",
+   "f": "nounit",
+   "text": "23 893",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=60].thrust_g",
+   "f": "nounit",
+   "text": "865",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=60].power_W",
+   "f": "nounit",
+   "text": "355",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=60].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.8",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=60].current_A",
+   "f": "d1|nounit",
+   "text": "15.5",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=60].rpm",
+   "f": "nounit",
+   "text": "23 263",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=60].thrust_g",
+   "f": "nounit",
+   "text": "1000",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=60].power_W",
+   "f": "nounit",
+   "text": "384",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=70].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.7",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=70].current_A",
+   "f": "d1|nounit",
+   "text": "20.0",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=70].rpm",
+   "f": "nounit",
+   "text": "26 534",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=70].thrust_g",
+   "f": "nounit",
+   "text": "1083",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=70].power_W",
+   "f": "nounit",
+   "text": "494",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=70].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.7",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=70].current_A",
+   "f": "d1|nounit",
+   "text": "21.5",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=70].rpm",
+   "f": "nounit",
+   "text": "25 704",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=70].thrust_g",
+   "f": "nounit",
+   "text": "1233",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=70].power_W",
+   "f": "nounit",
+   "text": "531",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=80].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.5",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=80].current_A",
+   "f": "d1|nounit",
+   "text": "27.3",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=80].rpm",
+   "f": "nounit",
+   "text": "28 890",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=80].thrust_g",
+   "f": "nounit",
+   "text": "1298",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=80].power_W",
+   "f": "nounit",
+   "text": "668",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=80].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.5",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=80].current_A",
+   "f": "d1|nounit",
+   "text": "28.7",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=80].rpm",
+   "f": "nounit",
+   "text": "27 751",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=80].thrust_g",
+   "f": "nounit",
+   "text": "1446",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=80].power_W",
+   "f": "nounit",
+   "text": "701",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=90].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.3",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=90].current_A",
+   "f": "d1|nounit",
+   "text": "35.2",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=90].rpm",
+   "f": "nounit",
+   "text": "30 766",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=90].thrust_g",
+   "f": "nounit",
+   "text": "1470",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=90].power_W",
+   "f": "nounit",
+   "text": "855",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=90].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.3",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=90].current_A",
+   "f": "d1|nounit",
+   "text": "36.8",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=90].rpm",
+   "f": "nounit",
+   "text": "29 199",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=90].thrust_g",
+   "f": "nounit",
+   "text": "1580",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=90].power_W",
+   "f": "nounit",
+   "text": "893",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.2",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].current_A",
+   "f": "d1|nounit",
+   "text": "41.8",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].rpm",
+   "f": "nounit",
+   "text": "31 973",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].thrust_g",
+   "f": "nounit",
+   "text": "1584",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].rows[throttle_pct=100].power_W",
+   "f": "nounit",
+   "text": "1009",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=100].voltage_V",
+   "f": "d1|nounit",
+   "text": "24.1",
+   "status": "source",
+   "unit": "V",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=100].current_A",
+   "f": "d1|nounit",
+   "text": "43.0",
+   "status": "source",
+   "unit": "A",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=100].rpm",
+   "f": "nounit",
+   "text": "30 342",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=100].thrust_g",
+   "f": "nounit",
+   "text": "1699",
+   "status": "source",
+   "unit": "g",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].rows[throttle_pct=100].power_W",
+   "f": "nounit",
+   "text": "1036",
+   "status": "source",
+   "unit": "W",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
+  },
+  {
+   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].propeller",
+   "text": "MEPS SZ4942",
+   "status": "source",
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
   },
   {
    "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].supply_V",
+   "f": "d1",
    "text": "25.2 V",
    "status": "source",
    "unit": "V",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.thrust_g",
-   "f": "u=g",
-   "text": "763 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].half_throttle.current_A",
-   "f": "u=A",
-   "text": "10.4 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.thrust_g",
-   "f": "u=g",
-   "text": "1699 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.current_A",
-   "f": "u=A|d1",
-   "text": "43.0 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.power_W",
-   "f": "u=W",
-   "text": "1036 W",
-   "status": "source",
-   "unit": "W",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[0].full_throttle.rpm",
-   "f": "u=rpm",
-   "text": "30 342 rpm",
-   "status": "source",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
   },
   {
    "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].propeller",
-   "text": "MEPS SZ4942",
+   "text": "MEPS SZ5145",
    "status": "source",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
   },
   {
    "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].supply_V",
+   "f": "d1",
    "text": "25.2 V",
    "status": "source",
    "unit": "V",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].half_throttle.thrust_g",
-   "f": "u=g",
-   "text": "648 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].half_throttle.current_A",
-   "f": "u=A",
-   "text": "9.5 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.thrust_g",
-   "f": "u=g",
-   "text": "1584 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.current_A",
-   "f": "u=A|d1",
-   "text": "41.8 A",
-   "status": "source",
-   "unit": "A",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.power_W",
-   "f": "u=W",
-   "text": "1009 W",
-   "status": "source",
-   "unit": "W",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
-  },
-  {
-   "q": "def:meps-neon-2207-v2-1950kv:traits[type=performance].params.thrust_tests[1].full_throttle.rpm",
-   "f": "u=rpm",
-   "text": "31 973 rpm",
-   "status": "source",
-   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-specification-pc.jpg"
+   "source": "https://img-meps.mepsking.top/material/1/neon-2207-v2-motor-test-data-pc.jpg"
   },
   {
    "q": "test:hover-current:summary[id=auw_g].value",
-   "text": "550 g",
+   "text": "604 g",
    "status": "standin",
    "unit": "g",
    "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
@@ -921,14 +1897,14 @@
   {
    "q": "test:hover-current:summary[id=hover_current_A].value",
    "f": "d1",
-   "text": "4.3 A",
+   "text": "8.4 A",
    "status": "standin",
    "unit": "A",
    "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
   },
   {
    "q": "test:hover-current:summary[id=hover_power_W].value",
-   "text": "95 W",
+   "text": "188 W",
    "status": "standin",
    "unit": "W",
    "source": "library/systems/quadcopter-5in/docs/test-data/hover-current.json"
@@ -944,7 +1920,7 @@
   {
    "q": "test:throttle-sweep:summary[id=thrust_total_full].value",
    "f": "si|d2",
-   "text": "6.80 kg",
+   "text": "6.34 kg",
    "status": "standin",
    "unit": "g",
    "source": "library/systems/quadcopter-5in/docs/test-data/throttle-sweep.json"
@@ -952,7 +1928,7 @@
   {
    "q": "test:throttle-sweep:summary[id=current_total_full].value",
    "f": "d1",
-   "text": "172.7 A",
+   "text": "167.9 A",
    "status": "standin",
    "unit": "A",
    "source": "library/systems/quadcopter-5in/docs/test-data/throttle-sweep.json"
@@ -968,7 +1944,7 @@
   {
    "q": "test:thrust-to-weight:rows[0][2]",
    "f": "d1|nounit",
-   "text": "12.4",
+   "text": "10.5",
    "status": "standin",
    "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
   },
@@ -983,7 +1959,7 @@
   {
    "q": "test:thrust-to-weight:rows[1][2]",
    "f": "d1|nounit",
-   "text": "9.6",
+   "text": "8.1",
    "status": "standin",
    "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
   },
@@ -998,14 +1974,14 @@
   {
    "q": "test:thrust-to-weight:rows[2][2]",
    "f": "d1|nounit",
-   "text": "8.6",
+   "text": "7.3",
    "status": "standin",
    "source": "library/systems/quadcopter-5in/docs/test-data/thrust-to-weight.json"
   },
   {
    "q": "test:flight-time:summary[id=hover_min].value",
    "f": "d1",
-   "text": "12.4 min",
+   "text": "6.3 min",
    "status": "standin",
    "unit": "min",
    "source": "library/systems/quadcopter-5in/docs/test-data/flight-time.json"
@@ -1013,7 +1989,7 @@
   {
    "q": "test:flight-time:summary[id=mix_min].value",
    "f": "d1",
-   "text": "2.3 min",
+   "text": "2.1 min",
    "status": "standin",
    "unit": "min",
    "source": "library/systems/quadcopter-5in/docs/test-data/flight-time.json"
@@ -1021,7 +1997,7 @@
   {
    "q": "test:esc-temp-punchout:summary[id=peak_C].value",
    "f": "d1",
-   "text": "38.9 °C",
+   "text": "38.6 °C",
    "status": "standin",
    "unit": "°C",
    "source": "library/systems/quadcopter-5in/docs/test-data/esc-temp-punchout.json"
@@ -1046,7 +2022,7 @@
   },
   {
    "q": "derived:diagCount(nominal,info)",
-   "text": "3",
+   "text": "5",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
@@ -1073,7 +2049,7 @@
   },
   {
    "q": "derived:diagCount(o4-on-vbat,info)",
-   "text": "2",
+   "text": "4",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
@@ -1100,7 +2076,7 @@
   },
   {
    "q": "derived:diagCount(frame-20mm-stack,info)",
-   "text": "3",
+   "text": "5",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
@@ -1127,7 +2103,7 @@
   },
   {
    "q": "derived:diagCount(gps-on-rx-uart,info)",
-   "text": "3",
+   "text": "5",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
@@ -1154,11 +2130,38 @@
   },
   {
    "q": "derived:diagCount(legacy-m10q,info)",
-   "text": "3",
+   "text": "5",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
     "sys:scenarios[id=legacy-m10q].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(prop-reversed,error)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=prop-reversed].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(prop-reversed,warning)",
+   "text": "1",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=prop-reversed].diagnostics"
+   ]
+  },
+  {
+   "q": "derived:diagCount(prop-reversed,info)",
+   "text": "5",
+   "status": "derived",
+   "formula": "count of checkSystem(scenario).diagnostics with the severity",
+   "inputs": [
+    "sys:scenarios[id=prop-reversed].diagnostics"
    ]
   },
   {
@@ -1181,7 +2184,7 @@
   },
   {
    "q": "derived:diagCount(two-compasses,info)",
-   "text": "3",
+   "text": "5",
    "status": "derived",
    "formula": "count of checkSystem(scenario).diagnostics with the severity",
    "inputs": [
@@ -1267,13 +2270,6 @@
    "source": "UHD bom"
   },
   {
-   "q": "def:dji-o4-air-unit:domains[domain=mechanical].weight_g",
-   "text": "8.2 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://www.dji.com/o4-air-unit/specs"
-  },
-  {
    "q": "sys:bom[line=2].verification",
    "text": "audited 32/34",
    "status": "model",
@@ -1320,13 +2316,6 @@
    "text": "1",
    "status": "model",
    "source": "UHD bom"
-  },
-  {
-   "q": "def:dolphinrc-am32-60a-4in1-esc:domains[domain=mechanical].weight_g",
-   "text": "13.2 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
   },
   {
    "q": "sys:bom[line=3].verification",
@@ -1377,13 +2366,6 @@
    "source": "UHD bom"
   },
   {
-   "q": "def:dolphinrc-f405-v3-flight-controller:domains[domain=mechanical].weight_g",
-   "text": "7.7 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://dolphinrc.com/u_file/2608/24/file/DolphinRCF40520250616153927-165929bb5a.pdf"
-  },
-  {
    "q": "sys:bom[line=4].verification",
    "text": "audited 28/30",
    "status": "model",
@@ -1432,13 +2414,6 @@
    "source": "UHD bom"
   },
   {
-   "q": "def:ettinger-005-83-060-m3-nylon-spacer-6mm:domains[domain=mechanical].weight_g",
-   "text": "0.15 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://www.ettinger.de/en/p/round-spacer-oe3.4-6.0-x-6.0-pa-gf-black/005.83.060"
-  },
-  {
    "q": "sys:bom[line=5].verification",
    "text": "audited 12/12",
    "status": "model",
@@ -1485,13 +2460,6 @@
    "text": "1",
    "status": "model",
    "source": "UHD bom"
-  },
-  {
-   "q": "def:hglrc-kevlar-battery-strap-20x250mm:domains[domain=mechanical].weight_g",
-   "text": "8.3 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://www.hglrc.com/products/hglrc-kevlar-battery-strap-15x250mm-20x250mm"
   },
   {
    "q": "sys:bom[line=6].verification",
@@ -2046,13 +3014,6 @@
    "source": "UHD bom"
   },
   {
-   "q": "def:matek-m9n-5883:domains[domain=mechanical].weight_g",
-   "text": "14.5 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://www.mateksys.com/?portfolio=m9n-5883"
-  },
-  {
    "q": "sys:bom[line=17].verification",
    "text": "audited 26/26",
    "status": "model",
@@ -2197,13 +3158,6 @@
    "source": "UHD bom"
   },
   {
-   "q": "def:radiomaster-rp1-v2-elrs-2g4:domains[domain=mechanical].weight_g",
-   "text": "2.2 g",
-   "status": "source",
-   "unit": "g",
-   "source": "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320"
-  },
-  {
    "q": "sys:bom[line=20].verification",
    "text": "audited 21/21",
    "status": "model",
@@ -2259,13 +3213,13 @@
   },
   {
    "q": "sys:bom[line=21].assumptions",
-   "text": "0",
+   "text": "1",
    "status": "model",
    "source": "UHD bom"
   },
   {
    "q": "sys:bom[line=21].openGaps",
-   "text": "1",
+   "text": "0",
    "status": "model",
    "source": "UHD bom"
   },
@@ -2307,13 +3261,13 @@
   },
   {
    "q": "sys:bom[line=22].assumptions",
-   "text": "0",
+   "text": "1",
    "status": "model",
    "source": "UHD bom"
   },
   {
    "q": "sys:bom[line=22].openGaps",
-   "text": "1",
+   "text": "0",
    "status": "model",
    "source": "UHD bom"
   },

@@ -81,7 +81,7 @@ export const DERIVED: Record<string, DerivedDef> = {
   "propulsion.thrust_full_total": {
     label: "Static thrust, all motors at full throttle",
     unit: "g",
-    formula: "motors × performance.thrust_tests[0].rows[throttle_pct=100].thrust_g",
+    formula: "motors × thrust_g of the top (100 %) row of the first thrust table",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;
@@ -97,7 +97,7 @@ export const DERIVED: Record<string, DerivedDef> = {
   "propulsion.current_full_total": {
     label: "Static current, all motors at full throttle",
     unit: "A",
-    formula: "motors × performance.thrust_tests[0].rows[throttle_pct=100].current_A",
+    formula: "motors × current_A of the top (100 %) row of the first thrust table",
     compute: (ctx) => {
       const m = motors(ctx);
       const d = m[0]?.def;

@@ -26,6 +26,12 @@
    "source": "UHD system"
   },
   {
+   "q": "sys:checks.diagnostics[id=fastener_torque:summary].details.assumed",
+   "text": "8",
+   "status": "model",
+   "source": "UHD checks"
+  },
+  {
    "q": "sys:bom[line=1].quantity",
    "text": "1",
    "status": "model",
@@ -188,6 +194,62 @@
    "source": "UHD bom"
   },
   {
+   "q": "def:quadcopter-5in-motor-hardware:fastenerStack[0].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.6 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-stack-hardware:fastenerStack[3].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.3 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-frame-hardware:fastenerStack[0].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.6 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-frame-hardware:fastenerStack[2].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.6 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-camera-hardware:fastenerStack[0].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.1 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-camera-hardware:fastenerStack[1].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.1 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-vtx-hardware:fastenerStack[2].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.1 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
+   "q": "def:quadcopter-5in-gps-hardware:fastenerStack[2].torque.torqueNm",
+   "f": "u=N·m",
+   "text": "0.1 N·m",
+   "status": "assumption",
+   "note": "assumption trait"
+  },
+  {
    "q": "sys:system.links[id=stack_mount].mate.gapMm",
    "f": "u=mm",
    "text": "7.2 mm",
@@ -223,13 +285,41 @@
    "source": "UHD system"
   },
   {
-   "q": "def:hqprop-ethix-s5:traits[type=performance].params.pack_split.cw",
+   "q": "sys:system.children[id=arm_fr].spin",
+   "f": "upper",
+   "text": "CCW",
+   "status": "model",
+   "source": "UHD system"
+  },
+  {
+   "q": "sys:system.children[id=arm_rr].spin",
+   "f": "upper",
+   "text": "CW",
+   "status": "model",
+   "source": "UHD system"
+  },
+  {
+   "q": "sys:system.children[id=arm_rl].spin",
+   "f": "upper",
+   "text": "CCW",
+   "status": "model",
+   "source": "UHD system"
+  },
+  {
+   "q": "sys:system.children[id=arm_fl].spin",
+   "f": "upper",
+   "text": "CW",
+   "status": "model",
+   "source": "UHD system"
+  },
+  {
+   "q": "def:hqprop-ethix-s5:traits[type=handedness].params.pack.cw",
    "text": "2",
    "status": "source",
    "source": "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html"
   },
   {
-   "q": "def:hqprop-ethix-s5:traits[type=performance].params.pack_split.ccw",
+   "q": "def:hqprop-ethix-s5:traits[type=handedness].params.pack.ccw",
    "text": "2",
    "status": "source",
    "source": "https://www.hqprop.com/ethix-s5-light-grey-2cw2ccw-poly-carbonate-p0206.html"
