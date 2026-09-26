@@ -1,0 +1,37 @@
+{
+  "artifact": "ti-tps63020-dsj14",
+  "tool": "build123d (representative geometry from datasheet dimensions, library/cad/py/partkit.py)",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "d857e995917c62d75994483272cf7d7043a1d3ab754d7bf9e97b236a20444166",
+  "units": "mm",
+  "features": {
+    "pcb_mount": {
+      "area_mm2": 1.344,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 14,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "thermal_pad": {
+      "area_mm2": 4.503,
+      "centroid": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    }
+  }
+}

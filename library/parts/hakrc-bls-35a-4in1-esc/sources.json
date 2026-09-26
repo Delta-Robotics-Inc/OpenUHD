@@ -1,0 +1,55 @@
+[
+  {
+    "id": "src_product",
+    "title": "HAKRC BLS 35A 4IN1 ESC product page (hakrc.com, Shenzhen Haike Technology)",
+    "url": "https://www.hakrc.com/BLS-35A-4IN1-ESC.html",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:40:00Z",
+    "sha256": "cd3c2752f46f46a21d1d337d5b03e64228e3ba19d962e052913dee8acfe9ab19",
+    "supports": [
+      "EFM8BB21F16G processor up to 48 MHz, three-in-one IC driver, 3oz copper, 6-layer board, 4 channels",
+      "BLHeli-S firmware BL16.7, BLHeliSuite; settable through the throttle signal line or FC passthrough",
+      "throttle modes: PWM, OneShot125, OneShot42, MultiShot, DShot150/300/600",
+      "Product size 31*30*6 mm; net weight 6.1 g; fixed hole position 20*20 mm; fixed aperture M3",
+      "Working voltage 2-6S; max continuous 35A; max instantaneous 40A",
+      "no drawing or 3D model offered"
+    ]
+  },
+  {
+    "id": "src_pinout_image",
+    "title": "HAKRC BLS 35A 4IN1 ESC product pinout image (top side, board HK88201 V1.2) from the product page",
+    "url": "https://img03.71360.com/file/read/www2/M00/17/B9/wKj2K2LrPOKAU2JMAAP4DLM4LYQ657.png",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:42:00Z",
+    "sha256": "4922080705476d7a44f97b24e9995e6a6a25e6afaa30af6c5a2229f8dce25bc1",
+    "supports": [
+      "8-pin FC connector labelled 'Curr NC 4 3 2 1 + -' (silkscreen CN4321+-)",
+      "motor pad groups: 2 top-left, 1 bottom-left, 4 top-right, 3 bottom-right; three pads per motor",
+      "battery pads '-' and '+' on the bottom edge",
+      "20*20mm hole callout",
+      "gate drivers marked FORTIOR FD6288Q"
+    ]
+  },
+  {
+    "id": "src_bottom_image",
+    "title": "HAKRC BLS 35A 4IN1 ESC product image (bottom side) from the product page",
+    "url": "https://img03.71360.com/file/read/www2/M00/17/BC/wKj2K2LrPi2AdaQ3AAEearEbZto343.jpg",
+    "type": "documentation",
+    "authority": "manufacturer",
+    "fetched_at": "2026-09-26T17:42:00Z",
+    "sha256": "f75c7378d339f0735752cab4fc0a2cba67da25d756bb18294d2305df03af8a9f",
+    "supports": ["bottom side: MOSFETs, current-sense shunt (m50), battery tabs +/-, mounting holes 1-4"]
+  },
+  {
+    "id": "src_protopart",
+    "title": "ProtoPart definition hakrc-bls-35a-4in1",
+    "url": "https://github.com/Delta-Robotics-Inc/ProtoPart/blob/main/protoparts/hakrc-bls-35a-4in1/definition.json",
+    "type": "documentation",
+    "authority": "community",
+    "fetched_at": "2026-09-26T17:38:00Z",
+    "sha256": "a135ff7e4fb8840421471d9a30754e9ecb13973436d2ed8800e8b32f3961d1ab",
+    "supports": ["starting point; values re-verified against manufacturer sources"]
+  }
+]
