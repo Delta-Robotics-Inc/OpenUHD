@@ -15,6 +15,7 @@ import { matTranslation, worldFrame, type SceneBody } from "../model.js";
 import type { RenderBody } from "../render/renderer.js";
 import type { StepGroupSpec } from "../types.js";
 import { coverPage, figNum, thumbnail, type BuildEnv } from "./common.js";
+import { systemTools, toolLabel, toolsFor } from "../../../../src/system/tools.js";
 
 const W = 178;
 
@@ -139,24 +140,25 @@ export async function buildAssemblyGuide(env: BuildEnv): Promise<string> {
   );
 
   // ---------------------------------------------------------------- 01 before you begin
-  const tools = new Set<string>();
-  for (const h of scene.hardware) {
-    const tags = new Set(h.def.tags ?? []);
-    const size = [...tags].find((t) => /^m\d$/.test(t))?.toUpperCase();
-    if (tags.has("screw")) tools.add(`Hex key for ${size} socket head (ISO 4762)`);
-    if (tags.has("nut")) tools.add(`Nut driver or spanner for ${size} nyloc`);
+  // tool sizes from the fasteners themselves (src/system/tools.ts)
+  const tools: string[] = [];
+  for (const t of systemTools(ctx.sys.system, ctx.sys.lookup)) {
+    const names = [...new Set(t.parts.map((id) => shortName(ctx.sys.lookup(id)!)))];
+    const why = t.use === "hold" ? "to hold" : "for";
+    const basis = t.basis === "standard" ? " (ISO 4762 socket size)" : "";
+    tools.push(`<b>${esc(toolLabel(t))}</b> <span class="muted small">${why} ${esc(names.join(", "))}${esc(basis)}</span>`);
   }
   const solder = ctx.wiring.some((w) => {
     const e = parseEnd(w.a);
     const l = leafOf(ctx.sys.system, ctx.sys.lookup, e.path, e.iface);
     return (l && /solder|bare_wire/.test(connectorOf(l.def, l.iface.id) ?? "")) || Boolean(w.harness && /xt60/.test(w.harness));
   });
-  if (solder) tools.add("Soldering iron, solder, heat-shrink");
+  if (solder) tools.push(esc("Soldering iron, solder, heat-shrink"));
   out.push(`<div class="block">${sec("01", "Before you begin")}<div class="cols-60"><div>
     ${sub("Contents")}<ol class="toc">${["Before you begin", "Kit contents", "Hardware", ...plans.map((p) => p.spec.title), "Coverage"].map((t, i) => `<li><span class="toc-n">${String(i + 1).padStart(2, "0")}</span><span class="toc-t">${esc(t)}</span><span class="toc-dots"></span><span class="toc-p">00</span></li>`).join("")}</ol>
   </div><div>
-    ${sub("Tools")}<ul class="plain">${[...tools].map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-    <p class="small muted">Derived from the hardware in the model (thread size and head type). Key sizes and tightening torques are not in the model.</p>
+    ${sub("Tools")}<ul class="plain">${tools.map((t) => `<li>${t}</li>`).join("")}</ul>
+    <p class="small muted">Derived from the fasteners in the model: hex keys from each screw's stated socket or the ISO 4762 socket size for its thread, drivers and spanners from each nut's and standoff's across-flats.</p>
     ${sub("Reading the figures")}
     <div class="keyrow"><span class="sw sw-ctx"></span>Already assembled</div>
     <div class="keyrow"><span class="sw sw-new"></span>Fitted in this step</div>
@@ -378,6 +380,7 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
     p.wiring.length ? `links: ${p.wiring.map((w) => w.linkId).join(", ")}` : "",
   ].filter(Boolean).join(" · ");
   const hasHw = p.hardware.length > 0;
+  const stepTools = toolsFor([...new Map(p.hardware.map((h) => [h.def.id, h.def])).values()]);
   const attrs = `data-step="${esc(s.id)}" data-mates="${esc(p.mates.map((m) => m.linkId).join(" "))}" data-wiring="${esc(p.wiring.map((w) => w.linkId).join(" "))}" data-hardware="${esc(p.hardware.map((h) => h.key).join(" "))}"`;
   const blocks = [
     `<div class="step step-top block keep-next"${p.n === 1 ? ' data-break="before"' : ""} ${attrs}>
@@ -386,7 +389,7 @@ async function stepBlock(env: BuildEnv, p: StepPlan, before: Set<string>, hwBefo
   ${fig}</div>`,
     `<div class="step-cont block"><ol class="actions">${actions.map((a) => `<li>${a}</li>`).join("")}</ol></div>`,
     wireTable.length ? table([{ h: "Link" }, { h: "From" }, { h: "To" }, { h: "" }, { h: "Termination" }, { h: "DRC" }], wireTable, { cls: "dense wiretable split", caption: s.title }) : "",
-    `<div class="step-cont block"><div class="step-meta">${hasHw ? `<span><b>Torque</b> <span class="v st-gap">—</span><sup class="mk mk-gap">—</sup> not in model</span>` : ""}<span><b>Step</b> ${p.n} of ${total}</span></div></div>`,
+    `<div class="step-cont block"><div class="step-meta">${hasHw ? `<span><b>Torque</b> <span class="v st-gap">—</span><sup class="mk mk-gap">—</sup> not in model</span>` : ""}${stepTools.length ? `<span><b>Tools</b> ${esc(stepTools.map(toolLabel).join(", "))}</span>` : ""}<span><b>Step</b> ${p.n} of ${total}</span></div></div>`,
     ...notes.map((n, i) => `<div class="step-cont block${i === notes.length - 1 ? " step-end" : ""}">${n}</div>`),
   ];
   if (!notes.length) blocks[blocks.length - 1] = blocks[blocks.length - 1].replace('class="step-cont block"', 'class="step-cont block step-end"');
