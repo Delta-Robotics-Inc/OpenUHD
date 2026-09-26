@@ -84,7 +84,7 @@ export function checkPairParameters(
       diagnostics.push({
         severity: "error",
         code: "param_range_disjoint",
-        message: `${pA.id}: ${fmt(nA.range)} ∩ ${fmt(nB.range)} = ∅ ${nA.base}`,
+        message: `${pA.id}: ${fmtParam(pA)} vs ${fmtParam(pB)} (ranges do not overlap)`,
         refs: [pA.id],
       });
     }
@@ -93,6 +93,10 @@ export function checkPairParameters(
   return diagnostics;
 }
 
-function fmt(range: [number, number]): string {
-  return range[0] === range[1] ? `${range[0]}` : `${range[0]}–${range[1]}`;
+/** A parameter in its own unit, e.g. "30.5 mm" or "18–25.2 V". */
+function fmtParam(param: Parameter): string {
+  const range = getEffectiveRange(param);
+  const unit = param.unit === "dimensionless" ? "" : ` ${param.unit}`;
+  if (!range) return `?${unit}`;
+  return range[0] === range[1] ? `${range[0]}${unit}` : `${range[0]}–${range[1]}${unit}`;
 }

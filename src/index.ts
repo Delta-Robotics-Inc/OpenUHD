@@ -50,3 +50,4 @@ export * from "./drc/index.js";
 // Systems: canonical paths, exports, stored interface links
 export * from "./system/index.js";
 export * from "./system/checks.js";
+export * from "./system/wiring.js";

@@ -1,0 +1,27 @@
+# Betaflight configuration — 5-inch 6S quadcopter
+# Generated from UHD by library/systems/quadcopter-5in/generate.ts. Do not edit by hand.
+# Target: MATEKF405TE · firmware >= 2025.12.1 · cloud build options: DSHOT, GPS, MAG, OSD_HD, SERIALRX_CRSF
+# Syntax and values verified against library/systems/quadcopter-5in/betaflight-reference.md.
+# NOT FLIGHT-TESTED. Verify motor order, directions and compass alignment on the bench before flight.
+# WARNING: matek-m9n-5883: QMC5883P compass (0x2C) is detected only by Betaflight >= 2025.12.1
+
+serial UART1 2 115200 115200 0 115200      # link gnss_uart: stack:uart1 ↔ gnss:uart_gnss (GNSS → GPS)
+serial UART2 64 115200 57600 0 115200      # link rx_crsf: stack:uart2 ↔ receiver:crsf (CRSF receiver → RX_SERIAL)
+serial UART5 131073 115200 57600 0 115200  # link video_osd: stack:uart5 ↔ video:uart_osd (DJI MSP DisplayPort → MSP + VTX_MSP)
+feature TELEMETRY                          # required by the serial functions above
+feature OSD                                # required by the serial functions above
+feature GPS                                # required by the serial functions above
+set serialrx_provider = CRSF               # receiver:crsf speaks crsf
+set osd_displayport_device = MSP           # DJI O4 OSD via MSP DisplayPort (onboard analog OSD chip must not win on AUTO)
+set vcd_video_system = HD                  # HD digital video system
+set gps_provider = UBLOX                   # Matek M9N-5883 GNSS & Compass: u-blox receiver
+set gps_auto_config = ON                   # auto-config sets the module's baud/protocol from its default
+set motor_pwm_protocol = DSHOT600          # highest DShot rate both dolphinrc-f405-v3-flight-controller and dolphinrc-am32-60a-4in1-esc state (600 kbit/s)
+set dshot_bidir = ON                       # both dolphinrc-f405-v3-flight-controller and dolphinrc-am32-60a-4in1-esc state bidirectional DShot (source: DolphinRC review blog only — verify)
+set motor_poles = 14                       # meps-neon-2207-v2-1950kv: 12N14P stator (14 magnet poles)
+set current_meter = ADC                    # dolphinrc-am32-60a-4in1-esc: analog current sensor on the FC connector
+set ibata_scale = 150                      # dolphinrc-am32-60a-4in1-esc: manufacturer current scale
+set ibata_offset = 0                       # dolphinrc-am32-60a-4in1-esc: manufacturer current offset
+set mag_hardware = AUTO                    # link gnss_i2c: compass at 0x2C on stack:i2c1
+set align_mag = CW270FLIP                  # matek-m9n-5883: manufacturer alignment for arrow-forward mounting — confirm in the Sensors tab
+save

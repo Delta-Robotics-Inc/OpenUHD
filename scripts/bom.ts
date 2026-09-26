@@ -101,7 +101,7 @@ export function buildBom(system: ModuleDef, lookup: ModuleLookup): BomRow[] {
     .map((row, i) => ({ ...row, line: i + 1 }));
 }
 
-function toMarkdown(system: ModuleDef, rows: BomRow[]): string {
+export function bomMarkdown(system: ModuleDef, rows: BomRow[]): string {
   const packs = (r: BomRow) => (r.packQuantity ? ` (${Math.ceil(r.quantity / r.packQuantity)} pack of ${r.packQuantity})` : "");
   const lines = [
     `# Bill of materials — ${system.name}`,
@@ -139,7 +139,7 @@ async function main() {
   const unsourced = rows.filter((r) => r.buy === "purchase" && !r.source);
   mkdirSync(join(dir, "generated"), { recursive: true });
   writeFileSync(join(dir, "generated", "bom.json"), JSON.stringify(rows, null, 2) + "\n");
-  writeFileSync(join(dir, "generated", "bom.md"), toMarkdown(mod.SYSTEM, rows));
+  writeFileSync(join(dir, "generated", "bom.md"), bomMarkdown(mod.SYSTEM, rows));
   console.log(`${rows.length} lines written to library/systems/${id}/generated/bom.{md,json}`);
   if (unsourced.length) {
     console.error(`purchased lines without a source: ${unsourced.map((r) => r.partId).join(", ")}`);
