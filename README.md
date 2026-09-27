@@ -163,6 +163,7 @@ We are actively interested in:
 
 - [docs/architecture.md](docs/architecture.md) — full design rationale, the four primitives, composition model, parameters, traits, and intra- vs. inter-module matching.
 - [docs/drc-spec.md](docs/drc-spec.md) — Design Rule Check tier model and connection-state semantics.
+- [docs/connectors-and-harnesses.md](docs/connectors-and-harnesses.md) — connector composites, link-scoped composition, physical harness wiring and derived links; the part-authoring rule for connectors.
 
 ---
 

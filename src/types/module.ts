@@ -53,7 +53,19 @@ export type ModuleKind = "module" | "group" | "harness";
  */
 export type EndpointTarget =
   | { self: true; interfaceId: string }
-  | { child: string; interfaceId: string; profileInstanceId?: string };
+  | { child: string; interfaceId: string; profileInstanceId?: string; compose?: LinkComposition };
+
+/**
+ * Link-scoped composition (PB-805): the end is an ad-hoc connector made on
+ * the child for this link only, because the child has no interface grouping
+ * these pads (solder pads, flying leads). `interfaceId` names it; it must not
+ * be an existing interface of the child.
+ *
+ * Keys are slot ids of the connector at the other end of the link (`p1`,
+ * `p2`, …). Values are interfaces on the child's boundary (`"rail_4v5"`) or
+ * canonical paths below the child (`"fc:uart1_tx"`).
+ */
+export type LinkComposition = Record<string, string>;
 
 /** A child interface surfaced on this module's boundary. */
 export interface InterfaceExport {

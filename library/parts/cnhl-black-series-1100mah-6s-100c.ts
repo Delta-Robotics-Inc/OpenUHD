@@ -25,8 +25,8 @@
  *     18.0 V bottom is a 3.0 V/cell `assumption` because CNHL states no
  *     discharge cut-off.
  *   - `battery_gnd` (Ground) is the − conductor of the same XT60 plug. The
- *     `xt60_main_lead` all_of group ties the two leaves together — the plug
- *     only mates as a pair.
+ *     `xt60` connector composite (PB-805) is the plug itself, binding both;
+ *     the `xt60_main_lead` all_of group says they are used together.
  *   - `balance_lead` is the JST-XH cell-tap connector. No protocol builder
  *     fits a balance lead, so it is `custom` / `peer` with a connector trait
  *     and usage note (vocabulary gap recorded). Position count (7) and pin
@@ -55,6 +55,7 @@ import {
   burstCurrentA,
   capacitymAh,
   cellCount,
+  Connector,
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
@@ -111,7 +112,6 @@ batteryOut.traits = [
       description: "Positive conductor of the XT60 output (discharge) lead, 12 AWG.",
     },
   },
-  connectorTrait("xt60", { positions: 2, pinout: ["BAT+", "BAT-"], note: XT60_NOTE }),
   {
     type: "usage_note",
     params: {
@@ -133,15 +133,6 @@ batteryOut.traits = [
         "3.0 V/cell is the standard LiPo absolute discharge floor. The 25.2 V maximum is sourced (4.2 V/cell).",
     },
   },
-  {
-    type: "assumption",
-    params: {
-      field: "connector gender",
-      value: "female (sockets) on the battery lead",
-      reason:
-        "Source says only 'XT60'. Battery-side female XT60 is the hobby convention so the pack mates with the male XT60 on an ESC/FC lead.",
-    },
-  },
 ];
 
 const batteryGnd = Ground({ id: "battery_gnd", name: "XT60 discharge lead (−)", pin: "-" });
@@ -154,12 +145,31 @@ batteryGnd.traits = [
       description: "Negative conductor of the XT60 output (discharge) lead, 12 AWG; carries the full pack return current.",
     },
   },
-  connectorTrait("xt60", { positions: 2, pinout: ["BAT+", "BAT-"], note: XT60_NOTE }),
 ];
 
 // ---------------------------------------------------------------------------
 // JST-XH balance lead (cell taps) — no fitting protocol builder
 // ---------------------------------------------------------------------------
+
+/** The XT60 plug itself (PB-805): the two conductors mate as one connector. */
+const xt60 = Connector({
+  id: "xt60",
+  name: "XT60 discharge plug",
+  connector: "xt60",
+  pins: [["BAT+", "battery_out"], ["BAT-", "battery_gnd"]],
+  note: XT60_NOTE,
+  traits: [
+    {
+      type: "assumption",
+      params: {
+        field: "connector gender",
+        value: "female (sockets) on the battery lead",
+        reason:
+          "Source says only 'XT60'. Battery-side female XT60 is the hobby convention so the pack mates with the male XT60 on an ESC/FC lead.",
+      },
+    },
+  ],
+});
 
 const balanceLead = {
   id: "balance_lead",
@@ -211,7 +221,7 @@ const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
   tags: ["lipo", "battery", "6s", "xt60", "fpv", "5-inch", "freestyle"],
   categories: ["power", "battery"],
 
-  interfaces: [batteryOut, batteryGnd, balanceLead],
+  interfaces: [batteryOut, batteryGnd, xt60, balanceLead],
 
   interfaceGroups: [
     {

@@ -79,7 +79,7 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
 | Trait `type` | Use for |
 | --- | --- |
 | `pin_functions` | The verbatim pad or pin description from the source, on a leaf. |
-| `connector` | Connector or termination (use `connectorTrait`). |
+| `connector` | Connector or termination (use `Connector()` for a multi-position connector, `connectorTrait` for a termination or a single-interface connector). |
 | `operating_conditions` | Temperature, supply limits, and environment at module level. |
 | `absolute_maximum` | Absolute maximum ratings. |
 | `performance` | Part-type performance: motor KV and thrust, battery C rating, prop geometry, radio power. `params.kind` names the kind. |
@@ -130,7 +130,8 @@ Then, in the part file, wrap the base definition with `withGeometry`:
 | --- | --- |
 | Mounting holes (`BoltPattern`) | `frame` required: `origin` = pattern centre on the mounting face, `normal` = outward from that face (the direction the mating part comes from), `xAxis` = pattern x (hole 1 for a circle), `symmetryDeg` only if the whole part may rotate (90 for a square pattern, unless a sensor axis or connector makes the orientation matter). Refs: the hole feature, then `procedural("bolt_pattern")`. |
 | Shaft (`Shaft`) | `frame` on the shaft axis at the mounting face, `normal` along the shaft outward. Refs: the shaft feature, then `procedural("shaft")`. |
-| Connector-borne bus or supply | Refs to the connector body (a `frame` on its mating face if a cable plugs in). Every interface carried by the connector points at the same feature; two identical connectors give two refs. |
+| Connector composite (`Connector`) | Refs to its connector body (a `frame` on its mating face if a cable plugs in). One composite per socket, so two identical sockets give two composites with one ref each. |
+| Connector-borne bus or supply | Optionally the same connector-body refs; two identical connectors give two refs. |
 | Solder pads, pins, headers | The header or pad-row feature, or no geometry. |
 | Electrical-only (a pin function, an internal rail) | Nothing, or `logical: true` when there is deliberately no physical form. |
 

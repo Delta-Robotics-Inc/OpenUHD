@@ -22,13 +22,15 @@ import type { Parameter } from "../types/parameter.js";
 import type { SuppliedFromTrait } from "../types/trait.js";
 import {
   boundaryInterfaces,
-  validateLinks,
   type LinkResult,
   type ModuleLookup,
   type ResolvedEndpoint,
 } from "./index.js";
 import { propHandednessRule } from "./rotation.js";
 import { fastenerTorqueRule } from "./fasteners.js";
+import { connectorTypes, slotBindings } from "./connectors.js";
+import { isConnector } from "../protocols/connector.js";
+import { systemLinks } from "./derive.js";
 
 export type SystemRule =
   | "link_state"
@@ -358,11 +360,16 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
   return out;
 }
 
-function connectorTypes(iface: InterfaceDef): string[] {
-  return (iface.traits ?? [])
-    .filter((t) => t.type === "connector")
-    .map((t) => String((t.params as Record<string, unknown> | undefined)?.connector_type ?? ""))
-    .filter(Boolean);
+/**
+ * Connector types a link end can present: its own connector traits plus those
+ * of connector composites on its module that bind it or its pads (PB-805).
+ */
+function sideConnectorTypes(side: ResolvedEndpoint): string[] {
+  const ids = new Set([side.iface.id, ...Object.values(slotBindings(side.iface))]);
+  const viaConnectors = side.owner.interfaces
+    .filter((c) => isConnector(c) && Object.values(slotBindings(c)).some((id) => ids.has(id)))
+    .flatMap(connectorTypes);
+  return [...new Set([...connectorTypes(side.iface), ...viaConnectors])];
 }
 
 /**
@@ -375,7 +382,7 @@ function harnessConnectorRule(def: ModuleDef, links: LinkResult[], lookup: Modul
   const out: SystemDiagnostic[] = [];
   for (const r of links) {
     const harnessId = r.link.harness;
-    if (!harnessId) continue;
+    if (!harnessId || r.derived) continue;
     const ref = def.children?.find((c) => c.id === harnessId);
     const harness = ref ? lookup(ref.moduleDefId) : undefined;
     if (!harness) {
@@ -394,7 +401,7 @@ function harnessConnectorRule(def: ModuleDef, links: LinkResult[], lookup: Modul
       const mates = (hIface.traits ?? []).find((t) => t.type === "connector")?.params as Record<string, unknown> | undefined;
       const side = mates?.mates === "b" ? r.b : mates?.mates === "a" ? r.a : undefined;
       if (!side) continue;
-      const sideTypes = connectorTypes(side.iface);
+      const sideTypes = sideConnectorTypes(side);
       if (!sideTypes.length) continue;
       if (!hTypes.some((t) => sideTypes.includes(t))) {
         out.push({
@@ -414,9 +421,14 @@ function harnessConnectorRule(def: ModuleDef, links: LinkResult[], lookup: Modul
 
 const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 } as const;
 
-/** Run every system rule over a module's stored links. */
+/**
+ * Run every system rule over a module's stored links and the functional
+ * links derived through its connectors and harnesses (PB-805). A diagnostic
+ * on a derived link also names the stored links it runs through.
+ */
 export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckResult {
-  const links = validateLinks(def, lookup);
+  const links = systemLinks(def, lookup);
+  const via = new Map(links.filter((r) => r.derived).map((r) => [`link:${r.link.id}`, r.derived!.via.map((id) => `link:${id}`)]));
   const diagnostics = [
     ...linkStateRule(links),
     ...supplyBudgetRule(links),
@@ -427,7 +439,12 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
     ...harnessConnectorRule(def, links, lookup),
     ...propHandednessRule(def, lookup),
     ...fastenerTorqueRule(def, lookup),
-  ].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+  ]
+    .map((d) => {
+      const extra = d.refs.flatMap((r) => via.get(r) ?? []).filter((r) => !d.refs.includes(r));
+      return extra.length ? { ...d, refs: [...d.refs, ...new Set(extra)] } : d;
+    })
+    .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
   return { links, diagnostics };
 }
 

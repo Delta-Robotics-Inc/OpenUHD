@@ -43,9 +43,11 @@
  *     UART5 RX exists only on the DJI connector (R5); UART5 TX is on the TX5
  *     pad and the VTX (T5) and DJI (T5) connectors. The 1x softserial TX
  *     option is a firmware feature and is only a usage_note.
- *   - DJI O4 connector: modelled as UART5 + the 10 V rail + GND + SBUS leaf,
- *     with the DJI connector trait on uart5 carrying the 6-pin order
- *     10V G T5 R5 G Sbus. The connector series/pitch is not stated.
+ *   - Sockets (PB-805): each physical socket is a connector composite bound
+ *     to the pads it shares: esc_socket (SH 8), rc_socket, gps_socket and
+ *     vtx_socket (SH 4), dji_socket (6-pin 10V G T5 R5 G Sbus; series/pitch
+ *     not stated) and cam_socket (3-pin). The functional interfaces (UART5,
+ *     the 10 V rail, …) are what a cable's conductors resolve to.
  *   - SBUS: one input leaf for the SBUS pad and the DJI "Sbus" pin; which
  *     UART it feeds is not stated (data gap).
  *   - I2C1 (SDA/SCL pads) is master; the barometer sits on I2C1 per target.
@@ -73,6 +75,7 @@ import {
   SBUS,
   UART,
   cellCount,
+  Connector,
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
@@ -87,48 +90,83 @@ const SRC = {
     "https://raw.githubusercontent.com/betaflight/config/master/configs/MTKS/MATEKF405TE/config.h",
 } as const;
 
-/** FC <-> ESC connector pinout, identical on both parts of the stack. */
-const STACK_PINOUT = ["BAT", "GND", "CUR", "VOID", "M1", "M2", "M3", "M4"];
-
 // ---------------------------------------------------------------------------
-// Connector traits (manual p4 wiring diagram, silkscreen order; pin 1 unmarked)
+// Sockets (manual p4 wiring diagram, silkscreen order; pin 1 unmarked).
+// Each physical socket is a connector composite (PB-805): one slot per
+// position, bound to the pad it shares. The pads stay solderable on their own.
 // ---------------------------------------------------------------------------
 
-const ESC_SH_8 = connectorTrait("jst_sh_8", {
+const PIN1_ASSUMPTION: TraitDef = {
+  type: "assumption",
+  params: {
+    field: "connector pin 1",
+    value: "first silkscreen label",
+    reason: "Pin 1 is not marked in any source; positions follow the silkscreen order printed beside the socket.",
+  },
+};
+
+const escSocket = Connector({
+  id: "esc_socket",
+  name: "ESC socket (SH1.0 8-pin)",
+  connector: "jst_sh_8",
   gender: "receptacle",
-  positions: 8,
-  pinout: STACK_PINOUT,
+  pins: [["BAT", "vbat_in"], ["GND", "gnd"], ["CUR", "cur"], "VOID", ["M1", "m1"], ["M2", "m2"], ["M3", "m3"], ["M4", "m4"]],
   note: "ESC socket, SH 1.0 mm 8-pin (included 50 mm SH 1.0 mm 8-pin cable). Wire labels BAT GND CUR VOID M1 M2 M3 M4 (manual p4). The same nets are also solder pads VBAT GND M1 M2 M3 M4 and CUR (manual p3). Pin 1 not marked; order from the BAT end.",
+  traits: [
+    {
+      type: "assumption",
+      params: {
+        field: "connector pin 1",
+        value: "BAT end",
+        reason: "Pin 1 is not marked in any source; order taken from the BAT end so the FC and ESC parts share one pinout (the included cable is 1:1).",
+      },
+    },
+  ],
 });
-const RC_SH_4 = connectorTrait("jst_sh_4", {
+const rcSocket = Connector({
+  id: "rc_socket",
+  name: "Receiver socket (SH1.0 4-pin)",
+  connector: "jst_sh_4",
   gender: "receptacle",
-  positions: 4,
-  pinout: ["G", "4.5V", "RX6", "TX6"],
+  pins: [["G", "gnd"], ["4.5V", "rail_4v5"], ["RX6", "uart6_rx"], ["TX6", "uart6_tx"]],
   note: "Receiver socket, silkscreen 'G 4.5V RX6 TX6'; wiring diagram labels TX6 RX6 5V GND (receiver TX -> RX6, RX -> TX6). SH 1.0 mm 4-pin cables are included. Pin 1 not marked.",
+  traits: [PIN1_ASSUMPTION],
 });
-const GPS_SH_4 = connectorTrait("jst_sh_4", {
+const gpsSocket = Connector({
+  id: "gps_socket",
+  name: "GPS socket (SH1.0 4-pin)",
+  connector: "jst_sh_4",
   gender: "receptacle",
-  positions: 4,
-  pinout: ["G", "4.5V", "RX4", "TX4"],
-  note: "GPS socket, silkscreen 'G 4.5V RX4 TX4'; wiring diagram labels GND 5V RX4 TX4 (GPS TX -> RX4, GPS RX -> TX4). Pin 1 not marked (dot beside G).",
+  pins: [["G", "gnd"], ["4.5V", "rail_4v5"], ["RX4", "uart4_rx"], ["TX4", "uart4_tx"]],
+  note: "GPS socket, silkscreen 'G 4.5V RX4 TX4'; wiring diagram labels GND 5V RX4 TX4 (GPS TX -> RX4, GPS RX -> TX4). No I2C on this socket, so a GPS with a compass is wired to pads. Pin 1 not marked (dot beside G).",
+  traits: [PIN1_ASSUMPTION],
 });
-const VTX_SH_4 = connectorTrait("jst_sh_4", {
+const vtxSocket = Connector({
+  id: "vtx_socket",
+  name: "VTX socket (SH1.0 4-pin)",
+  connector: "jst_sh_4",
   gender: "receptacle",
-  positions: 4,
-  pinout: ["G", "10V", "VTX", "T5"],
+  pins: [["G", "gnd"], ["10V", "bec_10v"], ["VTX", "vtx_video"], ["T5", "uart5_tx"]],
   note: "Analog VTX socket, silkscreen 'G 10V VTX T5'; T5 goes to the VTX IRC pin. Pin 1 not marked (dot beside G).",
+  traits: [PIN1_ASSUMPTION],
 });
-const DJI_6 = connectorTrait("dji_6pin", {
+const djiSocket = Connector({
+  id: "dji_socket",
+  name: "DJI socket (6-pin)",
+  connector: "dji_6pin",
   gender: "receptacle",
-  positions: 6,
-  pinout: ["10V", "G", "T5", "R5", "G", "Sbus"],
+  pins: [["10V", "bec_10v"], ["G", "gnd"], ["T5", "uart5_tx"], ["R5", "uart5_rx"], ["G", "gnd"], ["Sbus", "sbus"]],
   note: "DJI O4 Air Unit socket, silkscreen '10V G T5 R5 G Sbus'; the included 150 mm DJI 6-pin cable maps to O4 10V GND RX TX GND SBUS. Connector series/pitch not stated. Pin 1 not marked.",
+  traits: [PIN1_ASSUMPTION],
 });
-const CAM_3 = connectorTrait("jst_sh_3", {
+const camSocket = Connector({
+  id: "cam_socket",
+  name: "Camera socket (3-pin)",
+  connector: "jst_sh_3",
   gender: "receptacle",
-  positions: 3,
-  pinout: ["C1", "5V", "G"],
+  pins: [["C1", "cam_1"], ["5V", "bec_5v"], ["G", "gnd"]],
   note: "Camera socket, silkscreen 'C1 5V G'; included 150 mm 3-pin analog camera cable. Series not stated beyond the 3-pin cable. Pin 1 not marked.",
+  traits: [PIN1_ASSUMPTION],
 });
 const PAD = connectorTrait("solder_pad");
 
@@ -155,19 +193,12 @@ const vbatIn = withTraits(
   [
     padFunction("VBAT pad / BAT pin of the ESC socket — FC supply input, 6~30V (2~6S LiPo); also the VBAT ADC.", [SRC.manual, SRC.product]),
     PAD,
-    ESC_SH_8,
   ],
 );
 
 const gnd = withTraits(Ground({ id: "gnd", name: "GND", pin: "GND" }), [
   padFunction("GND / G — ground (several pads and every socket's G pin).", SRC.manual),
   PAD,
-  ESC_SH_8,
-  RC_SH_4,
-  GPS_SH_4,
-  VTX_SH_4,
-  DJI_6,
-  CAM_3,
 ]);
 
 const bec5v = withTraits(
@@ -175,7 +206,6 @@ const bec5v = withTraits(
   [
     padFunction("5V — 5V 3A BEC output: 5V pads (edge, beside LEDS, beside SDA), camera socket 5V pin, LED strip 5V.", [SRC.manual, SRC.product]),
     PAD,
-    CAM_3,
   ],
 );
 
@@ -184,8 +214,6 @@ const bec10v = withTraits(
   [
     padFunction("10V — high-voltage BEC output (2.5 A) for VTX / DJI air unit: 10V pad, VTX socket 10V, DJI socket 10V.", [SRC.manual, SRC.product]),
     PAD,
-    VTX_SH_4,
-    DJI_6,
     {
       type: "source_discrepancy",
       params: {
@@ -210,8 +238,6 @@ const rail4v5 = withTraits(
   [
     padFunction("4.5V — supply on the receiver (RC) and GPS sockets and two 4.5V pads.", SRC.manual),
     PAD,
-    RC_SH_4,
-    GPS_SH_4,
     {
       type: "source_discrepancy",
       params: {
@@ -259,7 +285,7 @@ const motorOut = [1, 2, 3, 4, 5, 6, 7, 8].map((n) =>
           : `M${n} — motor ${n} ESC signal output pad.`,
         [SRC.manual, SRC.product, SRC.review],
       ),
-      ...(n <= 4 ? [PAD, ESC_SH_8] : [PAD]),
+      PAD,
     ],
   ),
 );
@@ -276,7 +302,6 @@ const cur: InterfaceDef = {
   traits: [
     padFunction("CUR — current-sensor ADC input (pad and ESC socket pin). Betaflight default current meter scale 150.", [SRC.manual, SRC.product, SRC.bfTarget]),
     PAD,
-    ESC_SH_8,
   ],
 };
 
@@ -285,8 +310,6 @@ const escPort = withTraits(
     id: "esc_port",
     name: "ESC connector (8-pin SH)",
     side: "fc",
-    connector: "jst_sh_8",
-    pinout: STACK_PINOUT,
     motors: motorOut.slice(0, 4),
     vbat: "vbat_in",
     gnd: "gnd",
@@ -298,14 +321,6 @@ const escPort = withTraits(
       params: {
         note: "Connect to the DolphinRC AM32 ESC with the included 50 mm SH 1.0 mm 8-pin cable. VOID pin is unused (no ESC telemetry line).",
         source: [SRC.manual, SRC.product, SRC.review],
-      },
-    },
-    {
-      type: "assumption",
-      params: {
-        field: "connector pin 1",
-        value: "BAT end",
-        reason: "Pin 1 is not marked in any source; order taken from the BAT end so the FC and ESC parts share one pinout array (the included cable is 1:1).",
       },
     },
   ],
@@ -361,27 +376,26 @@ const uart3 = uartPort(
 );
 const uart4 = uartPort(
   4, "RX4", "TX4",
-  [padFunction("RX4 — UART4 receive; pad and GPS socket.", SRC.manual), PAD, GPS_SH_4],
-  [padFunction("TX4 — UART4 transmit; pad and GPS socket.", SRC.manual), PAD, GPS_SH_4],
-  uartNote(4, "GPS socket 'G 4.5V RX4 TX4' and RX4/TX4 pads; manual wiring diagram shows a GPS here.", [GPS_SH_4]),
+  [padFunction("RX4 — UART4 receive; pad and GPS socket.", SRC.manual), PAD],
+  [padFunction("TX4 — UART4 transmit; pad and GPS socket.", SRC.manual), PAD],
+  uartNote(4, "GPS socket 'G 4.5V RX4 TX4' and RX4/TX4 pads; manual wiring diagram shows a GPS here."),
 );
 const uart5 = uartPort(
   5, "R5", "TX5",
-  [padFunction("R5 — UART5 receive, on the DJI socket only.", SRC.manual), DJI_6],
-  [padFunction("TX5 / T5 — UART5 transmit: TX5 pad, VTX socket T5 (to VTX IRC), DJI socket T5.", SRC.manual), PAD, VTX_SH_4, DJI_6],
-  uartNote(5, "DJI O4 Air Unit link (DJI socket T5/R5) and analog VTX control (VTX socket T5 -> VTX IRC).", [DJI_6]),
+  [padFunction("R5 — UART5 receive, on the DJI socket only.", SRC.manual)],
+  [padFunction("TX5 / T5 — UART5 transmit: TX5 pad, VTX socket T5 (to VTX IRC), DJI socket T5.", SRC.manual), PAD],
+  uartNote(5, "DJI O4 Air Unit link (DJI socket T5/R5) and analog VTX control (VTX socket T5 -> VTX IRC)."),
 );
 const uart6 = uartPort(
   6, "RX6", "TX6",
-  [padFunction("RX6 — UART6 receive on the receiver socket (wire to receiver TX).", SRC.manual), RC_SH_4],
-  [padFunction("TX6 — UART6 transmit on the receiver socket (wire to receiver RX).", SRC.manual), RC_SH_4],
-  uartNote(6, "Receiver socket 'G 4.5V RX6 TX6'; manual wiring diagram shows the RC receiver here.", [RC_SH_4]),
+  [padFunction("RX6 — UART6 receive on the receiver socket (wire to receiver TX).", SRC.manual)],
+  [padFunction("TX6 — UART6 transmit on the receiver socket (wire to receiver RX).", SRC.manual)],
+  uartNote(6, "Receiver socket 'G 4.5V RX6 TX6'; manual wiring diagram shows the RC receiver here."),
 );
 
 const sbus = withTraits(SBUS({ interfaceId: "sbus", role: "input", pin: "SBUS", name: "SBUS" }), [
   padFunction("SBUS — SBUS input pad; also the 'Sbus' pin of the DJI socket (O4 SBUS output).", SRC.manual),
   PAD,
-  DJI_6,
 ]);
 
 // ---------------------------------------------------------------------------
@@ -453,9 +467,9 @@ const video = (id: string, label: string, role: "input" | "output", text: string
   ],
 });
 
-const cam1 = video("cam_1", "C1", "input", "C1 — camera 1 video input (pad and camera socket 'C1 5V G').", [PAD, CAM_3]);
+const cam1 = video("cam_1", "C1", "input", "C1 — camera 1 video input (pad and camera socket 'C1 5V G').", [PAD]);
 const cam2 = video("cam_2", "C2", "input", "C2 — camera 2 video input pad (switchable dual camera; USER1 mode selects camera 2).", [PAD]);
-const vtxOut = video("vtx_video", "VTX", "output", "VTX — video output to the analog VTX (pad and VTX socket).", [PAD, VTX_SH_4]);
+const vtxOut = video("vtx_video", "VTX", "output", "VTX — video output to the analog VTX (pad and VTX socket).", [PAD]);
 
 const usb: InterfaceDef = {
   id: "usb",
@@ -509,6 +523,12 @@ const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER_BASE: ModuleDef = defineModule({
     ...motorOut,
     cur,
     escPort,
+    escSocket,
+    rcSocket,
+    gpsSocket,
+    vtxSocket,
+    djiSocket,
+    camSocket,
     ...uart1,
     ...uart2,
     ...uart3,

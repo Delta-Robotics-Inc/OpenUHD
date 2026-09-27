@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 
 import type { InterfaceDef, ModuleDef } from "../src/types/index.js";
 import { validatePair } from "../src/drc/index.js";
+import { isConnector } from "../src/protocols/connector.js";
 import * as library from "../library/parts/index.js";
 import { checkCad } from "../library/cad/checks.js";
 import { manifestLookup } from "../library/cad/manifests.js";
@@ -26,7 +27,7 @@ const PARTS = join(ROOT, "library", "parts");
 const BUILDER_PROTOCOLS = [
   "digital", "pwm", "interrupt", "analog", "power", "i2c", "spi", "uart",
   "bldc_phase", "bldc_3phase", "dshot", "oneshot125", "oneshot42", "multishot",
-  "pwm_esc", "fc_esc_connector", "crsf", "sbus", "bolt_pattern", "shaft", "custom",
+  "pwm_esc", "fc_esc_connector", "connector", "crsf", "sbus", "bolt_pattern", "shaft", "custom",
 ];
 
 /** Trait types new parts should use (skills/uhd-part-author). */
@@ -162,7 +163,20 @@ function check(def: ModuleDef, id: string): Finding[] {
         );
       }
     }
-    if (iface.slots?.length) {
+    if (isConnector(iface)) {
+      // PB-805: positions mate by position, so slots carry no protocol match
+      const params = iface.traits?.find((t) => t.type === "connector")?.params as { positions?: number } | undefined;
+      if (!params) err("connectors", `${where}: connector composite has no connector trait`);
+      if (params?.positions !== undefined && params.positions !== iface.slots?.length) {
+        err("connectors", `${where}: connector trait says ${params.positions} positions but it has ${iface.slots?.length ?? 0} slots`);
+      }
+      for (const [slot, leaf] of Object.entries(iface.profiles?.[0]?.bindings ?? {})) {
+        for (const id of Array.isArray(leaf) ? leaf : [leaf]) {
+          if (!byId.has(id)) err("connectors", `${where}: position ${slot} binds unknown interface ${id}`);
+          else if (isConnector(byId.get(id)!)) err("connectors", `${where}: position ${slot} binds another connector (${id})`);
+        }
+      }
+    } else if (iface.slots?.length) {
       if (!iface.profiles?.length) err("structure", `${where}: composed interface has slots but no profile`);
       for (const slot of iface.slots) {
         if (!slot.match.protocol) {
@@ -181,6 +195,14 @@ function check(def: ModuleDef, id: string): Finding[] {
     }
     for (const target of iface.bridgesTo ?? []) {
       if (!byId.has(target)) err("structure", `${where}: bridgesTo unknown interface ${target}`);
+    }
+    if (!isConnector(iface)) {
+      for (const t of iface.traits ?? []) {
+        const c = t.params as { connector_type?: string; positions?: number } | undefined;
+        if (t.type === "connector" && (c?.positions ?? 0) > 1 && iface.pin !== undefined) {
+          warn("connectors", `${where}: carries a ${c?.positions}-position ${c?.connector_type} trait; declare the connector as a Connector() composite and keep only the pad's own trait here (docs/connectors-and-harnesses.md)`);
+        }
+      }
     }
     collectTraits(iface.traits);
   }

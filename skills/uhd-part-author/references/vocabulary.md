@@ -24,7 +24,8 @@ peer.
 | `SBUS` | `sbus: output/input` | SBUS receivers |
 | `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure) |
 | `Shaft` | `shaft: output/input` | Motor shafts (output), propeller hubs and pulleys (input) |
-| `connectorTrait` | trait | Connector or termination detail and pin order |
+| `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions (PB-805); binds each position to a pad |
+| `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
 
 ## Canonical parameter ids
 

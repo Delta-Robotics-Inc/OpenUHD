@@ -25,9 +25,10 @@
  *     i2c_compass, rst) so a system swaps parts by changing moduleDefId.
  *     The connector silkscreen (5V RX TX CL DA G) is also the same.
  *   - Leaves: one per signal on the two JST-GH-6P connectors (wired in
- *     parallel, same silkscreen order) plus the RST pad. The DA/CL/TX/RX/5V/G
- *     edge pads repeat the connector signals and are recorded in the
- *     connector trait. The VBus, D-, D+, Bt edge pads and the V-USB jumper are
+ *     parallel, same silkscreen order) plus the RST pad. Each socket is a
+ *     connector composite (`gh6p_1`, `gh6p_2`, PB-805) binding the six
+ *     leaves, with its own vendor-CAD feature. The DA/CL/TX/RX/5V/G edge pads
+ *     repeat the connector signals and are recorded in the connector note. The VBus, D-, D+, Bt edge pads and the V-USB jumper are
  *     silkscreen only with no stated function, so they are omitted (data gap).
  *   - Supply: 4~5.5 V on the 5V pad/pin, 50 mA (Matek). Covers the FC's
  *     4.5-5 V GPS rail.
@@ -56,6 +57,7 @@ import {
   I2C,
   Pin,
   BoltPattern,
+  Connector,
   connectorTrait,
 } from "../../src/protocols/index.js";
 import { feature, procedural, withGeometry } from "../cad/artifacts.js";
@@ -74,15 +76,6 @@ const SRC = {
     "https://github.com/betaflight/betaflight/blob/master/src/main/drivers/compass/compass_qmc5883.c",
   inavQmc5883p: "https://github.com/iNavFlight/inav/pull/10994",
 } as const;
-
-/** Two parallel JST-GH-6P sockets, same silkscreen order. */
-const JST_GH_6P = connectorTrait("jst_gh_6", {
-  gender: "receptacle",
-  positions: 6,
-  pinout: ["5V", "RX", "TX", "CL", "DA", "G"],
-  note:
-    "JST-GH-6P, two connectors fitted, both silkscreened 5V RX TX CL DA G (same order as the M10Q-5883). Pin 1 is not marked by the source, so the order is silkscreen order. The same signals are also on edge pads (G DA CL TX RX 5V). A 20 cm JST-GH-6P to JST-GH-6P silicone lead is included.",
-});
 
 function withTraits(iface: InterfaceDef, traits: TraitDef[]): InterfaceDef {
   return { ...iface, traits: [...(iface.traits ?? []), ...traits] };
@@ -107,13 +100,11 @@ const vin = withTraits(
       "5V — module supply input, 4~5.5 V (\"Input voltage range: 4~5.5V (5V pad/pin)\"); power consumption 50 mA. Wire to flight controller 4~5.5 V.",
       [SRC.product, SRC.imgDims],
     ),
-    JST_GH_6P,
   ],
 );
 
 const gnd = withTraits(Ground({ id: "gnd", name: "G", pin: "G" }), [
   padFunction("G — ground. Wire to flight controller GND.", [SRC.product, SRC.imgDims]),
-  JST_GH_6P,
 ]);
 
 const uart = amend(
@@ -130,13 +121,11 @@ const uart = amend(
       "uart_gnss_tx",
       [
         padFunction("TX — GNSS UART transmit. Wire to flight controller UART_RX.", [SRC.product, SRC.imgDims]),
-        JST_GH_6P,
       ],
     ),
     "uart_gnss_rx",
     [
       padFunction("RX — GNSS UART receive. Wire to flight controller UART_TX.", [SRC.product, SRC.imgDims]),
-      JST_GH_6P,
     ],
   ),
   "uart_gnss",
@@ -167,13 +156,11 @@ const i2c = amend(
       "i2c_compass_sda",
       [
         padFunction("DA — I2C data for the compass. Wire to flight controller I2C_SDA.", [SRC.product, SRC.imgDims]),
-        JST_GH_6P,
       ],
     ),
     "i2c_compass_scl",
     [
       padFunction("CL — I2C clock for the compass. Wire to flight controller I2C_SCL.", [SRC.product, SRC.imgDims]),
-      JST_GH_6P,
     ],
   ),
   "i2c_compass",
@@ -209,6 +196,16 @@ const i2c = amend(
 // ---------------------------------------------------------------------------
 // Leaves — service pad
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Sockets (PB-805): two parallel JST-GH-6P, same silkscreen order
+// ---------------------------------------------------------------------------
+
+const GH6P_PINS: [string, string][] = [["5V", "vin_5v"], ["RX", "uart_gnss_rx"], ["TX", "uart_gnss_tx"], ["CL", "i2c_compass_scl"], ["DA", "i2c_compass_sda"], ["G", "gnd"]];
+const GH6P_NOTE =
+  "JST-GH-6P, two connectors fitted, both silkscreened 5V RX TX CL DA G (same order as the M10Q-5883). Pin 1 is not marked by the source, so the order is silkscreen order. The same signals are also on edge pads (G DA CL TX RX 5V). A 20 cm JST-GH-6P to JST-GH-6P silicone lead is included.";
+const gh6p = (n: 1 | 2) =>
+  Connector({ id: `gh6p_${n}`, name: `GH6P-${n} socket`, connector: "jst_gh_6", gender: "receptacle", pins: GH6P_PINS, note: GH6P_NOTE });
 
 const rst = withTraits(
   Pin({ id: "rst", name: "RST", pin: "RST", capabilities: { inputOnly: true }, defaultActive: false }),
@@ -273,7 +270,7 @@ const MATEK_M9N_5883_BASE: ModuleDef = defineModule({
   tags: ["gnss", "gps", "compass", "magnetometer", "u-blox", "neo-m9n", "qmc5883p", "qmc5883l", "uart", "i2c", "jst-gh", "fpv", "matek"],
   categories: ["sensor", "sensor.gnss", "drone.gnss"],
 
-  interfaces: [vin, gnd, ...uart, ...i2c, rst, mount],
+  interfaces: [vin, gnd, ...uart, ...i2c, gh6p(1), gh6p(2), rst, mount],
 
   domains: [
     {
@@ -433,6 +430,9 @@ export const MATEK_M9N_5883: ModuleDef = withGeometry(
         procedural("bolt_pattern"),
       ],
     },
+    // Each socket is its own connector at its own place in the vendor STEP.
+    gh6p_1: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    gh6p_2: { refs: [feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
     // Both sockets carry the same six signals (5V RX TX CL DA G), so each
     // interface on them has two alternative physical locations.
     uart_gnss: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },

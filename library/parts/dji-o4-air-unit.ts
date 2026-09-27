@@ -31,8 +31,9 @@
  *     NOT exposed: there is no video-link protocol (gaps.json, vocabulary).
  *   - FC-facing 3-in-1 cable: every wire is a leaf (`vcc`, `gnd`, `uart_osd_rx`,
  *     `uart_osd_tx`, `gnd_signal`, `sbus`) with its verbatim DJI description
- *     in `pin_functions`. `uart_osd` (role device, 115200 baud, 0-3.3 V) carries
- *     the connector trait with the full pinout. DJI shows the wire order
+ *     in `pin_functions`. `uart_osd` is role device, 115200 baud, 0-3.3 V. The
+ *     socket is the `fc_cable_socket` connector composite (PB-805) binding the
+ *     six leaves in wire order. DJI shows the wire order
  *     (VCC, GND, RX, TX, GND, S.Bus) but does not mark pin 1 or name the
  *     connector family, so the connector type is a data_gap.
  *   - S.Bus wire is DJI HDL to the FC's S.Bus input: modelled with the SBUS
@@ -73,6 +74,7 @@ import {
   PowerIn,
   SBUS,
   UART,
+  Connector,
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
@@ -100,7 +102,6 @@ const LOGIC_V = 3.3;
 const MSP_BAUD = 115_200;
 
 /** 3-in-1 cable wire order as drawn — src_manual p.10. */
-const FC_CABLE_PINOUT = ["VCC", "GND", "RX", "TX", "GND", "S.Bus"];
 
 const pinFn = (description: string, colour: string): TraitDef => ({
   type: "pin_functions",
@@ -164,12 +165,6 @@ const uartOsd = UART({
   }
   if (iface.id === "uart_osd") {
     return withTraits(iface, [
-      connectorTrait("dji_3in1_cable_6pin", {
-        positions: 6,
-        pinout: FC_CABLE_PINOUT,
-        note:
-          "Removable 50 mm 3-in-1 cable (src_specs, src_manual p.6). Order is the wire order DJI draws (VCC red, GND black, RX white, TX grey, GND brown, S.Bus yellow; src_manual p.10); DJI does not mark pin 1 or name the FC-side connector family. Wiring sequence is the same as the DJI O3 Air Unit (src_faq), so FC 'DJI/HD' connectors wired for O3 match. Solder-to-pad wiring is also allowed (src_manual p.9).",
-      }),
       {
         type: "usage_note",
         params: {
@@ -208,6 +203,19 @@ const sbus = withTraits(
 // ---------------------------------------------------------------------------
 // USB-C, RF
 // ---------------------------------------------------------------------------
+
+/**
+ * The socket the removable 3-in-1 cable plugs into (PB-805): positions bound
+ * to the power, ground, UART and S.Bus leaves in DJI's wire order.
+ */
+const fcCableSocket = Connector({
+  id: "fc_cable_socket",
+  name: "3-in-1 cable socket (6-pin)",
+  connector: "dji_3in1_cable_6pin",
+  pins: [["VCC", "vcc"], ["GND", "gnd"], ["RX", "uart_osd_rx"], ["TX", "uart_osd_tx"], ["GND", "gnd_signal"], ["S.Bus", "sbus"]],
+  note:
+    "Removable 50 mm 3-in-1 cable (src_specs, src_manual p.6). Order is the wire order DJI draws (VCC red, GND black, RX white, TX grey, GND brown, S.Bus yellow; src_manual p.10); DJI does not mark pin 1 or name the FC-side connector family. Wiring sequence is the same as the DJI O3 Air Unit (src_faq), so FC 'DJI/HD' connectors wired for O3 match. Solder-to-pad wiring is also allowed (src_manual p.9).",
+});
 
 const usbC: InterfaceDef = {
   id: "usb_c",
@@ -343,7 +351,7 @@ const DJI_O4_AIR_UNIT_BASE: ModuleDef = defineModule({
   tags: ["fpv", "digital-video", "hd-vtx", "dji", "o4", "air-unit", "camera", "msp-displayport", "5.8ghz"],
   categories: ["drone.video", "rf.video_transmitter", "sensor.camera"],
 
-  interfaces: [vcc, gnd, ...uartOsd, gndSignal, sbus, usbC, antenna, txModuleMount, cameraMount],
+  interfaces: [vcc, gnd, ...uartOsd, gndSignal, sbus, fcCableSocket, usbC, antenna, txModuleMount, cameraMount],
 
   domains: [
     {

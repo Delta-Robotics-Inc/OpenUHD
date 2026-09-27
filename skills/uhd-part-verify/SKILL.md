@@ -36,6 +36,11 @@ npx tsc --noEmit                                         # type-check
 - **Traits:** part-specific trait types trigger a warning to use the
   canonical set. Assumption traits are counted in the report.
 - **Hygiene:** the file contains no `TODO` or `TBD`.
+- **Connectors** (PB-805): every connector composite has a connector trait
+  whose `positions` equals its slot count, and each position binds an
+  existing, non-connector interface. A pad (an interface with a `pin`) that
+  carries a multi-position connector trait is a warning: declare the socket
+  with `Connector()` instead.
 - **CAD** (`library/cad/checks.ts`):
   - the part has a body artifact (vendor or generated);
   - `checkGeometryBindings`: every ref's artifact is on the module, every

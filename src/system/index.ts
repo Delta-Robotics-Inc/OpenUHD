@@ -13,6 +13,8 @@ import type {
 import type { ConnectionResult, ConnectionState, Diagnostic, SubLinkResult } from "../drc/types.js";
 import { validatePair } from "../drc/validate-pair.js";
 import { matchProtocols } from "../matching/protocol-match.js";
+import { validateConnectorLink } from "./connectors.js";
+import { isConnector } from "../protocols/connector.js";
 
 /** Resolves a child's `moduleDefId` to its definition. */
 export type ModuleLookup = (moduleDefId: string) => ModuleDef | undefined;
@@ -49,11 +51,13 @@ export function parsePath(path: string): { modules: string[]; interfaceId?: stri
  * bound as a leaf into another interface's profile (pins behind a UART port
  * are revealed by opening the link, not drawn on the outline). Power and
  * ground leaves stay primary even when a connector binds them, because a
- * supply net is shared by every consumer.
+ * supply net is shared by every consumer. Connector composites (PB-805) do
+ * not hide what they bind: a pad on a socket is still a pad.
  */
 export function primaryInterfaces(def: ModuleDef): InterfaceDef[] {
   const bound = new Set<string>();
   for (const iface of def.interfaces) {
+    if (isConnector(iface)) continue;
     for (const profile of iface.profiles ?? []) {
       for (const value of Object.values(profile.bindings)) {
         for (const id of Array.isArray(value) ? value : [value]) {
@@ -168,23 +172,73 @@ export interface ResolvedEndpoint {
   /** The module that finally owns the interface (after following exports). */
   owner: ModuleDef;
   iface: InterfaceDef;
+  /** Instance path of `owner` below the linking module (export hops included). */
+  ownerPath: string[];
+  /** Link-scoped composition: each slot of the ad-hoc connector, resolved. */
+  composed?: Record<string, ResolvedEndpoint>;
 }
 
 /** Follow an endpoint through exports down to the module that owns the interface. */
 export function resolveEndpoint(def: ModuleDef, end: EndpointTarget, lookup: ModuleLookup): ResolvedEndpoint {
+  if ("child" in end && end.compose) return resolveComposition(def, end.child, end.interfaceId, end.compose, lookup);
   let owner = "child" in end ? childDef(def, end.child, lookup) : def;
   let interfaceId = end.interfaceId;
   const modules = "child" in end ? [end.child] : [];
+  const ownerPath = [...modules];
 
   for (let depth = 0; depth < 16; depth++) {
     const own = owner.interfaces.find((i) => i.id === interfaceId);
-    if (own) return { path: formatPath(modules, end.interfaceId), owner, iface: own };
+    if (own) return { path: formatPath(modules, end.interfaceId), owner, iface: own, ownerPath };
     const ex = resolveExports(owner, lookup).find((e) => e.id === interfaceId);
     if (!ex) break;
     owner = ex.childDef;
     interfaceId = ex.from.interfaceId;
+    ownerPath.push(ex.from.child);
   }
   throw new Error(`Link endpoint ${formatPath(modules, end.interfaceId)} not found on "${owner.id}"`);
+}
+
+/**
+ * Resolve `value` below child `childId`: an interface on the child's boundary
+ * (`"rail_4v5"`) or a canonical path below it (`"fc:uart1_tx"`,
+ * `"arm/motor:phases"`). Paths are relative to the linking module.
+ */
+export function resolveBelow(def: ModuleDef, childId: string, value: string, lookup: ModuleLookup): ResolvedEndpoint {
+  if (!value.includes(":")) return resolveEndpoint(def, { child: childId, interfaceId: value }, lookup);
+  const { modules, interfaceId } = parsePath(value);
+  let current = childDef(def, childId, lookup);
+  const prefix = [childId];
+  for (const m of modules.slice(0, -1)) {
+    current = childDef(current, m, lookup);
+    prefix.push(m);
+  }
+  const inner = resolveEndpoint(current, { child: modules[modules.length - 1], interfaceId: interfaceId! }, lookup);
+  return { ...inner, path: formatPath([...prefix, modules[modules.length - 1]], interfaceId), ownerPath: [...prefix, ...inner.ownerPath] };
+}
+
+/**
+ * A link-scoped composition (PB-805): an ad-hoc connector on the child,
+ * valid for this link only, whose slots are the other end's positions.
+ */
+function resolveComposition(def: ModuleDef, childId: string, interfaceId: string, compose: Record<string, string>, lookup: ModuleLookup): ResolvedEndpoint {
+  const owner = childDef(def, childId, lookup);
+  if (owner.interfaces.some((i) => i.id === interfaceId)) {
+    throw new Error(`Link-scoped composition "${interfaceId}" on "${childId}" shadows an existing interface; give it a new name`);
+  }
+  const composed: Record<string, ResolvedEndpoint> = {};
+  for (const [slot, value] of Object.entries(compose)) composed[slot] = resolveBelow(def, childId, value, lookup);
+  const first = Object.values(composed)[0];
+  const iface: InterfaceDef = {
+    id: interfaceId,
+    name: interfaceId,
+    domain: first?.iface.domain ?? "electrical",
+    exposed: true,
+    protocols: [{ type: "connector", roles: ["mate"] }],
+    slots: Object.entries(composed).map(([slot, r]) => ({ id: slot, label: r.iface.name ?? r.iface.id, required: false, match: {} })),
+    profiles: [{ id: "link", label: "Link-scoped", bindings: Object.fromEntries(Object.entries(compose).map(([slot, v]) => [slot, v])) }],
+    traits: [{ type: "link_scoped", params: { note: "Composed on the link: the module has no interface grouping these." } }],
+  };
+  return { path: formatPath([childId], interfaceId), owner, iface, ownerPath: [childId], composed };
 }
 
 export type LinkState = "configured" | "partial" | "incompatible" | "unconfigured";
@@ -192,7 +246,8 @@ export type LinkState = "configured" | "partial" | "incompatible" | "unconfigure
 export interface LinkChildResult {
   a: { slotId?: string; leafId: string; pin?: string };
   b: { slotId?: string; leafId: string; pin?: string };
-  method: "protocol" | "manual";
+  /** protocol: derived by DRC; manual: stored child links; wired: traced through a harness (PB-805). */
+  method: "protocol" | "manual" | "wired";
   locked: boolean;
 }
 
@@ -206,6 +261,11 @@ export interface LinkResult {
   children: LinkChildResult[];
   unresolvedSlots: string[];
   diagnostics: Diagnostic[];
+  /**
+   * Set on links derived from conductors (PB-805): the stored connector links
+   * and harness children the conductors run through.
+   */
+  derived?: { via: string[]; harnesses: string[] };
 }
 
 const STATE_MAP: Record<ConnectionState, LinkState> = {
@@ -259,6 +319,12 @@ function storedChildren(stored: ChildLink[], a: ResolvedEndpoint, b: ResolvedEnd
 export function validateLink(def: ModuleDef, link: InterfaceLink, lookup: ModuleLookup): LinkResult {
   const a = resolveEndpoint(def, link.a, lookup);
   const b = resolveEndpoint(def, link.b, lookup);
+  if (isConnector(a.iface) && isConnector(b.iface)) return validateConnectorLink(link, a, b);
+  return validateResolved(link, a, b);
+}
+
+/** Validate a link whose ends are already resolved (stored or derived). */
+export function validateResolved(link: InterfaceLink, a: ResolvedEndpoint, b: ResolvedEndpoint): LinkResult {
   const pair = validatePair(slice(a.owner, a.iface), slice(b.owner, b.iface), { includePotentials: false });
   const connection: ConnectionResult | undefined = pair.connections.find(
     (c) => c.a.regionPath[0] === a.iface.id && c.b.regionPath[0] === b.iface.id,

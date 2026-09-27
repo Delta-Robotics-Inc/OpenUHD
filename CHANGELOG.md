@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Connectors and physical harnesses (PB-805, `docs/connectors-and-harnesses.md`): `Connector()` connector composites (protocol `connector`, positions `p1…pN` bound to pads); link-scoped composition on a link end (`compose`) for pads with no grouping interface; harness conductors as internal `self` links; `deriveLinks`/`systemLinks` trace conductors to functional links, and `checkSystem` runs on stored + derived links. New link diagnostics `connector_mismatch`, `connector_gender`, `connector_positions`, `compose_unknown_slot`, `harness_wiring`. `ResolvedEndpoint` gains `ownerPath` and `composed`; `LinkResult` gains `derived`; `resolveBelow`, `validateResolved` are exported.
 - Drone protocol vocabulary: `BrushlessPhases`, `EscSignal`, `FcEscPort`, `CRSF`, `SBUS`, `BoltPattern`, `Shaft`, `connectorTrait`, and parameters for cell count, capacity, hole spacing, fastener and shaft diameter, burst current, and ESC signal rate.
 - Module kinds (`module`, `group`, `harness`), `exports` (child interfaces on a parent boundary; groups export implicitly), stored `links` (`InterfaceLink` with explicit `EndpointTarget`s and optional stored `childLinks`), and `display` hints on `ModuleDef`. Harness endpoints gain topology roles; harnesses gain parameters, artifacts, and traits.
 - `src/system`: canonical paths, `primaryInterfaces`, `resolveExports`, `boundaryInterfaces`, `resolveEndpoint`, and `validateLink`/`validateLinks` (per-link DRC on sliced modules, with stored child links overriding derived ones).
@@ -16,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Part-authoring rule: every multi-position connector is a connector composite. The FC, ESC, O4, M9N and CNHL parts declare their sockets (`esc_socket`, `rc_socket`, `gps_socket`, `vtx_socket`, `dji_socket`, `cam_socket`, `fc_socket`, `fc_cable_socket`, `gh6p_1`/`gh6p_2`, `xt60`); socket traits moved off pads and `FcEscPort` no longer carries a pinout. `harness_connector` also finds connector composites that bind a link end's pads. `verify-part.ts` checks connectors and warns on sockets left on pads.
 - DRC treats `burst_current` and `drive_current` as capacity parameters (no pairwise range overlap).
 
 ### Deprecated

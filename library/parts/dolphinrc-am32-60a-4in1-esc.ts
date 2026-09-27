@@ -50,6 +50,7 @@ import {
   PowerIn,
   PowerOut,
   cellCount,
+  Connector,
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
@@ -61,17 +62,6 @@ const SRC = {
   product: "https://dolphinrc.com/products/dolphinrc-f405-v3-50a-60a-stack",
   review: "https://dolphinrc.com/blog/dolphinrc-f405-v3-50a-60a-stack-review",
 } as const;
-
-/** FC <-> ESC connector pinout, identical on both parts of the stack. */
-const STACK_PINOUT = ["BAT", "GND", "CUR", "VOID", "M1", "M2", "M3", "M4"];
-
-const SH_8 = connectorTrait("jst_sh_8", {
-  gender: "receptacle",
-  positions: 8,
-  pinout: STACK_PINOUT,
-  note:
-    "SH 1.0 mm 8-pin socket; stack ships with a 50 mm SH 1.0 mm 8-pin cable for the FC-ESC connection (product page). Wire labels BAT GND CUR VOID M1 M2 M3 M4 (manual p4); ESC silkscreen V G CUR (blank) M1 M2 M3 M4 (manual p3). Pin 1 is not marked; order is given from the BAT end. The pads can also be soldered directly (review).",
-});
 
 function withTraits(iface: InterfaceDef, traits: TraitDef[]): InterfaceDef {
   return { ...iface, traits: [...(iface.traits ?? []), ...traits] };
@@ -116,13 +106,11 @@ const vbatOut = withTraits(
   PowerOut({ id: "vbat_out", name: "V (BAT)", pin: "V", voltageV: VIN }),
   [
     padFunction("V / BAT — battery voltage passed to the flight controller over the 8-pin connector.", SRC.manual),
-    SH_8,
   ],
 );
 
 const gnd = withTraits(Ground({ id: "gnd", name: "G (GND)", pin: "G" }), [
   padFunction("G / GND — ground on the 8-pin FC connector.", SRC.manual),
-  SH_8,
 ]);
 
 const cur: InterfaceDef = {
@@ -136,7 +124,6 @@ const cur: InterfaceDef = {
   capabilities: ["analog_out"],
   traits: [
     padFunction("CUR — current sensor output to the FC current ADC. Current Sensor: Support (Scale=150 Offset=0).", [SRC.manual, SRC.product]),
-    SH_8,
   ],
 };
 
@@ -153,7 +140,6 @@ const signals = [1, 2, 3, 4].map((n) =>
     }),
     [
       padFunction(`M${n} — ESC channel ${n} signal input from the FC (8-pin connector).`, [SRC.manual, SRC.review]),
-      SH_8,
     ],
   ),
 );
@@ -163,8 +149,6 @@ const fcPort = withTraits(
     id: "fc_port",
     name: "FC connector (8-pin SH)",
     side: "esc",
-    connector: "jst_sh_8",
-    pinout: STACK_PINOUT,
     motors: signals,
     vbat: "vbat_out",
     gnd: "gnd",
@@ -178,16 +162,29 @@ const fcPort = withTraits(
         source: [SRC.product, SRC.manual, SRC.review],
       },
     },
+  ],
+);
+
+/** The FC socket itself (PB-805): positions bound to the pads they share. */
+const fcSocket = Connector({
+  id: "fc_socket",
+  name: "FC socket (SH1.0 8-pin)",
+  connector: "jst_sh_8",
+  gender: "receptacle",
+  pins: [["BAT", "vbat_out"], ["GND", "gnd"], ["CUR", "cur"], "VOID", ["M1", "m1"], ["M2", "m2"], ["M3", "m3"], ["M4", "m4"]],
+  note:
+    "SH 1.0 mm 8-pin socket; stack ships with a 50 mm SH 1.0 mm 8-pin cable for the FC-ESC connection (product page). Wire labels BAT GND CUR VOID M1 M2 M3 M4 (manual p4); ESC silkscreen V G CUR (blank) M1 M2 M3 M4 (manual p3). Pin 1 is not marked; order is given from the BAT end. The pads can also be soldered directly (review).",
+  traits: [
     {
       type: "assumption",
       params: {
         field: "connector pin 1",
         value: "BAT end",
-        reason: "Neither silkscreen nor manual marks pin 1; order taken from the BAT end so FC and ESC parts share one pinout array (the included cable is 1:1).",
+        reason: "Neither silkscreen nor manual marks pin 1; order taken from the BAT end so FC and ESC parts share one pinout (the included cable is 1:1).",
       },
     },
   ],
-);
+});
 
 // ---------------------------------------------------------------------------
 // Motor outputs
@@ -252,6 +249,7 @@ const DOLPHINRC_AM32_60A_4IN1_ESC_BASE: ModuleDef = defineModule({
     cur,
     ...signals,
     fcPort,
+    fcSocket,
     ...motors,
     mount,
   ],
