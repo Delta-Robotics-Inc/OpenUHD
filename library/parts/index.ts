@@ -15,6 +15,7 @@ export { HCSR04_ULTRASONIC_SENSOR } from "./hcsr04-ultrasonic-sensor.js";
 export { ICM_42688_P } from "./icm-42688-p.js";
 export { L298N_MOTOR_DRIVER } from "./l298n-motor-driver.js";
 export { PJRC_TEENSY_4_1 } from "./pjrc-teensy-4-1.js";
+export { PVC_SCH40_PIPE_0_5IN } from "./pvc-sch40-pipe-0-5in.js";
 export { REV_21_1652_NEO_VORTEX } from "./rev-21-1652-neo-vortex-brushless-motor.js";
 export { RP2040 } from "./rp2040.js";
 export { SEEED_XIAO_ESP32C3 } from "./seeed-xiao-esp32c3.js";
