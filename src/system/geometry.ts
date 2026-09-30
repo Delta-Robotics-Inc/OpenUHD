@@ -13,7 +13,7 @@
  */
 import type { InterfaceDef } from "../types/interface.js";
 import type { EndpointTarget, InterfaceLink as Link, ModuleDef } from "../types/module.js";
-import { resolveExports, type ModuleLookup } from "./index.js";
+import { resolveBelow, resolveExports, type ModuleLookup } from "./index.js";
 import type { GeometryFrame, GeometryRef, GeometrySignature, Vec3 } from "../types/geometry.js";
 
 export interface ResolvedInterfaceGeometry {
@@ -321,6 +321,46 @@ export interface HardwarePlacement {
   direction: 1 | -1;
 }
 
+/**
+ * One end of a routed harness (PB-805 harness geometry): the harness's end
+ * interface, the link it takes part in, and how well the routed geometry
+ * still meets the part it lands on.
+ */
+export interface HarnessEndCheck {
+  interfaceId: string;
+  linkId: string;
+  /** The part interface (or link-scoped composition) the end lands on, e.g. "stack/esc.motor_1_a". */
+  counterpart: string;
+  /**
+   * anchor: this end placed the harness; matches: the routed end meets its
+   * counterpart; stale: it no longer does (the part moved, or the route was
+   * generated from another assembly); unplaced: the counterpart is not
+   * placed; no_geometry: one side has no frame.
+   */
+  status: "anchor" | "matches" | "stale" | "unplaced" | "no_geometry";
+  /** Distance between the routed end and the counterpart's frame (mm). */
+  offsetMm?: number;
+  /** Angle between the routed end's normal and the reversed counterpart normal (degrees). */
+  angleDeg?: number;
+}
+
+/**
+ * A harness whose ends carry frames in its own (routed) geometry, placed by
+ * the first end whose counterpart is placed. Harnesses never place modules:
+ * a cable follows the parts it connects. Every other end is checked against
+ * its counterpart.
+ */
+export interface HarnessPlacement {
+  key: string;
+  path: string[];
+  def: ModuleDef;
+  /** Harness coordinates -> assembly root coordinates. */
+  matrix: Mat4;
+  /** Link that anchored it. */
+  via: string;
+  ends: HarnessEndCheck[];
+}
+
 export interface Assembly {
   instances: GeometryInstance[];
   placements: Placement[];
@@ -329,6 +369,8 @@ export interface Assembly {
   routes: RouteEdge[];
   /** Hardware placed from fastener harnesses (`ModuleDef.fastenerStack`). */
   hardware: HardwarePlacement[];
+  /** Routed wire harnesses (harness ends with frames), placed by the parts they connect. */
+  harnesses: HarnessPlacement[];
   /** Non-mechanical links where at least one end has no geometry (not drawable yet). */
   unrouted: { linkId: string; missing: string[] }[];
   issues: AssemblyIssue[];
@@ -382,6 +424,8 @@ export function assemble(
     const fb = b.iface.geometry?.frame;
     const linkId = [...prefix, link.id].join("/");
     const mechanical = a.iface.domain === "mechanical" || b.iface.domain === "mechanical";
+    const routedHarnessEnd = [a, b].some((e) => e.def.kind === "harness" && e.iface.geometry?.frame);
+    if (!mechanical && routedHarnessEnd) continue; // a routed harness end: checked by placeHarnesses
     if (!mechanical) {
       const ga = interfaceGeometry(a.def, a.iface.id).frames;
       const gb = interfaceGeometry(b.def, b.iface.id).frames;
@@ -484,7 +528,8 @@ export function assemble(
   }
 
   const hardware = placeHardware(instances, mates, placed, lookup, issues);
-  return { instances, placements: [...placed.values()], mates, routes, unrouted, hardware, issues };
+  const harnesses = placeHarnesses(instances, links, placed, lookup, issues);
+  return { instances, placements: [...placed.values()], mates, routes, unrouted, hardware, harnesses, issues };
 }
 
 // ---------------------------------------------------------------------------
@@ -612,6 +657,158 @@ function placeHardware(
         }
       }
     }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Routed harnesses (PB-805): harness geometry bound to the frames it lands on
+// ---------------------------------------------------------------------------
+
+/** Tolerances for a routed end meeting its counterpart. */
+export const HARNESS_END_TOLERANCE = { mm: 0.5, deg: 5 };
+
+const transformFrame = (m: Mat4, f: GeometryFrame): GeometryFrame => {
+  const o = applyMat4(m, f.origin);
+  const dir = (v: Vec3): Vec3 => sub(applyMat4(m, v), applyMat4(m, [0, 0, 0]));
+  return { origin: o, normal: norm(dir(f.normal)), ...(f.xAxis ? { xAxis: norm(dir(f.xAxis)) } : {}) };
+};
+
+/**
+ * One frame for several: the mean origin and normal, and (when the origins
+ * are spread out) an xAxis from the first to the last, i.e. pin 1 to pin N
+ * of a composed end. A single frame is returned as is.
+ */
+export function combineFrames(frames: GeometryFrame[]): GeometryFrame | undefined {
+  if (!frames.length) return undefined;
+  if (frames.length === 1) return frames[0];
+  const n = frames.length;
+  const origin: Vec3 = [0, 1, 2].map((k) => frames.reduce((s, f) => s + f.origin[k], 0) / n) as Vec3;
+  const normal = norm([0, 1, 2].map((k) => frames.reduce((s, f) => s + norm(f.normal)[k], 0)) as Vec3);
+  const span = sub(frames[n - 1].origin, frames[0].origin);
+  const inPlane = sub(span, scale(normal, dot(span, normal)));
+  return Math.hypot(...inPlane) > 1e-6 ? { origin, normal, xAxis: norm(inPlane) } : { origin, normal };
+}
+
+/** Numeric order of connector slots: p1, p2, …, p10. */
+const slotOrder = (a: string, b: string) => (parseInt(a.replace(/\D+/g, ""), 10) || 0) - (parseInt(b.replace(/\D+/g, ""), 10) || 0) || a.localeCompare(b);
+
+/**
+ * World frames of a link end on the part side: per position for a
+ * link-scoped composition (in slot order), else the interface's own frame or
+ * its children's. Also returns the combined frame and whether every body is
+ * placed.
+ */
+export function linkEndFrames(
+  owner: ModuleDef,
+  end: EndpointTarget,
+  lookup: ModuleLookup,
+  prefix: string[],
+  placed: Map<string, { matrix: Mat4 }>,
+): { label: string; frames: { slot?: string; interfaceId: string; frame: GeometryFrame }[]; combined?: GeometryFrame; placed: boolean } | undefined {
+  const out: { slot?: string; interfaceId: string; frame: GeometryFrame }[] = [];
+  let allPlaced = true;
+  const add = (path: string[], def: ModuleDef, interfaceId: string, slot?: string) => {
+    const g = interfaceGeometry(def, interfaceId).frames;
+    const world: GeometryFrame[] = [];
+    for (const { frame } of g) {
+      const p = placed.get(bodyKey(path, frame.artifact));
+      if (!p) {
+        allPlaced = false;
+        continue;
+      }
+      world.push(transformFrame(p.matrix, frame));
+    }
+    if (slot !== undefined) {
+      const c = combineFrames(world);
+      if (c) out.push({ slot, interfaceId, frame: c });
+    } else for (const f of world) out.push({ interfaceId, frame: f });
+    return g.length > 0;
+  };
+  if ("child" in end && end.compose) {
+    let any = false;
+    for (const slot of Object.keys(end.compose).sort(slotOrder)) {
+      let r;
+      try {
+        r = resolveBelow(owner, end.child, end.compose[slot], lookup);
+      } catch {
+        return undefined;
+      }
+      any = add([...prefix, ...r.ownerPath], r.owner, r.iface.id, slot) || any;
+    }
+    if (!any) return { label: `${[...prefix, end.child].join("/")}.${end.interfaceId}`, frames: [], placed: allPlaced };
+    return { label: `${[...prefix, end.child].join("/")}.${end.interfaceId}`, frames: out, combined: combineFrames(out.map((f) => f.frame)), placed: allPlaced };
+  }
+  const r = resolveLeafEndpoint(owner, end, lookup, prefix);
+  if (!r) return undefined;
+  add(r.path, r.def, r.iface.id);
+  return { label: `${r.path.join("/")}.${r.iface.id}`, frames: out, combined: combineFrames(out.map((f) => f.frame)), placed: allPlaced };
+}
+
+function placeHarnesses(
+  instances: GeometryInstance[],
+  links: { owner: ModuleDef; prefix: string[]; link: Link }[],
+  placed: Map<string, Placement>,
+  lookup: ModuleLookup,
+  issues: AssemblyIssue[],
+): HarnessPlacement[] {
+  const out: HarnessPlacement[] = [];
+  for (const inst of instances) {
+    if (inst.kind !== "harness") continue;
+    const routed = inst.def.interfaces.filter((i) => i.geometry?.frame);
+    if (!routed.length) continue;
+    const key = inst.path.join("/");
+    const parent = inst.path.slice(0, -1);
+    const childId = inst.path[inst.path.length - 1];
+    // links (declared by the harness's parent) with one end on this harness
+    const ends: { link: Link; linkId: string; own: InterfaceDef; other: NonNullable<ReturnType<typeof linkEndFrames>> | undefined; owner: ModuleDef; prefix: string[] }[] = [];
+    for (const { owner, prefix, link } of links) {
+      if (prefix.join("/") !== parent.join("/")) continue;
+      for (const [mine, theirs] of [[link.a, link.b], [link.b, link.a]] as const) {
+        if (!("child" in mine) || mine.child !== childId) continue;
+        const own = inst.def.interfaces.find((i) => i.id === mine.interfaceId);
+        if (!own) continue;
+        ends.push({ link, linkId: [...prefix, link.id].join("/"), own, other: linkEndFrames(owner, theirs, lookup, prefix, placed), owner, prefix });
+      }
+    }
+    const checks: HarnessEndCheck[] = [];
+    const anchor = ends.find((e) => e.own.geometry?.frame && e.other?.combined && e.other.placed);
+    if (!anchor) {
+      issues.push({ severity: "info", subject: key, message: "routed harness: no end lands on a placed part with a frame, so it is not placed" });
+      continue;
+    }
+    const matrix = mateTransform(anchor.other!.combined!, anchor.own.geometry!.frame!);
+    for (const e of ends) {
+      const counterpart = e.other?.label ?? "?";
+      const base = { interfaceId: e.own.id, linkId: e.linkId, counterpart };
+      if (e === anchor) {
+        checks.push({ ...base, status: "anchor", offsetMm: 0, angleDeg: 0 });
+        continue;
+      }
+      const f = e.own.geometry?.frame;
+      if (!f || !e.other?.frames.length) {
+        checks.push({ ...base, status: "no_geometry" });
+        continue;
+      }
+      if (!e.other.placed || !e.other.combined) {
+        checks.push({ ...base, status: "unplaced" });
+        continue;
+      }
+      const w = transformFrame(matrix, f);
+      const c = e.other.combined;
+      const offsetMm = Math.hypot(...sub(w.origin, c.origin));
+      const angleDeg = (Math.acos(Math.max(-1, Math.min(1, -dot(w.normal, c.normal)))) * 180) / Math.PI;
+      const stale = offsetMm > HARNESS_END_TOLERANCE.mm || angleDeg > HARNESS_END_TOLERANCE.deg;
+      checks.push({ ...base, status: stale ? "stale" : "matches", offsetMm: +offsetMm.toFixed(3), angleDeg: +angleDeg.toFixed(2) });
+      if (stale) {
+        issues.push({
+          severity: "warning",
+          subject: key,
+          message: `routed harness end ${e.own.id} is ${offsetMm.toFixed(1)} mm / ${angleDeg.toFixed(0)}° from ${counterpart} (link ${e.linkId}): the route was generated for another assembly; regenerate it`,
+        });
+      }
+    }
+    out.push({ key, path: inst.path, def: inst.def, matrix, via: anchor.linkId, ends: checks });
   }
   return out;
 }

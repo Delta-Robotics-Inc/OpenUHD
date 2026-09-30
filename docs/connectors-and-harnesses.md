@@ -169,6 +169,41 @@ example, UART5 used by both the DJI socket and the VTX socket's T5 at once).
   connector composites that bind a link end's pads. Prefer the physical form
   for new work.
 
+## Routed harness geometry
+
+A cable's shape belongs to the cable. A harness can carry its own 3D
+artifact (a routed body: conductors, connector housings, solder joints)
+when each end interface also carries a **frame in the harness's
+coordinates**: the point and direction where that end meets its part.
+
+```ts
+Connector({ id: "end_esc", connector: "solder_leads", pins: ["A", "B", "C"] })
+// + geometry: { frame: { origin, normal, xAxis } }   (written by the route generator)
+```
+
+`assemble` places such a harness from the parts it connects, never the
+other way round (`assembly.harnesses`, `HarnessPlacement`):
+
+1. the **anchor** is the first link whose other end lands on a placed part
+   with geometry; the harness is mated there (`mateTransform`, as for a
+   rigid part);
+2. every **other end** is compared with the frame it should meet. More than
+   0.5 mm or 5° apart (`HARNESS_END_TOLERANCE`) is a warning: the route was
+   generated for another assembly and must be regenerated.
+
+The part side of a link end resolves to world frames with `linkEndFrames`:
+a link-scoped composition gives one frame per position (in slot order: the
+pad each conductor lands on), a connector or pad its own frame, a parent
+port its children's. `combineFrames` makes one frame from several (mean
+origin and normal; xAxis from position 1 to N), which is what the harness
+end frame is compared with. A generator that writes its end frames as the
+combined counterpart frames (normal reversed, same xAxis) and its geometry
+in assembly-root coordinates gets the identity placement.
+
+Links with a routed harness end are not listed as `routes` or `unrouted`;
+their state is in the harness placement's `ends`
+(`anchor | matches | stale | unplaced | no_geometry`).
+
 ## Part-authoring rule
 
 > Every physical connector on a part is a connector composite. A connector
