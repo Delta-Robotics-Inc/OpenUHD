@@ -431,8 +431,12 @@ export const MATEK_M9N_5883: ModuleDef = withGeometry(
       ],
     },
     // Each socket is its own connector at its own place in the vendor STEP.
-    gh6p_1: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step")] },
-    gh6p_2: { refs: [feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    // Frames (PB-805 harness routing) sit on each SM06B-GHS-TB's mating face,
+    // measured from the vendor STEP (socket bodies x 10.55…15.4, z 0…4.35):
+    // side entry, opening outward along ±X; xAxis runs 5V → G (pin 1 is not
+    // marked by Matek, so the direction is an assumption, like the pin order).
+    gh6p_1: { frame: { origin: [15.4, 0, 2.175], normal: [1, 0, 0], xAxis: [0, 1, 0] }, refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step")] },
+    gh6p_2: { frame: { origin: [-15.4, 0, 2.175], normal: [-1, 0, 0], xAxis: [0, -1, 0] }, refs: [feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
     // Both sockets carry the same six signals (5V RX TX CL DA G), so each
     // interface on them has two alternative physical locations.
     uart_gnss: { refs: [feature("GH6P-1", { area_mm2: 333.419, centroid: [13.362, 0.0, 2.213] }, "cad_vendor_step"), feature("GH6P-2", { area_mm2: 333.419, centroid: [-13.362, 0.0, 2.213] }, "cad_vendor_step")] },
