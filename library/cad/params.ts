@@ -85,6 +85,7 @@ const params = {
     hub_thickness: Number(pm.hub_thickness_mm),
     bore: p(iface(prop, "hub_bore"), "shaft_diameter"),
     blades: Number(pm.blade_count),
+    pitch: Number(pm.pitch_in) * 25.4,
   },
   frame: {
     wheelbase,

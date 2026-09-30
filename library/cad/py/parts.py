@@ -45,13 +45,27 @@ def motor() -> None:
         with PolarLocations(r_hole, int(m["base_holes"]), start_angle=45):
             Cylinder(1.25, base_h, align=MIN, mode=Mode.SUBTRACT)
         Cylinder(3.0, 1.0, align=MIN, mode=Mode.SUBTRACT)  # centre relief for the shaft circlip
+    R, H = m["diameter"] / 2, m["body_height"]
+    top = 1.6  # representative bell top and wall thickness (not dimensioned by MEPS)
     with BuildPart() as bell:
-        with Locations(Pos(0, 0, base_h)):
-            Cylinder(m["diameter"] / 2, m["body_height"] - base_h, align=MIN)
-        # cooling slots on the bell top, for recognisability
-        with Locations(Pos(0, 0, m["body_height"] - 1.2)):
-            with PolarLocations(9, 6):
-                Box(8, 2.2, 1.3, align=MIN, mode=Mode.SUBTRACT)
+        with Locations(Pos(0, 0, base_h + 0.4)):
+            Cylinder(R, H - base_h - 0.4, align=MIN)
+            Cylinder(R - 1.1, H - base_h - 0.4 - top, align=MIN, mode=Mode.SUBTRACT)
+        # the NEON's spoked top: twelve windows between the spokes (product photos),
+        # and a ring of windows around the top of the bell wall above the solid band
+        with Locations(Pos(0, 0, H - top)):
+            with PolarLocations((R - 1.5 + 4.2) / 2, 12):
+                Box(R - 1.5 - 4.2, 3.0, top, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+        with Locations(Pos(0, 0, H - top - 5.0)):
+            with PolarLocations(R - 0.55, 12, start_angle=15):
+                Box(1.4, 3.4, 4.6, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+    # stator and windings (2207: 22 mm stator, 7 mm stack), seen through the windows
+    with BuildPart() as windings:
+        with Locations(Pos(0, 0, base_h + 1.0)):
+            Cylinder(11.0, 9.5, align=MIN)
+            with PolarLocations(10.6, 12, start_angle=15):
+                Box(1.6, 1.8, 9.5, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+            Cylinder(3.2, 9.5, align=MIN, mode=Mode.SUBTRACT)
     with BuildPart() as shaft:
         with Locations(Pos(0, 0, m["body_height"])):
             Cylinder(m["shaft_diameter"] / 2, m["overall_height"] - m["body_height"], align=MIN)
@@ -75,6 +89,7 @@ def motor() -> None:
         leads[letter] = lead.part
     a.body(base.part, "base")
     a.body(bell.part, "bell")
+    a.body(windings.part, "windings")
     a.body(shaft.part, "shaft_body")
     a.body(sleeve.part, "heat_shrink")
     for letter, lead in leads.items():
@@ -88,20 +103,41 @@ def motor() -> None:
 
 
 def propeller() -> None:
+    """HQProp Ethix S5: 5 in (127 mm) tri-blade, 4 in pitch, 12.8 x 6 mm hub, 5 mm bore
+    (HQProp listing). Blades are lofted from elliptical sections whose pitch angle
+    follows the stated pitch, atan(P / 2 pi r); chord and thickness distributions are
+    representative (HQProp publishes no blade drawing). One handedness is drawn."""
+    from build123d import Ellipse, Plane, loft
+
     p = PARAMS["prop"]
     a = Artifact("hqprop-ethix-s5", part_dir("hqprop-ethix-s5"), HERE)
-    blade_len = p["diameter"] / 2 - p["hub_diameter"] / 2
+    R = p["diameter"] / 2
+    hub_r = p["hub_diameter"] / 2
+    pitch = p.get("pitch", 4 * 25.4)
+    zc = p["hub_thickness"] / 2
     with BuildPart() as hub:
-        Cylinder(p["hub_diameter"] / 2, p["hub_thickness"], align=MIN)
+        Cylinder(hub_r, p["hub_thickness"], align=MIN)
         Cylinder(p["bore"] / 2, p["hub_thickness"], align=MIN, mode=Mode.SUBTRACT)
+    r0 = hub_r - 0.6
+    stations = [r0 + (R - 0.8 - r0) * (k / 10) for k in range(11)]
+    with BuildPart() as blade:
+        for r in stations:
+            f = (r - r0) / (R - 0.8 - r0)
+            chord = (8.0 + 7.5 * math.sin(math.pi * min(1.0, 0.18 + 0.75 * f))) * (1 - 0.55 * f**5)
+            thick = 2.4 * (1 - f) + 0.7
+            beta = math.atan(pitch / (2 * math.pi * r))
+            plane = Plane(origin=(r, 0, zc), x_dir=(0, math.cos(beta), math.sin(beta)), z_dir=(1, 0, 0))
+            with BuildSketch(plane):
+                Ellipse(chord / 2, thick / 2)
+        loft()
     with BuildPart() as blades:
         for k in range(int(p["blades"])):
-            ang = k * 360 / p["blades"]
-            with Locations(Rot(0, 0, ang) * Pos(p["hub_diameter"] / 2 + blade_len / 2 - 1, 0, p["hub_thickness"] / 2) * Rot(18, 0, 0)):
-                Box(blade_len + 2, 12, 1.2)
+            add_part = blade.part.rotate(Axis.Z, k * 360 / p["blades"])
+            from build123d import add
+            add(add_part)
     a.body(hub.part, "hub")
     a.body(blades.part, "blades")
-    a.feature("hub_bore", [f for f in hub.part.faces() if f.geom_type.name == "CYLINDER" and f.radius < p["hub_diameter"] / 2 - 0.1])
+    a.feature("hub_bore", [f for f in hub.part.faces() if f.geom_type.name == "CYLINDER" and f.radius < hub_r - 0.1])
     a.write()
 
 
@@ -311,6 +347,11 @@ def battery() -> None:
         Box(L, W, H, align=MIN)
         fillet(pack.edges().filter_by(Axis.X), radius=3.0)
     a.body(pack.part, "pack")
+    # the printed wrap's label panel on the top face (cosmetic, representative)
+    with BuildPart() as label:
+        with Locations(Pos(0, 0, H)):
+            Box(L - 12, W - 8, 0.2, align=MIN)
+    a.body(label.part, "label")
     end = None
     for label, y in (("lead_pos", -xt["pitch"] / 2), ("lead_neg", xt["pitch"] / 2)):
         pts = _pigtail(b, y)

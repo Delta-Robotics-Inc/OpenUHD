@@ -14,6 +14,7 @@ export propHubDiameter = 12.8
 export propHubThickness = 6
 export propBore = 5
 export propBlades = 3
+export propPitch = 101.6
 export frameWheelbase = 225
 export framePlateThickness = 5
 export frameArmWidth = 14

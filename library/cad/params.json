@@ -15,7 +15,8 @@
     "hub_diameter": 12.8,
     "hub_thickness": 6,
     "bore": 5,
-    "blades": 3
+    "blades": 3,
+    "pitch": 101.6
   },
   "frame": {
     "wheelbase": 225,

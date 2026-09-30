@@ -2,12 +2,12 @@
   "artifact": "hqprop-ethix-s5",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
+  "sourceDigest": "e3492832735531a1a943a7b9d4986c7db82e39e4848e002972d0b4b9a365524c",
   "units": "mm",
-  "volume_mm3": 3207.388,
+  "volume_mm3": 4098.715,
   "bodies": {
     "hub": 654.268,
-    "blades": 2553.12
+    "blades": 3444.447
   },
   "features": {
     "hub_bore": {
