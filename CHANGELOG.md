@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Library part `pvc-sch40-pipe-0-5in`: generic Schedule 40 PVC pipe, 1/2 in nominal, plain end (ASTM D1785, PVC 1120). First part in the `hydraulic` domain; establishes the `hydraulic` protocol type with bidirectional `source`/`sink` pipe ends. Values sourced from Spears and Charlotte Pipe technical data (600 psi / 41.4 bar at 23 C, 60 C max, temperature de-rating table).
+
 ## [0.1.0] — 2026-05-02
 
 ### Added
