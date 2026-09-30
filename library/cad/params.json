@@ -74,9 +74,11 @@
     "length": 75,
     "width": 39.5,
     "height": 35,
-    "lead_length": 60,
     "lead_od": 3.4,
-    "lead_exit_below_top": 9
+    "lead_exit_below_top": 11,
+    "lead_run": 49.5,
+    "lead_bend_radius": 8,
+    "lead_drop": 26
   },
   "xt60": {
     "length": 16,

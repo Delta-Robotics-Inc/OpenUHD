@@ -258,13 +258,13 @@ def o4() -> None:
             Cylinder(mod["hole_diameter"] / 2, mod["height"], align=MIN, mode=Mode.SUBTRACT)
     a.body(tx.part, "transmission_module")
     a.feature("tx_module_mount", [f for f in tx.part.faces() if f.geom_type.name == "CYLINDER"])
-    # the 3-in-1 cable socket on the module's front edge, top face (representative
-    # position and size: DJI publishes neither)
+    # the 3-in-1 cable socket on the module's right side (-Y), toward the front
+    # (representative position and size: DJI publishes neither)
     with BuildPart() as sock:
-        with Locations(Pos(mod["length"] / 2 - 2.0, -7.0, mod["height"])):
-            Box(4.0, 7.0, 1.6, align=MIN)
+        with Locations(Pos(7.0, -mod["width"] / 2 + 1.0, mod["height"] - 1.6)):
+            Box(7.0, 2.0, 1.6, align=MIN)
     a.body(sock.part, "cable_socket")
-    a.feature("fc_cable_socket", [f for f in sock.part.faces() if f.geom_type.name == "PLANE" and f.normal_at().X > 0.9])
+    a.feature("fc_cable_socket", [f for f in sock.part.faces() if f.geom_type.name == "PLANE" and f.normal_at().Y < -0.9])
     a.write()
 
     # the camera is a separate body joined only by a cable: its own artifact and coordinates
@@ -278,31 +278,55 @@ def o4() -> None:
     c.write()
 
 
+def _pigtail(b: dict, y: float):
+    """Corner points of one discharge-lead conductor's centre line (battery coordinates, mm).
+
+    Out of the rear end face (-X) near the top, back past the frame's top
+    plate, down, and a U-turn forward into the rear of the XT60, so the XT60
+    faces the frame (+X) and the ESC lead plugs in from the front. The shape
+    is a design choice for this build: CNHL states neither lead length nor
+    exit position. The corners are filleted to lead_bend_radius.
+    """
+    L = b["length"]
+    z0 = b["height"] - b["lead_exit_below_top"]
+    x1 = -L / 2 - b["lead_run"]
+    r = b["lead_bend_radius"]
+    zb = z0 - 2 * r - b["lead_drop"]
+    return [(-L / 2 + 1.0, y, z0), (x1 - r, y, z0), (x1 - r, y, zb), (x1, y, zb)]
+
+
 def battery() -> None:
     """Pack centred on X/Y, bottom at z = 0, length along X. The discharge lead
-    leaves the rear end face (-X) and ends in the XT60 (female), straight as
-    shipped; the xt60 frame is the connector's mating face (pin 1 = BAT+ on -Y)."""
+    leaves the rear end face (-X), loops down behind the pack and ends in the
+    XT60 (female) facing +X; the xt60 frame is the connector's mating face
+    (pin 1 = BAT+ on -Y)."""
+    from build123d import Circle, FilletPolyline, Plane, Vector, sweep
+
     b = PARAMS["battery"]
     L, W, H = b["length"], b["width"], b["height"]
-    lead, od = b["lead_length"], b["lead_od"]
+    od = b["lead_od"]
     xt = PARAMS["xt60"]
     a = Artifact("cnhl-1100-6s", part_dir("cnhl-black-series-1100mah-6s-100c"), HERE)
     with BuildPart() as pack:
         Box(L, W, H, align=MIN)
         fillet(pack.edges().filter_by(Axis.X), radius=3.0)
     a.body(pack.part, "pack")
-    zc = H - b["lead_exit_below_top"]
+    end = None
     for label, y in (("lead_pos", -xt["pitch"] / 2), ("lead_neg", xt["pitch"] / 2)):
+        pts = _pigtail(b, y)
+        path = FilletPolyline(*[Vector(*p) for p in pts], radius=b["lead_bend_radius"] * 0.999)
         with BuildPart() as w:
-            with Locations(Pos(-L / 2, y, zc) * Rot(0, -90, 0)):
-                Cylinder(od / 2, lead, align=MIN)
+            with BuildSketch(Plane(origin=pts[0], z_dir=path.tangent_at(0))):
+                Circle(od / 2)
+            sweep(path=path)
         a.body(w.part, label)
-    x0 = -L / 2 - lead
+        end = pts[-1]
+    x0, zc = end[0], end[2]
     with BuildPart() as plug:
-        with Locations(Pos(x0 - xt["length"] / 2, 0, zc)):
+        with Locations(Pos(x0 + xt["length"] / 2, 0, zc)):
             Box(xt["length"], xt["width"], xt["height"])
     a.body(plug.part, "xt60_housing")
-    a.feature("xt60", [f for f in plug.part.faces() if f.geom_type.name == "PLANE" and f.normal_at().X < -0.9])
+    a.feature("xt60", [f for f in plug.part.faces() if f.geom_type.name == "PLANE" and f.normal_at().X > 0.9])
     a.write()
 
 

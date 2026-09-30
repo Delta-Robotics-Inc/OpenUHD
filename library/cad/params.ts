@@ -111,9 +111,15 @@ const params = {
     ...dims(battery),
     // Discharge lead as shipped: 12 AWG (src_product); its length is not
     // stated by CNHL (see the part's data_gap), so this is a design value.
-    lead_length: 60, // design: representative, not stated by the maker
-    lead_od: 3.4, // design: 12 AWG silicone, outside diameter (representative)
-    lead_exit_below_top: 9, // design: lead exit height on the end face
+    // Design values (this build's layout), not the maker's: the lead leaves the
+    // rear face 11 mm below the top, runs 49.5 mm back (past the top plate and
+    // GPS), bends down (R 8), drops 26 mm and U-turns into the XT60 (about
+    // 101 mm of lead in all).
+    lead_od: 3.4, // 12 AWG silicone, outside diameter (representative)
+    lead_exit_below_top: 11,
+    lead_run: 49.5,
+    lead_bend_radius: 8,
+    lead_drop: 26,
   },
   // AMASS XT60: 16.4 x 9.2 mm face, 20.2 mm male housing, 7.2 mm contact pitch
   // (XT60H-M / XT60PW drawings); the female housing length is representative

@@ -2,26 +2,26 @@
   "artifact": "cnhl-1100-6s",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "083ab672c51fc2e53200cffc302f6c2922aff58086dc8a3d09a85acc540b3c09",
+  "sourceDigest": "7a9985d598acdaf32cda1a90595316fda7bd304d31863f7dba8df73b8c567ab3",
   "units": "mm",
-  "volume_mm3": 106611.659,
+  "volume_mm3": 107367.768,
   "bodies": {
     "pack": 103108.075,
-    "lead_pos": 544.752,
-    "lead_neg": 544.752,
+    "lead_pos": 922.807,
+    "lead_neg": 922.807,
     "xt60_housing": 2414.08
   },
   "features": {
     "xt60": {
       "area_mm2": 150.88,
       "centroid": [
-        -113.5,
+        -71.0,
         0.0,
-        26.0
+        -18.0
       ],
       "faces": 1,
       "normal": [
-        -1.0,
+        1.0,
         0.0,
         0.0
       ]

@@ -2,7 +2,7 @@
   "artifact": "dji-o4-camera",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "13c8b4269cfe298767748520d13cd7e72c23fd075ef62a7f22b845866a53d524",
+  "sourceDigest": "5581b94d6036752d52fd8dc6e8899b14e3f1783fb4f99c6ecebd41ac5f6232a3",
   "units": "mm",
   "volume_mm3": 2740.954,
   "bodies": {

@@ -315,7 +315,7 @@ const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
           "XT60 gender",
           "balance connector pinout",
         ],
-        note: "Not stated by CNHL for 1101006BK; see .research/gaps.json. The generated CAD draws the discharge lead 60 mm long (a design value, marked in library/cad/params.ts), straight as shipped.",
+        note: "Not stated by CNHL for 1101006BK; see .research/gaps.json. The generated CAD draws the discharge lead about 101 mm long, looped down behind the pack (design values for the reference build, marked in library/cad/params.ts).",
       },
     },
   ],
@@ -331,11 +331,12 @@ const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
 export const CNHL_BLACK_SERIES_1100MAH_6S_100C: ModuleDef = withGeometry(
   CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE,
   {
-    // The XT60 at the end of the discharge lead (straight as shipped): its
-    // mating face, opening away from the pack; xAxis from BAT+ to BAT-.
+    // The XT60 at the end of the discharge lead: its mating face, facing
+    // forward (+X) after the lead loops down behind the pack (a design choice
+    // for this build, see library/cad/params.ts); xAxis from BAT+ to BAT-.
     xt60: {
-      frame: { origin: [-113.5, 0.0, 26.0], normal: [-1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
-      refs: [feature("xt60", { area_mm2: 150.88, centroid: [-113.5, 0.0, 26.0], normal: [-1.0, 0.0, 0.0] }), own("xt60")],
+      frame: { origin: [-71.0, 0.0, -18.0], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("xt60", { area_mm2: 150.88, centroid: [-71.0, 0.0, -18.0], normal: [1.0, 0.0, 0.0] }), own("xt60")],
     },
   },
   // The pack has no mechanical interface (it is strapped), so it cannot be
