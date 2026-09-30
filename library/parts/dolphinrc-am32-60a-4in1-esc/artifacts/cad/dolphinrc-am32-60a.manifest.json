@@ -2,17 +2,20 @@
   "artifact": "dolphinrc-am32-60a",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
+  "sourceDigest": "13c8b4269cfe298767748520d13cd7e72c23fd075ef62a7f22b845866a53d524",
   "units": "mm",
-  "volume_mm3": 6029.988,
+  "volume_mm3": 6188.878,
   "bodies": {
     "pcb": 2871.575,
     "components": 2641.1,
     "grommets": 487.073,
-    "motor_1_pads": 7.56,
-    "motor_2_pads": 7.56,
-    "motor_3_pads": 7.56,
-    "motor_4_pads": 7.56
+    "motor_1_pads": 10.8,
+    "motor_2_pads": 10.8,
+    "motor_3_pads": 10.8,
+    "motor_4_pads": 10.8,
+    "pad_bat_in": 11.34,
+    "pad_bat_neg": 11.34,
+    "socket_fc_socket": 123.25
   },
   "features": {
     "stack_mount": {
@@ -25,13 +28,55 @@
       "faces": 4
     },
     "motor_1": {
-      "area_mm2": 25.2,
+      "area_mm2": 36.0,
       "centroid": [
-        -20.0,
-        -13.3,
+        -11.5,
+        -18.3,
         1.9
       ],
       "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_1_a": {
+      "area_mm2": 12.0,
+      "centroid": [
+        -6.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_1_b": {
+      "area_mm2": 12.0,
+      "centroid": [
+        -11.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_1_c": {
+      "area_mm2": 12.0,
+      "centroid": [
+        -16.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
       "normal": [
         0.0,
         0.0,
@@ -39,13 +84,55 @@
       ]
     },
     "motor_2": {
-      "area_mm2": 25.2,
+      "area_mm2": 36.0,
       "centroid": [
-        20.0,
-        -13.3,
+        11.5,
+        -18.3,
         1.9
       ],
       "faces": 3,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_2_a": {
+      "area_mm2": 12.0,
+      "centroid": [
+        6.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_2_b": {
+      "area_mm2": 12.0,
+      "centroid": [
+        11.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_2_c": {
+      "area_mm2": 12.0,
+      "centroid": [
+        16.5,
+        -18.3,
+        1.9
+      ],
+      "faces": 1,
       "normal": [
         0.0,
         0.0,
@@ -53,10 +140,10 @@
       ]
     },
     "motor_3": {
-      "area_mm2": 25.2,
+      "area_mm2": 36.0,
       "centroid": [
-        -20.0,
-        13.3,
+        -11.5,
+        18.3,
         1.9
       ],
       "faces": 3,
@@ -66,11 +153,53 @@
         1.0
       ]
     },
-    "motor_4": {
-      "area_mm2": 25.2,
+    "motor_3_a": {
+      "area_mm2": 12.0,
       "centroid": [
-        20.0,
-        13.3,
+        -6.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_3_b": {
+      "area_mm2": 12.0,
+      "centroid": [
+        -11.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_3_c": {
+      "area_mm2": 12.0,
+      "centroid": [
+        -16.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_4": {
+      "area_mm2": 36.0,
+      "centroid": [
+        11.5,
+        18.3,
         1.9
       ],
       "faces": 3,
@@ -78,6 +207,90 @@
         0.0,
         0.0,
         1.0
+      ]
+    },
+    "motor_4_a": {
+      "area_mm2": 12.0,
+      "centroid": [
+        6.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_4_b": {
+      "area_mm2": 12.0,
+      "centroid": [
+        11.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "motor_4_c": {
+      "area_mm2": 12.0,
+      "centroid": [
+        16.5,
+        18.3,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "bat_in": {
+      "area_mm2": 37.8,
+      "centroid": [
+        -19.3,
+        -5.5,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "bat_neg": {
+      "area_mm2": 37.8,
+      "centroid": [
+        -19.3,
+        5.5,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "fc_socket": {
+      "area_mm2": 29.0,
+      "centroid": [
+        22.2,
+        0.0,
+        3.05
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
       ]
     }
   }

@@ -31,7 +31,7 @@ describe("interfaceGeometry", () => {
   });
 
   it("reports interfaces with no geometry as unmapped, not invented", () => {
-    const g = interfaceGeometry(part("dolphinrc-f405-v3-flight-controller"), "uart1");
+    const g = interfaceGeometry(part("dolphinrc-f405-v3-flight-controller"), "uart3");
     expect(g.frames).toHaveLength(0);
     expect(g.refs).toHaveLength(0);
   });
@@ -156,7 +156,7 @@ describe("assemble", () => {
   });
 
   it("routes motor phases from the ESC pads to each lead, and lists links without geometry", () => {
-    expect(asm.routes.map((r) => r.linkId).sort()).toEqual(["m1_phases", "m2_phases", "m3_phases", "m4_phases"]);
+    expect(asm.routes.map((r) => r.linkId).sort()).toEqual(["m1_phases", "m2_phases", "m3_phases", "m4_phases", "rx_crsf", "rx_gnd", "rx_power"]);
     expect(asm.routes[0].b.frames).toHaveLength(3);
     expect(asm.unrouted.map((u) => u.linkId)).toContain("gnss_i2c");
   });

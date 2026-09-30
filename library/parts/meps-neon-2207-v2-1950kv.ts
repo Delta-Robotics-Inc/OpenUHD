@@ -277,6 +277,16 @@ const MEPS_NEON_2207_V2_1950KV_BASE: ModuleDef = defineModule({
       },
     },
     {
+      type: "source_discrepancy",
+      params: {
+        field: "lead wire gauge",
+        values: ["20 AWG ('Lead:20#150mm', MEPS 4-motor combo listing; motor version not stated)", "24 AWG ('Lead: 24#150mm', reseller listing)"],
+        sources: ["https://www.mepsking.shop/4pcs-neon-2207-fpv-motors-with-4pairs-sz5145-propellers.html", "https://www.toydronehq.com/products/meps-neon-2207-fpv-motor-for-5-inch-freestyle-drone-1950kv-2050kv-2550kv/"],
+        resolution:
+          "Unresolved: the V2 product page does not state it. The generated CAD draws 20 AWG (the maker's own combo listing); measure a lead to confirm. Leads are three loose white silicone wires, untwisted and unsleeved beyond the 10 mm heat shrink (product photos).",
+      },
+    },
+    {
       type: "data_gap",
       params: {
         fields: [
@@ -331,16 +341,16 @@ export const MEPS_NEON_2207_V2_1950KV: ModuleDef = withGeometry(
     },
     // "phases" has no geometry of its own: it resolves to its three leads.
     phases_a: {
-      frame: { origin: [25.15, -2.2, 1.5], normal: [1, 0, 0] },
-      refs: [feature("phases_a", { area_mm2: 2.011, centroid: [25.15, -2.2, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_a")],
+      frame: { origin: [23.65, -1.9, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_a", { area_mm2: 2.545, centroid: [23.65, -1.9, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_a")],
     },
     phases_b: {
-      frame: { origin: [25.15, 0, 1.5], normal: [1, 0, 0] },
-      refs: [feature("phases_b", { area_mm2: 2.011, centroid: [25.15, 0.0, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_b")],
+      frame: { origin: [23.65, 0, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_b", { area_mm2: 2.545, centroid: [23.65, 0.0, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_b")],
     },
     phases_c: {
-      frame: { origin: [25.15, 2.2, 1.5], normal: [1, 0, 0] },
-      refs: [feature("phases_c", { area_mm2: 2.011, centroid: [25.15, 2.2, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_c")],
+      frame: { origin: [23.65, 1.9, 1.5], normal: [1, 0, 0] },
+      refs: [feature("phases_c", { area_mm2: 2.545, centroid: [23.65, 1.9, 1.5], normal: [1.0, 0.0, 0.0] }), own("phases_c")],
     },
   },
   [

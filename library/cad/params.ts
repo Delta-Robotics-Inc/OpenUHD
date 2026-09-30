@@ -54,6 +54,7 @@ const fc = part("dolphinrc-f405-v3-flight-controller");
 const gnss = part("matek-m9n-5883");
 const o4 = part("dji-o4-air-unit");
 const battery = part("cnhl-black-series-1100mah-6s-100c");
+const rp1 = part("radiomaster-rp1-v2-elrs-2g4");
 const screw = part("iso-4762-m3x30-socket-head-cap-screw");
 const nut = part("iso-10511-m3-nyloc-nut");
 const spacer = part("ettinger-005-83-060-m3-nylon-spacer-6mm");
@@ -106,7 +107,18 @@ const params = {
   fc: { ...dims(fc), hole_spacing: p(iface(fc, "stack_mount"), "hole_spacing"), hole_diameter: 4 },
   gnss: { ...dims(gnss), hole_spacing: p(iface(gnss, "mount"), "hole_spacing") },
   o4: { module: o4m.transmission_module_mm, camera: o4m.camera_module_mm },
-  battery: dims(battery),
+  battery: {
+    ...dims(battery),
+    // Discharge lead as shipped: 12 AWG (src_product); its length is not
+    // stated by CNHL (see the part's data_gap), so this is a design value.
+    lead_length: 60, // design: representative, not stated by the maker
+    lead_od: 3.4, // design: 12 AWG silicone, outside diameter (representative)
+    lead_exit_below_top: 9, // design: lead exit height on the end face
+  },
+  // AMASS XT60: 16.4 x 9.2 mm face, 20.2 mm male housing, 7.2 mm contact pitch
+  // (XT60H-M / XT60PW drawings); the female housing length is representative
+  xt60: { length: 16, width: 16.4, height: 9.2, pitch: 7.2, male_length: 20.2 },
+  rp1: dims(rp1),
   fasteners: {
     screw_length: p(iface(screw, screw.interfaces[0].id), "length"),
     screw_diameter: p(iface(screw, screw.interfaces[0].id), "fastener_diameter"),

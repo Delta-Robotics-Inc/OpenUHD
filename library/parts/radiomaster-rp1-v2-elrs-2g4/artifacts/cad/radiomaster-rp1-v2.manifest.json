@@ -1,0 +1,75 @@
+{
+  "artifact": "radiomaster-rp1-v2",
+  "tool": "build123d",
+  "toolVersion": "0.13.0",
+  "sourceDigest": "13c8b4269cfe298767748520d13cd7e72c23fd075ef62a7f22b845866a53d524",
+  "units": "mm",
+  "volume_mm3": 289.138,
+  "bodies": {
+    "pcb": 143.0,
+    "components": 134.232,
+    "u_fl": 8.45,
+    "pad_crsf_rx": 0.864,
+    "pad_crsf_tx": 0.864,
+    "pad_vcc_5v": 0.864,
+    "pad_gnd": 0.864
+  },
+  "features": {
+    "crsf_rx": {
+      "area_mm2": 2.88,
+      "centroid": [
+        -5.4,
+        -3.81,
+        1.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "crsf_tx": {
+      "area_mm2": 2.88,
+      "centroid": [
+        -5.4,
+        -1.27,
+        1.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "vcc_5v": {
+      "area_mm2": 2.88,
+      "centroid": [
+        -5.4,
+        1.27,
+        1.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "gnd": {
+      "area_mm2": 2.88,
+      "centroid": [
+        -5.4,
+        3.81,
+        1.3
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  }
+}

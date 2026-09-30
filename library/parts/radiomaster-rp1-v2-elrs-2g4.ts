@@ -56,6 +56,7 @@ import {
   connectorTrait,
   defineModule,
 } from "../../src/protocols/index.js";
+import { cadArtifacts, feature, own, withGeometry } from "../cad/artifacts.js";
 
 const SRC = {
   manual: "https://cdn.shopify.com/s/files/1/0609/8324/7079/files/RP1_User_Manual.pdf?v=1722923320",
@@ -210,7 +211,7 @@ const antennaUfl: InterfaceDef = {
 // Module
 // ---------------------------------------------------------------------------
 
-export const RADIOMASTER_RP1_V2_ELRS_2G4: ModuleDef = defineModule({
+const RADIOMASTER_RP1_V2_ELRS_2G4_BASE: ModuleDef = defineModule({
   id: "radiomaster-rp1-v2-elrs-2g4",
   name: "RadioMaster RP1 V2 ExpressLRS 2.4GHz Nano Receiver",
   version: "1.0.0",
@@ -251,6 +252,14 @@ export const RADIOMASTER_RP1_V2_ELRS_2G4: ModuleDef = defineModule({
   ],
 
   traits: [
+    {
+      type: "usage_note",
+      params: {
+        note:
+          "Package includes '1 * CRSF wire' (product page); the manual card lists silicone wires and the product photo shows four (red, black, white, green) twisted together with bare tinned ends and no plug. Their gauge, length and colour-to-pad assignment are not stated.",
+        source: ["https://radiomasterrc.com/products/rp1-expresslrs-2-4ghz-nano-receiver", "https://flymod.net/download/radiomaster_receiver_rp1_v2_manual"],
+      },
+    },
     {
       type: "performance",
       params: {
@@ -376,3 +385,38 @@ export const RADIOMASTER_RP1_V2_ELRS_2G4: ModuleDef = defineModule({
     { id: "art_elrs_targets", name: "ExpressLRS targets.json", type: "firmware", url: SRC.elrsTargets },
   ],
 });
+
+/**
+ * Representative CAD (library/cad/py/parts.py): the 13 x 11 x 3 mm envelope
+ * (src_manual), the four pads along one 11 mm edge in the manual's top-view
+ * order RX TX 5V G, and the U.FL socket at the far end. Pad pitch and size are
+ * not stated (2.54 mm drawn). The pads face +Z: wires are soldered from above.
+ */
+export const RADIOMASTER_RP1_V2_ELRS_2G4: ModuleDef = withGeometry(
+  RADIOMASTER_RP1_V2_ELRS_2G4_BASE,
+  {
+    crsf_rx: {
+      frame: { origin: [-5.4, -3.81, 1.3], normal: [0, 0, 1] },
+      refs: [feature("crsf_rx", { area_mm2: 2.88, centroid: [-5.4, -3.81, 1.3], normal: [0.0, 0.0, 1.0] }), own("crsf_rx")],
+    },
+    crsf_tx: {
+      frame: { origin: [-5.4, -1.27, 1.3], normal: [0, 0, 1] },
+      refs: [feature("crsf_tx", { area_mm2: 2.88, centroid: [-5.4, -1.27, 1.3], normal: [0.0, 0.0, 1.0] }), own("crsf_tx")],
+    },
+    vcc_5v: {
+      frame: { origin: [-5.4, 1.27, 1.3], normal: [0, 0, 1] },
+      refs: [feature("vcc_5v", { area_mm2: 2.88, centroid: [-5.4, 1.27, 1.3], normal: [0.0, 0.0, 1.0] }), own("vcc_5v")],
+    },
+    gnd: {
+      frame: { origin: [-5.4, 3.81, 1.3], normal: [0, 0, 1] },
+      refs: [feature("gnd", { area_mm2: 2.88, centroid: [-5.4, 3.81, 1.3], normal: [0.0, 0.0, 1.0] }), own("gnd")],
+    },
+  },
+  cadArtifacts({
+    dir: "library/parts/radiomaster-rp1-v2-elrs-2g4/artifacts/cad",
+    name: "radiomaster-rp1-v2",
+    generator: "library/cad/py/parts.py",
+    tool: "build123d 0.13.0",
+    interfaces: ["crsf_rx", "crsf_tx", "vcc_5v", "gnd"],
+  }),
+);

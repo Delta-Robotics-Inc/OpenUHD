@@ -2,11 +2,12 @@
   "artifact": "dji-o4-air-unit",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
+  "sourceDigest": "13c8b4269cfe298767748520d13cd7e72c23fd075ef62a7f22b845866a53d524",
   "units": "mm",
-  "volume_mm3": 5272.577,
+  "volume_mm3": 5317.377,
   "bodies": {
-    "transmission_module": 5272.577
+    "transmission_module": 5272.577,
+    "cable_socket": 44.8
   },
   "features": {
     "tx_module_mount": {
@@ -17,6 +18,20 @@
         3.0
       ],
       "faces": 4
+    },
+    "fc_cable_socket": {
+      "area_mm2": 11.2,
+      "centroid": [
+        15.0,
+        -7.0,
+        6.8
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
     }
   }
 }

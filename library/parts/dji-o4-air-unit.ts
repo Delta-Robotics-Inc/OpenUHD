@@ -498,6 +498,12 @@ export const DJI_O4_AIR_UNIT: ModuleDef = withGeometry(
       frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
       refs: [feature("tx_module_mount", { area_mm2: 196.035, centroid: [0.0, 0.0, 3.0] }), own("tx_module_mount"), procedural("bolt_pattern")],
     },
+    // The 3-in-1 cable socket: front edge of the module, opening forward
+    // (representative position; DJI publishes no drawing of it).
+    fc_cable_socket: {
+      frame: { origin: [15.0, -7.0, 6.8], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("fc_cable_socket", { area_mm2: 11.2, centroid: [15.0, -7.0, 6.8], normal: [1.0, 0.0, 0.0] }), own("fc_cable_socket")],
+    },
     // The camera is a second body joined only by its cable, so its frame
     // names the body artifact it is expressed in. Side plates clamp it from
     // both sides, so the frame sits on the mid-plane (origin: the side-hole
@@ -514,7 +520,7 @@ export const DJI_O4_AIR_UNIT: ModuleDef = withGeometry(
     name: "dji-o4-air-unit",
     generator: "library/cad/py/parts.py",
     tool: "build123d 0.13.0",
-    interfaces: ["tx_module_mount"],
+    interfaces: ["tx_module_mount", "fc_cable_socket"],
   }),
     ...cadArtifacts({
     dir: "library/parts/dji-o4-air-unit/artifacts/cad",

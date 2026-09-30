@@ -73,7 +73,22 @@
   "battery": {
     "length": 75,
     "width": 39.5,
-    "height": 35
+    "height": 35,
+    "lead_length": 60,
+    "lead_od": 3.4,
+    "lead_exit_below_top": 9
+  },
+  "xt60": {
+    "length": 16,
+    "width": 16.4,
+    "height": 9.2,
+    "pitch": 7.2,
+    "male_length": 20.2
+  },
+  "rp1": {
+    "length": 13,
+    "width": 11,
+    "height": 3
   },
   "fasteners": {
     "screw_length": 30,

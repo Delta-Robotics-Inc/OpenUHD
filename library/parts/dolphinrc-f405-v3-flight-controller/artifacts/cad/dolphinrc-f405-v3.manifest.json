@@ -2,13 +2,51 @@
   "artifact": "dolphinrc-f405-v3",
   "tool": "build123d",
   "toolVersion": "0.13.0",
-  "sourceDigest": "71e60249a0339138bc0b8bdc410eac1bf4ebffefa4566ae1bc7fe70bcc8d1943",
+  "sourceDigest": "13c8b4269cfe298767748520d13cd7e72c23fd075ef62a7f22b845866a53d524",
   "units": "mm",
-  "volume_mm3": 6321.848,
+  "volume_mm3": 7067.813,
   "bodies": {
     "pcb": 1993.175,
     "components": 3841.6,
-    "grommets": 487.073
+    "grommets": 487.073,
+    "pad_r0_CUR": 1.056,
+    "pad_r1_RX3": 1.056,
+    "pad_r2_TX3": 1.056,
+    "pad_r3_GND": 1.056,
+    "pad_r4_rail_4v5": 1.056,
+    "pad_r5_uart1_rx": 1.056,
+    "pad_r6_uart1_tx": 1.056,
+    "pad_r7_gnd": 1.056,
+    "pad_r8_bec_5v": 1.056,
+    "pad_r9_i2c1_sda": 1.056,
+    "pad_r10_i2c1_scl": 1.056,
+    "pad_b0_TX4": 1.056,
+    "pad_b1_RX4": 1.056,
+    "pad_b2_4V5": 1.056,
+    "pad_b3_GND": 1.056,
+    "pad_b4_uart2_tx": 1.056,
+    "pad_b5_uart2_rx": 1.056,
+    "pad_b6_TX5": 1.056,
+    "pad_b7_VTX": 1.056,
+    "pad_b8_10V": 1.056,
+    "pad_b9_GND": 1.056,
+    "pad_f0_C1": 1.056,
+    "pad_f1_C2": 1.056,
+    "pad_f2_5V": 1.056,
+    "pad_f3_GND": 1.056,
+    "pad_f4_M4": 1.056,
+    "pad_f5_M3": 1.056,
+    "pad_f6_M2": 1.056,
+    "pad_f7_M1": 1.056,
+    "pad_f8_GND": 1.056,
+    "pad_f9_VBAT": 1.056,
+    "socket_esc_socket": 123.25,
+    "socket_rc_socket": 73.95,
+    "socket_cam_socket": 61.625,
+    "socket_dji_socket": 98.6,
+    "socket_vtx_socket": 73.95,
+    "socket_gps_socket": 73.95,
+    "usb_c": 207.904
   },
   "features": {
     "stack_mount": {
@@ -19,6 +57,216 @@
         0.8
       ],
       "faces": 4
+    },
+    "rail_4v5": {
+      "area_mm2": 3.52,
+      "centroid": [
+        2.3,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "uart1_rx": {
+      "area_mm2": 3.52,
+      "centroid": [
+        0.0,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "uart1_tx": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -2.3,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "gnd": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -4.6,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "bec_5v": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -6.9,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "i2c1_sda": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -9.2,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "i2c1_scl": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -11.5,
+        -16.6,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "uart2_tx": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -16.6,
+        1.27,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "uart2_rx": {
+      "area_mm2": 3.52,
+      "centroid": [
+        -16.6,
+        -1.27,
+        1.9
+      ],
+      "faces": 1,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "esc_socket": {
+      "area_mm2": 29.0,
+      "centroid": [
+        17.7,
+        0.0,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rc_socket": {
+      "area_mm2": 17.4,
+      "centroid": [
+        17.7,
+        -11.0,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "cam_socket": {
+      "area_mm2": 14.5,
+      "centroid": [
+        17.7,
+        10.5,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "dji_socket": {
+      "area_mm2": 23.2,
+      "centroid": [
+        -17.7,
+        0.0,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "vtx_socket": {
+      "area_mm2": 17.4,
+      "centroid": [
+        -17.7,
+        -11.0,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "gps_socket": {
+      "area_mm2": 17.4,
+      "centroid": [
+        -17.7,
+        11.0,
+        -1.45
+      ],
+      "faces": 1,
+      "normal": [
+        -1.0,
+        0.0,
+        0.0
+      ]
     }
   }
 }

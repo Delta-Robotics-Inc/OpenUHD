@@ -382,20 +382,84 @@ export const DOLPHINRC_AM32_60A_4IN1_ESC: ModuleDef = withGeometry(
     // Motor pads: geometry on the parent (three pads as one feature), unlike
     // the motor, whose leads are bound per phase leaf.
     motor_1: {
-      frame: { origin: [-20.0, -13.3, 1.9], normal: [0, 0, 1] },
-      refs: [feature("motor_1", { area_mm2: 25.2, centroid: [-20.0, -13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1"), procedural("pad")],
+      frame: { origin: [-11.5, -18.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_1", { area_mm2: 36.0, centroid: [-11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1"), procedural("pad")],
     },
     motor_2: {
-      frame: { origin: [20.0, -13.3, 1.9], normal: [0, 0, 1] },
-      refs: [feature("motor_2", { area_mm2: 25.2, centroid: [20.0, -13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2"), procedural("pad")],
+      frame: { origin: [11.5, -18.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_2", { area_mm2: 36.0, centroid: [11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2"), procedural("pad")],
     },
     motor_3: {
-      frame: { origin: [-20.0, 13.3, 1.9], normal: [0, 0, 1] },
-      refs: [feature("motor_3", { area_mm2: 25.2, centroid: [-20.0, 13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3"), procedural("pad")],
+      frame: { origin: [-11.5, 18.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_3", { area_mm2: 36.0, centroid: [-11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3"), procedural("pad")],
     },
     motor_4: {
-      frame: { origin: [20.0, 13.3, 1.9], normal: [0, 0, 1] },
-      refs: [feature("motor_4", { area_mm2: 25.2, centroid: [20.0, 13.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4"), procedural("pad")],
+      frame: { origin: [11.5, 18.3, 1.9], normal: [0, 0, 1] },
+      refs: [feature("motor_4", { area_mm2: 36.0, centroid: [11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4"), procedural("pad")],
+    },
+
+    // Each phase pad on its own (PB-805 harness ends land per conductor), a innermost.
+    motor_1_a: {
+      frame: { origin: [-6.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_1_a", { area_mm2: 12.0, centroid: [-6.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1_a")],
+    },
+    motor_1_b: {
+      frame: { origin: [-11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_1_b", { area_mm2: 12.0, centroid: [-11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1_b")],
+    },
+    motor_1_c: {
+      frame: { origin: [-16.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_1_c", { area_mm2: 12.0, centroid: [-16.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_1_c")],
+    },
+    motor_2_a: {
+      frame: { origin: [6.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_2_a", { area_mm2: 12.0, centroid: [6.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2_a")],
+    },
+    motor_2_b: {
+      frame: { origin: [11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_2_b", { area_mm2: 12.0, centroid: [11.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2_b")],
+    },
+    motor_2_c: {
+      frame: { origin: [16.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_2_c", { area_mm2: 12.0, centroid: [16.5, -18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_2_c")],
+    },
+    motor_3_a: {
+      frame: { origin: [-6.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_3_a", { area_mm2: 12.0, centroid: [-6.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3_a")],
+    },
+    motor_3_b: {
+      frame: { origin: [-11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_3_b", { area_mm2: 12.0, centroid: [-11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3_b")],
+    },
+    motor_3_c: {
+      frame: { origin: [-16.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_3_c", { area_mm2: 12.0, centroid: [-16.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_3_c")],
+    },
+    motor_4_a: {
+      frame: { origin: [6.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_4_a", { area_mm2: 12.0, centroid: [6.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4_a")],
+    },
+    motor_4_b: {
+      frame: { origin: [11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_4_b", { area_mm2: 12.0, centroid: [11.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4_b")],
+    },
+    motor_4_c: {
+      frame: { origin: [16.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("motor_4_c", { area_mm2: 12.0, centroid: [16.5, 18.3, 1.9], normal: [0.0, 0.0, 1.0] }), own("motor_4_c")],
+    },
+    // Battery pads on the rear edge (+ on the right, - on the left, as photographed in the manual p3)
+    bat_in: {
+      frame: { origin: [-19.3, -5.5, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("bat_in", { area_mm2: 37.8, centroid: [-19.3, -5.5, 1.9], normal: [0.0, 0.0, 1.0] }), own("bat_in")],
+    },
+    bat_neg: {
+      frame: { origin: [-19.3, 5.5, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("bat_neg", { area_mm2: 37.8, centroid: [-19.3, 5.5, 1.9], normal: [0.0, 0.0, 1.0] }), own("bat_neg")],
+    },
+    // SH1.0 8-pin socket on the front edge, opening forward; xAxis runs pin 1 (BAT) to pin 8 (M4)
+    fc_socket: {
+      frame: { origin: [22.2, 0.0, 3.05], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("fc_socket", { area_mm2: 29.0, centroid: [22.2, 0.0, 3.05], normal: [1.0, 0.0, 0.0] }), own("fc_socket")],
     },
   },
   cadArtifacts({
@@ -403,6 +467,6 @@ export const DOLPHINRC_AM32_60A_4IN1_ESC: ModuleDef = withGeometry(
     name: "dolphinrc-am32-60a",
     generator: "library/cad/py/parts.py",
     tool: "build123d 0.13.0",
-    interfaces: ["stack_mount", "motor_1", "motor_2", "motor_3", "motor_4"],
+    interfaces: ["stack_mount", "motor_1", "motor_2", "motor_3", "motor_4", "motor_1_a", "motor_1_b", "motor_1_c", "motor_2_a", "motor_2_b", "motor_2_c", "motor_3_a", "motor_3_b", "motor_3_c", "motor_4_a", "motor_4_b", "motor_4_c", "bat_in", "bat_neg", "fc_socket"],
   }),
 );

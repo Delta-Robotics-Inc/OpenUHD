@@ -679,14 +679,77 @@ export const DOLPHINRC_F405_V3_FLIGHT_CONTROLLER: ModuleDef = withGeometry(
       frame: { origin: [0, 0, 0], normal: [0, 0, -1], xAxis: [1, 0, 0], symmetryDeg: 90 },
       refs: [feature("stack_mount", { area_mm2: 80.425, centroid: [0.0, 0.0, 0.8] }), own("stack_mount"), procedural("bolt_pattern")],
     },
-    // Electrical interfaces (UARTs, I2C, BEC pads) are not modelled yet and
-    // report as unmapped; USB is where a cable plugs in but has no geometry.
+    // Solder pads on the top face (manual p3). A net with several pads (GND,
+    // 5V, 4.5V) is bound to one of them: the one next to the peripheral pads
+    // (RX1/TX1, SDA/SCL) on the right edge. Positions are representative.
+    rail_4v5: {
+      frame: { origin: [2.3, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("rail_4v5", { area_mm2: 3.52, centroid: [2.3, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("rail_4v5")],
+    },
+    uart1_rx: {
+      frame: { origin: [0.0, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("uart1_rx", { area_mm2: 3.52, centroid: [0.0, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("uart1_rx")],
+    },
+    uart1_tx: {
+      frame: { origin: [-2.3, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("uart1_tx", { area_mm2: 3.52, centroid: [-2.3, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("uart1_tx")],
+    },
+    gnd: {
+      frame: { origin: [-4.6, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("gnd", { area_mm2: 3.52, centroid: [-4.6, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("gnd")],
+    },
+    bec_5v: {
+      frame: { origin: [-6.9, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("bec_5v", { area_mm2: 3.52, centroid: [-6.9, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("bec_5v")],
+    },
+    i2c1_sda: {
+      frame: { origin: [-9.2, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("i2c1_sda", { area_mm2: 3.52, centroid: [-9.2, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("i2c1_sda")],
+    },
+    i2c1_scl: {
+      frame: { origin: [-11.5, -16.6, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("i2c1_scl", { area_mm2: 3.52, centroid: [-11.5, -16.6, 1.9], normal: [0.0, 0.0, 1.0] }), own("i2c1_scl")],
+    },
+    uart2_tx: {
+      frame: { origin: [-16.6, 1.27, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("uart2_tx", { area_mm2: 3.52, centroid: [-16.6, 1.27, 1.9], normal: [0.0, 0.0, 1.0] }), own("uart2_tx")],
+    },
+    uart2_rx: {
+      frame: { origin: [-16.6, -1.27, 1.9], normal: [0.0, 0.0, 1.0] },
+      refs: [feature("uart2_rx", { area_mm2: 3.52, centroid: [-16.6, -1.27, 1.9], normal: [0.0, 0.0, 1.0] }), own("uart2_rx")],
+    },
+    // Sockets on the underside (manual p4), opening outward; xAxis runs from
+    // pin 1 (the first silkscreen label) to the last.
+    esc_socket: {
+      frame: { origin: [17.7, 0.0, -1.45], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("esc_socket", { area_mm2: 29.0, centroid: [17.7, 0.0, -1.45], normal: [1.0, 0.0, 0.0] }), own("esc_socket")],
+    },
+    rc_socket: {
+      frame: { origin: [17.7, -11.0, -1.45], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("rc_socket", { area_mm2: 17.4, centroid: [17.7, -11.0, -1.45], normal: [1.0, 0.0, 0.0] }), own("rc_socket")],
+    },
+    cam_socket: {
+      frame: { origin: [17.7, 10.5, -1.45], normal: [1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("cam_socket", { area_mm2: 14.5, centroid: [17.7, 10.5, -1.45], normal: [1.0, 0.0, 0.0] }), own("cam_socket")],
+    },
+    dji_socket: {
+      frame: { origin: [-17.7, 0.0, -1.45], normal: [-1.0, 0.0, 0.0], xAxis: [0.0, -1.0, 0.0] },
+      refs: [feature("dji_socket", { area_mm2: 23.2, centroid: [-17.7, 0.0, -1.45], normal: [-1.0, 0.0, 0.0] }), own("dji_socket")],
+    },
+    vtx_socket: {
+      frame: { origin: [-17.7, -11.0, -1.45], normal: [-1.0, 0.0, 0.0], xAxis: [0.0, -1.0, 0.0] },
+      refs: [feature("vtx_socket", { area_mm2: 17.4, centroid: [-17.7, -11.0, -1.45], normal: [-1.0, 0.0, 0.0] }), own("vtx_socket")],
+    },
+    gps_socket: {
+      frame: { origin: [-17.7, 11.0, -1.45], normal: [-1.0, 0.0, 0.0], xAxis: [0.0, -1.0, 0.0] },
+      refs: [feature("gps_socket", { area_mm2: 17.4, centroid: [-17.7, 11.0, -1.45], normal: [-1.0, 0.0, 0.0] }), own("gps_socket")],
+    },
   },
   cadArtifacts({
     dir: "library/parts/dolphinrc-f405-v3-flight-controller/artifacts/cad",
     name: "dolphinrc-f405-v3",
     generator: "library/cad/py/parts.py",
     tool: "build123d 0.13.0",
-    interfaces: ["stack_mount"],
+    interfaces: ["stack_mount", "rail_4v5", "uart1_rx", "uart1_tx", "gnd", "bec_5v", "i2c1_sda", "i2c1_scl", "uart2_tx", "uart2_rx", "esc_socket", "rc_socket", "cam_socket", "dji_socket", "vtx_socket", "gps_socket"],
   }),
 );

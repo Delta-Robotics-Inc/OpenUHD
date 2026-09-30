@@ -315,7 +315,7 @@ const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
           "XT60 gender",
           "balance connector pinout",
         ],
-        note: "Not stated by CNHL for 1101006BK; see .research/gaps.json.",
+        note: "Not stated by CNHL for 1101006BK; see .research/gaps.json. The generated CAD draws the discharge lead 60 mm long (a design value, marked in library/cad/params.ts), straight as shipped.",
       },
     },
   ],
@@ -330,14 +330,21 @@ const CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE: ModuleDef = defineModule({
 
 export const CNHL_BLACK_SERIES_1100MAH_6S_100C: ModuleDef = withGeometry(
   CNHL_BLACK_SERIES_1100MAH_6S_100C_BASE,
-  {},
-  // Body only: the pack has no mechanical interface (it is strapped), so it
-  // cannot be placed from links — see "unlinked modules" in the spec.
+  {
+    // The XT60 at the end of the discharge lead (straight as shipped): its
+    // mating face, opening away from the pack; xAxis from BAT+ to BAT-.
+    xt60: {
+      frame: { origin: [-113.5, 0.0, 26.0], normal: [-1.0, 0.0, 0.0], xAxis: [0.0, 1.0, 0.0] },
+      refs: [feature("xt60", { area_mm2: 150.88, centroid: [-113.5, 0.0, 26.0], normal: [-1.0, 0.0, 0.0] }), own("xt60")],
+    },
+  },
+  // The pack has no mechanical interface (it is strapped), so it cannot be
+  // placed from links — see "unlinked modules" in the spec.
   cadArtifacts({
     dir: "library/parts/cnhl-black-series-1100mah-6s-100c/artifacts/cad",
     name: "cnhl-1100-6s",
     generator: "library/cad/py/parts.py",
     tool: "build123d 0.13.0",
-    interfaces: [],
+    interfaces: ["xt60"],
   }),
 );
