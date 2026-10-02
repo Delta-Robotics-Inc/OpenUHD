@@ -1,0 +1,32 @@
+# Tests, type-check and build for UHD on its own.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["mark/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  uhd:
+    name: Test, type-check, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run type-check
+      - run: npm test
+      - run: npm run build
+      - run: npm run build:library
