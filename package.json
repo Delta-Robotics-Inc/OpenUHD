@@ -1,7 +1,7 @@
 {
   "name": "@deltarobotics/uhd",
   "version": "0.2.0",
-  "description": "Universal Hardware Description — an open, composable description language for multidisciplinary hardware engineering. Module / Interface / Harness primitives.",
+  "description": "Universal Hardware Description \u2014 an open, composable description language for multidisciplinary hardware engineering. Module / Interface / Harness primitives.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,11 +20,17 @@
     },
     "./taxonomy/uhd-taxonomy.json": "./src/taxonomy/uhd-taxonomy.json",
     "./taxonomy/uhd-taxonomy.schema.json": "./src/taxonomy/uhd-taxonomy.schema.json",
-    "./taxonomy/taxonomy-extension.schema.json": "./src/taxonomy/taxonomy-extension.schema.json"
+    "./taxonomy/taxonomy-extension.schema.json": "./src/taxonomy/taxonomy-extension.schema.json",
+    "./library": {
+      "types": "./dist/library/index.d.ts",
+      "import": "./dist/library/index.js"
+    },
+    "./schemas/uhd-library-v1.schema.json": "./schemas/uhd-library-v1.schema.json"
   },
   "files": [
     "dist",
     "src",
+    "schemas",
     "library",
     "skills",
     "docs/**/*.md",
@@ -39,7 +45,8 @@
     "prepack": "npm run build && npm run build:library",
     "test": "vitest run",
     "test:watch": "vitest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "build:schemas": "tsx scripts/write-schemas.ts"
   },
   "keywords": [
     "hardware",

@@ -1,0 +1,799 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/schemas/uhd-library-v1.schema.json",
+  "title": "UHD library protocol uhd-library/v1",
+  "description": "Response bodies of the UHD library protocol and the revision envelope uhd.part-revision/v1 (docs/library-protocol.md).",
+  "$defs": {
+    "discovery": {
+      "type": "object",
+      "required": [
+        "protocol",
+        "name",
+        "version",
+        "envelopeSchemas",
+        "uhdSchema",
+        "taxonomy",
+        "capabilities",
+        "auth"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "uhd-library/v1"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "api": {
+          "type": "string",
+          "minLength": 1
+        },
+        "envelopeSchemas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "uhdSchema": {
+          "$ref": "#/$defs/uhdSchemaRange"
+        },
+        "taxonomy": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "version"
+              ],
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "namespaces": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "auth": {
+          "type": "object",
+          "required": [
+            "read"
+          ],
+          "properties": {
+            "read": {
+              "enum": [
+                "none",
+                "bearer"
+              ]
+            },
+            "realm": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "defaultPageSize": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxPageSize": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "uhdSchemaRange": {
+      "type": "object",
+      "required": [
+        "min",
+        "below"
+      ],
+      "properties": {
+        "min": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "below": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "partRef": {
+      "type": "object",
+      "required": [
+        "partId",
+        "revision"
+      ],
+      "properties": {
+        "partId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "deprecation": {
+      "type": "object",
+      "required": [
+        "reason",
+        "at"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replacedBy": {
+          "$ref": "#/$defs/partRef"
+        }
+      }
+    },
+    "blobRef": {
+      "type": "object",
+      "required": [
+        "sha256",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "partSummary": {
+      "type": "object",
+      "required": [
+        "partId",
+        "name",
+        "categories",
+        "tags",
+        "protocols",
+        "domains",
+        "latestRevision"
+      ],
+      "properties": {
+        "partId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "partNumber": {
+          "type": "string"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "latestRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "recommendedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deprecated": {
+          "$ref": "#/$defs/deprecation"
+        },
+        "thumbnail": {
+          "$ref": "#/$defs/blobRef"
+        }
+      }
+    },
+    "searchResponse": {
+      "type": "object",
+      "required": [
+        "total",
+        "parts",
+        "nextCursor"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/partSummary"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "facets": {
+          "type": "object",
+          "required": [
+            "taxonomy",
+            "domain",
+            "protocol",
+            "tag"
+          ],
+          "properties": {
+            "taxonomy": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "domain": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "protocol": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "tag": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "revisionRow": {
+      "type": "object",
+      "required": [
+        "partId",
+        "revision",
+        "digest",
+        "definitionDigest",
+        "uhdSchema",
+        "createdAt"
+      ],
+      "properties": {
+        "partId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "definitionDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "uhdSchema": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "deprecated": {
+          "$ref": "#/$defs/deprecation"
+        }
+      }
+    },
+    "partDetail": {
+      "type": "object",
+      "required": [
+        "part",
+        "revisions"
+      ],
+      "properties": {
+        "part": {
+          "$ref": "#/$defs/partSummary"
+        },
+        "revisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/revisionRow"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "revisionList": {
+      "type": "object",
+      "required": [
+        "partId",
+        "revisions"
+      ],
+      "properties": {
+        "partId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "revisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/revisionRow"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "moduleDef": {
+      "description": "A UHD ModuleDef; the envelope checks only what the protocol reads.",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "interfaces"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "domain"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "moduleDefId"
+            ],
+            "properties": {
+              "moduleDefId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "filePath": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "envelopeArtifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "size",
+        "mediaType",
+        "role"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "body",
+            "interface",
+            "source",
+            "drawing",
+            "thumbnail",
+            "license",
+            "attachment"
+          ]
+        },
+        "artifactId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "missingArtifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "artifactId",
+        "reason"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidenceRef": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "sources",
+            "verification",
+            "datasheet",
+            "document",
+            "other"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://"
+        }
+      },
+      "additionalProperties": false
+    },
+    "revisionSource": {
+      "type": "object",
+      "required": [
+        "repository"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "dirty": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "envelope": {
+      "description": "The revision envelope. The standard schema identifier is uhd.part-revision/v1; a library may serve envelopes published before it adopted the protocol under the identifiers its discovery document lists.",
+      "type": "object",
+      "required": [
+        "schema",
+        "uhdSchema",
+        "partId",
+        "revision",
+        "definition",
+        "definitionDigest",
+        "dependencies",
+        "artifacts",
+        "missingArtifacts",
+        "evidence",
+        "derivedFrom",
+        "digest",
+        "createdAt"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uhdSchema": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "partId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "definition": {
+          "$ref": "#/$defs/moduleDef"
+        },
+        "definitionDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/partRef"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/envelopeArtifact"
+          }
+        },
+        "missingArtifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/missingArtifact"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidenceRef"
+          }
+        },
+        "derivedFrom": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/partRef"
+            }
+          ]
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "source": {
+          "$ref": "#/$defs/revisionSource"
+        },
+        "publisher": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "closure": {
+      "type": "object",
+      "required": [
+        "root",
+        "revisions",
+        "conflicts"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/partRef"
+        },
+        "revisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/envelope"
+          },
+          "minItems": 1
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "partId",
+              "revisions"
+            ],
+            "properties": {
+              "partId": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+              },
+              "revisions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-error-codes": [
+    "QUERY_INVALID",
+    "CURSOR_INVALID",
+    "REVISION_INVALID",
+    "SHA256_INVALID",
+    "AUTH_REQUIRED",
+    "FORBIDDEN",
+    "PART_NOT_FOUND",
+    "REVISION_NOT_FOUND",
+    "BLOB_NOT_FOUND",
+    "NOT_FOUND",
+    "RATE_LIMITED",
+    "INTERNAL"
+  ]
+}
