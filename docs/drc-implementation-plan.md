@@ -175,7 +175,7 @@ field for future migration.
 
 ## Phase 9 — Web plumbing (Protoboard-Website repo)
 
-1. Library manifest build (`scripts/build-library.ts`) per `docs/showcase-plan.md` §2.3.
+1. Parts come from a library served over the open library protocol (`docs/library-protocol.md`); UHD has no part library of its own.
 2. `/validate` page: engine runs client-side; state in URL.
 3. **Pair-scene layout engine** (visualizer-spec §9): DOM rows + measured ports
    (ResizeObserver), SVG overlay for shared regions/wires, row-pairing from `rowPair`,

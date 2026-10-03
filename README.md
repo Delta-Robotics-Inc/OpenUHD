@@ -171,12 +171,12 @@ We are actively interested in:
 
 ### What is not in this repository
 
-UHD holds the schema, pure helpers and test fixtures. Tools that run on UHD
-(CAD generators, document generators, part research and verification
-workflows) live with the tools built on it. The part library that used to
-be in `library/` has moved to the ProtoBoard Cloud parts service and is no
-longer maintained here; the copy that remains is read only and will be
-removed ([library/MOVED.md](library/MOVED.md)).
+UHD holds the schema, pure helpers and the test fixtures its own tests use
+(`test/fixtures/`: invented parts and systems, and a few frozen copies of
+datasheet parts). It has no part library: the library lives in ProtoBoard's
+parts service, which serves it over the open [library protocol](docs/library-protocol.md).
+Tools that run on UHD (CAD generators, document generators, part research
+and verification workflows) live with the tools built on it.
 
 ---
 

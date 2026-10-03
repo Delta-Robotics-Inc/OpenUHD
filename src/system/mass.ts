@@ -8,8 +8,8 @@
  * A module with neither but with children is the sum of its children; a
  * leaf with neither is reported as missing.
  *
- * CAD volume is supplied by the caller (library/cad/manifests.ts reads it
- * from the generator manifest), so this module does no file I/O.
+ * CAD volume is supplied by the caller (it reads it from the generator
+ * manifest), so this module does no file I/O.
  */
 import type { MaterialSpec } from "../types/domain.js";
 import type { ModuleDef } from "../types/module.js";

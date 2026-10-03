@@ -5,14 +5,9 @@
 import { describe, it, expect } from "vitest";
 import type { ModuleDef } from "../src/types/index.js";
 import { I2C, Passive, defineModule, partPackage, pinDesignatorIssues, pinTable } from "../src/protocols/index.js";
-import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
-import { ICM_42688_P } from "../library/parts/icm-42688-p.js";
-import { ST_LSM6DS3TR_C } from "../library/parts/st-lsm6ds3tr-c.js";
-import { TI_TPS63020DSJR } from "../library/parts/ti-tps63020dsjr.js";
-import { TI_DRV8871 } from "../library/parts/ti-drv8871.js";
-import { TI_L293DNE } from "../library/parts/ti-l293dne.js";
-import { RP2040 } from "../library/parts/rp2040.js";
-import * as library from "../library/parts/index.js";
+import { BOSCH_BMI270 } from "./fixtures/parts/bosch-bmi270.js";
+import { TI_TPS63020DSJR } from "./fixtures/parts/ti-tps63020dsjr.js";
+import { RP2040 } from "./fixtures/parts/rp2040.js";
 
 const SRC = "https://example.com/datasheet.pdf (Table 1)";
 
@@ -113,14 +108,10 @@ describe("Passive", () => {
   });
 });
 
-describe("chip parts carry package facts and complete designators", () => {
+describe("chip fixtures carry package facts and complete designators", () => {
   const cases: [ModuleDef, string, number, boolean][] = [
     [BOSCH_BMI270, "LGA-14", 14, false],
-    [ICM_42688_P, "LGA-14", 14, false],
-    [ST_LSM6DS3TR_C, "LGA-14L", 14, false],
     [TI_TPS63020DSJR, "VSON-14", 14, true],
-    [TI_DRV8871, "HSOP-8", 8, true],
-    [TI_L293DNE, "PDIP-16", 16, false],
     [RP2040, "QFN-56", 56, true],
   ];
   for (const [def, name, count, ep] of cases) {
@@ -136,10 +127,4 @@ describe("chip parts carry package facts and complete designators", () => {
       if (ep) expect(pkg.exposed_pad_mm).toHaveLength(2);
     });
   }
-
-  it("every library part that states a package has clean designators", () => {
-    const withPackage = (Object.values(library) as ModuleDef[]).filter((d) => partPackage(d));
-    expect(withPackage.length).toBeGreaterThanOrEqual(7);
-    for (const def of withPackage) expect(pinDesignatorIssues(def), def.id).toEqual([]);
-  });
 });
