@@ -34,6 +34,19 @@ peer.
 | `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle`, `cross` (two diagonals, e.g. a 16 × 19 motor base), `row` (holes in a line on a pitch: bracket legs, a line of a hole grid) or `slot` (a T-slot or a through slot that takes fasteners anywhere along its length) |
 | `Shaft` | `shaft: output/input/bidirectional` | Motor shafts and hollow outputs (output), hubs, pulleys, wheels and gearbox inputs (input), loose shafts, spacers and couplers (bidirectional); `gender` shaft or bore, `profile` round, hex, rounded_hex, d_cut, double_d, keyed, spline or square |
 | `LinearMotion` | `linear_motion: output/input` | The moving member of a linear actuator, lead screw or slide (output) and the load it drives (input), with stroke, lead, thread pitch, force and speed |
+| `PCIe` | `pcie_lane`, `pcie_refclk`, `digital` leaves + `pcie: root/endpoint` | PCIe ports: root ports, slots, sockets and FFCs (root), cards, SSDs and switch upstream ports (endpoint); `lanes`, `generation`, optional lane, REFCLK, PERST#, CLKREQ#, WAKE# pins |
+| `M2` | `m2: socket/card` | M.2 sockets and card edges; `key`, `sizes`, `carries` (pcie, sata, usb2, usb3, sdio, uart, i2c, i2s, pcm, cnvi...), `pcie` lanes and generation |
+| `CSI2` / `DSI` | `mipi_dphy` leaves + `mipi_csi2` / `mipi_dsi: transmitter/receiver` | Cameras (CSI-2 transmitter) and host camera ports (receiver); host display ports (DSI transmitter) and displays (receiver); `lanes`, `laneModes`, `laneRateMbps`, D-PHY clock and data pairs |
+| `Ethernet` | `ethernet_mdi` leaves + `ethernet: port` | RJ45 jacks, PHY MDI pins, fibre ports; `speedsMbps`, `medium`, MDI pairs a–d, `poe` (PSE or PD, 802.3af/at/bt or passive, power, class), `fiber` (mode, wavelengths) |
+| `SFP` | `sfp: cage/module` | SFP / SFP+ / QSFP cages and module edges; the module's line side is an `Ethernet` port |
+| `I2S` / `PCM` | `digital` leaves + `i2s: controller/target` | Digital audio ports: `clockRole`, `direction` (out, in, duplex), `formats`, BCLK, WS, DOUT, DIN, MCLK, sample rate, bit depth, channels |
+| `DVP` | `digital` leaves + `dvp: camera/host` | Parallel camera bus (OV2640 and kin); data pins MSB first, PCLK, VSYNC, HREF, XCLK |
+| `SDCard` | `digital` leaves + `sd_card: host/card` | SD and microSD slots, SDMMC peripherals (host), memory cards and SDIO devices (card); `form`, `modes`, `capacityClasses` |
+| `USB` | `usb_signal` leaves + `usb: host/device/dual_role` | USB data ports: `speeds`, D+/D−, SuperSpeed pairs, CC; VBUS is `PowerIn`/`PowerOut` |
+| `WiFi` / `Bluetooth` / `IEEE802154` | `wifi: client/access_point/peer`, `bluetooth: central/peripheral/peer/broadcaster/observer`, `ieee802154: node` (network domain) | Radios: `bands`, Wi-Fi `standards`, Bluetooth `version` and `modes` (classic, le), 802.15.4 `stacks` (zigbee, thread, matter, raw) and Zigbee/Thread roles; `radio` names the `rf` antenna interface |
+| `Led` / `LedDrive` / `ledTrait` | `passive` terminals + `led_drive: anode/cathode/sink/source` | Two-terminal LEDs (`Led`), LED driver channels (`LedDrive` role driver, mode sink or source), the `led` trait on any LED part or display |
+| `RelayCoil` / `RelayContacts` / `relayTrait` | `passive` terminals | Relay coil and contact pins (capabilities `relay_coil_plus`, `relay_com`, `relay_no`, `relay_nc`) and the `relay` trait (form, coil, contact ratings) |
+| `storageTrait` | trait | Memory chips, eMMC, memory cards, SSDs: medium, `capacity_bytes`, interfaces, endurance |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions (PB-805); binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
 | `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
@@ -51,7 +64,14 @@ rate), `pulse_width` (us), `frame_rate` (Hz), `counts_per_rev`, `bit_rate`
 (bit/s), `pressure` (bar), `tube_od` and `tube_id` (mm), `hole_pitch` and
 `slot_length` (mm), `key_width` (mm), `stroke`, `lead` and `thread_pitch`
 (mm), `force` (N), `linear_speed` (mm/s), `min_supply_current` (A, on an
-input: the least current its source must be rated for).
+input: the least current its source must be rated for), `lane_count`,
+`pcie_generation`, `lane_rate` (Mbit/s per lane), `link_speed` (Mbit/s),
+`poe_power` (W), `sample_rate` (Hz), `bit_depth`, `channel_count`,
+`bus_width`, `rf_band` (MHz, on `rf` interfaces), `wavelength` (nm),
+`led_current` (mA), `forward_voltage` (V).
+
+`link_speed`, `lane_rate`, `bus_width`, `poe_power` and `wavelength` are
+not range-checked either: `checkPairLinks` compares them (see below).
 
 Capacity parameters are not compared by range overlap: `max_current`,
 `burst_current`, `drive_current`, `current_draw`, `min_supply_power`,
@@ -69,11 +89,23 @@ compare `min_supply_current` with the source's `max_current`, and a load's
 - `pneumatic` and `hydraulic`: source ↔ sink, bidirectional with everything
   but another sensor, sensing ↔ source or bidirectional. Generic pairs such
   as input ↔ output do not apply.
+- `pcie` root ↔ endpoint; `m2` socket ↔ card; `mipi_csi2` and `mipi_dsi`
+  transmitter ↔ receiver; `ethernet` port ↔ port; `sfp` cage ↔ module;
+  `i2s` controller ↔ target (and the older master ↔ slave); `dvp` camera ↔
+  host; `sd_card` host ↔ card; `usb` host ↔ device, dual_role with either,
+  the older bidirectional with all; `led_drive` sink ↔ cathode, source ↔
+  anode; `wifi` client ↔ access_point, peer ↔ peer; `bluetooth` central ↔
+  peripheral, broadcaster ↔ observer, peer with central, peripheral and
+  peer; `ieee802154` node ↔ node. Each composite's slots carry per-conductor
+  sub-roles (`tx_p` ↔ `rx_p`, `bclk_out` ↔ `bclk_in`, `data_out` ↔
+  `data_in`). None of these fall back to the generic pairs.
 
 ## Existing types in use
 
 `power`, `digital`, `i2c`, `spi`, `uart`, `usb`, `analog`, `pwm`,
 `interrupt`, `can`, `bluetooth`, `wifi`, `rf`, `i2s`, `jtag`, `swd`,
+`pcie`, `m2`, `mipi_csi2`, `mipi_dsi`, `ethernet`, `sfp`, `dvp`, `sd_card`,
+`led_drive`, `ieee802154`,
 `mechanical_connection`, `mechanical_drive`, `mechanical_mount`,
 `threaded_connection`, `thermal_connection`, `custom`, and a
 few part-specific types. The older mechanical types
@@ -90,6 +122,14 @@ the older ones is tracked as a vocabulary gap.
 [mechanical interfaces](../../../docs/mechanical-interfaces.md) and
 [fluid ports](../../../docs/fluid-ports.md).
 
+`checkPairLinks` (`src/drc/link-check.ts`) reports `link_width` (info),
+`lane_rate`, `m2_key`, `m2_size`, `m2_interface`, `ethernet_speed`,
+`ethernet_medium`, `fiber_mismatch`, `poe_power`, `sfp_form`,
+`audio_format`, `audio_direction`, `dvp_width`, `sd_form`, `sd_mode`,
+`sd_capacity`, `usb_speed`, `led_drive_current`, `wireless_band`,
+`wireless_stack` and `zigbee_roles`. See
+[links, buses and radios](../../../docs/links-and-buses.md).
+
 ## Not yet covered
 
 Use `custom` with a trait, and log a `vocabulary` gap, for:
@@ -99,4 +139,13 @@ Use `custom` with a trait, and log a `vocabulary` gap, for:
   interface;
 - battery straps and zip-tie points;
 - MSP / DisplayPort OSD: it runs over UART, so model it as `UART` and note
-  the protocol in a `usage_note` trait.
+  the protocol in a `usage_note` trait;
+- PDM microphones, S/PDIF, MQS and other audio outside I2S / PCM;
+- Ethernet MAC-to-PHY buses (RMII, RGMII, MDIO) and NFC antennas;
+- I3C, 3-wire SPI, PIO and peripherals routed through a GPIO matrix (no
+  per-instance pin assignment);
+- buzzers, speakers and other transducer drives; keypad matrices; push,
+  slide and thumbstick actuators; optical apertures and gas inlets; seals and
+  gaskets; battery charge ports (charge output on the cell's terminal);
+- crystals as a `Passive` kind (use passive terminals and a `performance`
+  trait).

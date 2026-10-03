@@ -224,3 +224,113 @@ export function forceN(value: number): Parameter {
 export function linearSpeedMmS(value: number): Parameter {
   return { id: "linear_speed", unit: "mm/s", value };
 }
+
+// ---------------------------------------------------------------------------
+// Links and buses (PB-866): PCIe, M.2, MIPI, Ethernet, audio, cameras, radios
+// ---------------------------------------------------------------------------
+
+/**
+ * Lane counts a link can run at, as [min, max] (a single number is one
+ * count). PCIe trains down to any width, so a PCIe port states [1, lanes];
+ * a MIPI receiver states [1, lanes]; a MIPI transmitter states the counts
+ * its modes use. The pair check requires the two to overlap.
+ */
+export function laneCount(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "lane_count", unit: "dimensionless", range: value }
+    : { id: "lane_count", unit: "dimensionless", value };
+}
+
+/** PCIe generations a port supports, [1, highest]: links train to the highest both support. */
+export function pcieGeneration(highest: number): Parameter {
+  return { id: "pcie_generation", unit: "dimensionless", range: [1, highest] };
+}
+
+/**
+ * Data rate per lane in Mbit/s (MIPI D-PHY, C-PHY symbol rate × 2.28):
+ * the highest the port supports, or [min, max]. Checked by `checkPairLinks`
+ * (`lane_rate`), not by overlap: a transmitter faster than the receiver
+ * still works in its slower modes.
+ */
+export function laneRateMbps(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "lane_rate", unit: "Mbit/s", range: value }
+    : { id: "lane_rate", unit: "Mbit/s", value };
+}
+
+/**
+ * Link speeds in Mbit/s (Ethernet, SFP), as [slowest, fastest] of the
+ * speeds the port supports. The exact list is on the port's trait
+ * (`speeds_mbps`); `checkPairLinks` compares the lists (`ethernet_speed`).
+ */
+export function linkSpeedMbps(speeds: number[]): Parameter {
+  const s = [...speeds].sort((a, b) => a - b);
+  return s.length === 1 ? { id: "link_speed", unit: "Mbit/s", value: s[0] } : { id: "link_speed", unit: "Mbit/s", range: [s[0], s[s.length - 1]] };
+}
+
+/**
+ * Power over Ethernet in watts: on a PSE port, the power it delivers per
+ * port; on a powered device, the most it draws at its input. Checked by
+ * `checkPairLinks` (`poe_power`).
+ */
+export function poePowerW(value: number): Parameter {
+  return { id: "poe_power", unit: "W", value };
+}
+
+/** Audio sample rate in Hz: fixed, or [min, max] supported. */
+export function sampleRateHz(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "sample_rate", unit: "Hz", range: value }
+    : { id: "sample_rate", unit: "Hz", value };
+}
+
+/** Audio sample word length in bits: fixed, or [min, max] supported. */
+export function bitDepth(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "bit_depth", unit: "dimensionless", range: value }
+    : { id: "bit_depth", unit: "dimensionless", value };
+}
+
+/** Audio channels (slots per frame on TDM): fixed, or [min, max] supported. */
+export function channelCount(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "channel_count", unit: "dimensionless", range: value }
+    : { id: "channel_count", unit: "dimensionless", value };
+}
+
+/**
+ * Width of a parallel data bus in bits (a DVP camera port). Checked by
+ * `checkPairLinks` (`dvp_width`), not by overlap: a narrower host takes a
+ * wider camera's upper bits.
+ */
+export function busWidthBits(value: number): Parameter {
+  return { id: "bus_width", unit: "dimensionless", value };
+}
+
+/**
+ * Radio frequency band in MHz, [low, high] (e.g. 2400–2483.5 for the 2.4 GHz
+ * ISM band), for `rf` interfaces: an antenna and the radio port it serves
+ * must overlap. Wireless interfaces state their bands in the `wireless`
+ * trait instead (`WIRELESS_BANDS`).
+ */
+export function rfBandMHz(low: number, high: number): Parameter {
+  return { id: "rf_band", unit: "MHz", range: [low, high] };
+}
+
+/** Optical wavelength in nm (fibre transceivers). */
+export function wavelengthNm(value: number): Parameter {
+  return { id: "wavelength", unit: "nm", value };
+}
+
+/**
+ * Current through an LED in mA: on an LED, [0, its maximum continuous
+ * forward current]; on an LED driver channel, the current it can be set to
+ * ([min, max]) or the one it gives. The pair check requires the two to
+ * overlap; `checkPairLinks` warns when a driver can be set above the LED's
+ * maximum (`led_drive_current`).
+ */
+export function ledCurrentmA(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "led_current", unit: "mA", range: value }
+    : { id: "led_current", unit: "mA", value };
+}

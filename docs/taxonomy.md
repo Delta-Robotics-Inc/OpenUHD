@@ -34,7 +34,7 @@ component.passive.capacitor   Capacitors
 kit.freenove_fnk0082          Freenove Ultimate Starter Kit for ESP32-S3 (FNK0082)
 ```
 
-Version 1.1.0 has 103 nodes under 11 roots: `microcontroller`, `sensor`,
+Version 1.2.0 has 113 nodes under 11 roots: `microcontroller`, `sensor`,
 `actuator`, `power`, `connectivity`, `robotics`, `mechanical`, `connector`,
 `expansion`, `component`, `kit`.
 
@@ -87,7 +87,7 @@ known node (`motor` → `actuator.motor`).
 
 The taxonomy file publishes `aliases`: category paths that parts have used
 but that are not nodes, each mapped to the node paths that hold the same
-parts. Version 1.1.0 maps the paths that ProtoPart 2.1.0 parts used outside
+parts. Since version 1.1.0 it maps the paths that ProtoPart 2.1.0 parts used outside
 the ProtoPart taxonomy:
 
 | Legacy path | Node paths |
@@ -238,6 +238,15 @@ Robotics, 77 nodes, 11 roots). The file's `provenance` records how:
   protection and relays. Their names and descriptions follow the source's
   style: short lists of the parts in the category, with examples in
   parentheses.
+- **1.2.0 adds 10 more**, again after the source's own children:
+  `connectivity.wireless.ieee802154` (Zigbee and Thread radios),
+  `connectivity.wired.ethernet` (PHYs, jacks with magnetics, PoE, SFP
+  modules, media converters), `mechanical.fastener.standoff`,
+  `expansion.pcie` (PCIe and M.2 adapters), `component.ic.analog_switch`,
+  `component.ic.led_driver`, and `component.storage` with `.memory` (memory
+  chips), `.memory_card` and `.ssd`. These are the places the first
+  migration wave had to file parts under the nearest node (a memory chip
+  under `component.ic`, an NVMe SSD under `expansion.breakout`).
 - **Kit fields.** The kit node `kit.freenove_fnk0082` keeps the source's
   `sku` and `vendor`. The source's kit block also names a
   `controller_part_id` and a `manifest`; both point into ProtoPart's own
@@ -252,6 +261,8 @@ Robotics, 77 nodes, 11 roots). The file's `provenance` records how:
 
 ### History
 
+- **1.2.0** adds 10 nodes (storage and memory, Ethernet, 802.15.4 radios,
+  PCIe adapters, standoffs, analog switches, LED drivers). No node changed.
 - **1.1.0** restores the source's text for the 77 ProtoPart nodes (1.0.0
   had reworded 45 names, descriptions and agent notes on 41 of them),
   rewrites the 26 added

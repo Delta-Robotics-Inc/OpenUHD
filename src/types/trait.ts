@@ -215,3 +215,178 @@ export interface StrapTrait extends TraitDef {
     source?: string;
   };
 }
+
+/**
+ * An LED, an LED package with several emitters, or an LED display (PB-866):
+ * what it emits and at what drive. `ledTrait()` and `Led()` in
+ * src/protocols build it. Facts are per emitter (a die or a segment colour);
+ * `anode` and `cathode` name the emitter's terminal interfaces where they
+ * are pins of the part.
+ */
+export interface LedTrait extends TraitDef {
+  type: "led";
+  params: {
+    kind:
+      | "indicator"
+      | "bicolor"
+      | "rgb"
+      | "rgbw"
+      | "addressable"
+      | "infrared"
+      | "ultraviolet"
+      | "high_power"
+      | "seven_segment"
+      | "matrix"
+      | "bar_graph";
+    emitters: LedEmitter[];
+    /** Shared terminal on multi-emitter packages and displays. */
+    common?: "anode" | "cathode" | "none";
+    /** Integrated driver or controller (an addressable LED's protocol chip, e.g. "WS2812B"). */
+    driver?: string;
+    /** Full viewing angle (2θ½) in degrees. */
+    viewing_angle_deg?: number;
+    /** Displays: digits, segments per digit, rows and columns. */
+    digits?: number;
+    segments?: number;
+    rows?: number;
+    columns?: number;
+    source?: string;
+    assumption?: string;
+  };
+}
+
+export interface LedEmitter {
+  /** Colour name as the source gives it ("red", "warm white", "940 nm IR"). */
+  color: string;
+  /** Wavelength in nm; say which in `wavelength_kind`. */
+  wavelength_nm?: number;
+  wavelength_kind?: "peak" | "dominant";
+  /** White LEDs: correlated colour temperature in K. */
+  cct_k?: number;
+  /** Forward voltage in V: typical, or [min, max], at `test_current_mA`. */
+  forward_voltage_V?: number | [number, number];
+  /** Current the electro-optical figures are stated at, in mA. */
+  test_current_mA?: number;
+  /** Absolute maximum continuous forward current in mA. */
+  max_current_mA?: number;
+  /** Luminous intensity in mcd (or radiant intensity in mW/sr for IR, say so in `color`), at `test_current_mA`. */
+  luminous_intensity_mcd?: number | [number, number];
+  /** Interface ids of this emitter's terminals on the part. */
+  anode?: string;
+  cathode?: string;
+}
+
+/**
+ * A relay (PB-866): an electromechanical, reed or solid-state switch whose
+ * coil (or input) is isolated from its contacts (or output). `relayTrait()`
+ * in src/protocols builds and checks it; `RelayCoil` and `RelayContacts`
+ * declare the pins.
+ */
+export interface RelayTrait extends TraitDef {
+  type: "relay";
+  params: {
+    kind: "electromechanical" | "reed" | "solid_state";
+    /**
+     * Contact form: poles then a letter, "1A" (SPST-NO), "1B" (SPST-NC),
+     * "1C" (SPDT), "2A", "2C" (DPDT)... Solid-state relays are "1A" or "1B".
+     */
+    form: string;
+    poles: number;
+    throws: 1 | 2;
+    latching?: "none" | "single_coil" | "dual_coil";
+    /** Coil (electromechanical, reed) or input (solid state). */
+    coil: {
+      /** Rated (nominal) coil voltage in V, or an SSR's input range [min, max]. */
+      voltage_V: number | [number, number];
+      ac?: boolean;
+      resistance_ohm?: number;
+      current_mA?: number;
+      power_mW?: number;
+      /** Must-operate (pick-up) voltage in V, at most. */
+      must_operate_V?: number;
+      /** Must-release (drop-out) voltage in V, at least. */
+      must_release_V?: number;
+      /** Highest coil voltage allowed, in V. */
+      max_V?: number;
+      /** The coil has a polarity (a built-in diode, a latching coil). */
+      polarized?: boolean;
+    };
+    /** Contact (or output) ratings. */
+    contacts: {
+      ratings: { voltage_V: number; current_A: number; current: "ac" | "dc"; load?: "resistive" | "inductive" | "motor" | "lamp"; note?: string }[];
+      max_switching_voltage_V?: number;
+      max_switching_current_A?: number;
+      max_switching_power_W?: number;
+      material?: string;
+      /** SSR output: zero-cross switching. */
+      zero_cross?: boolean;
+    };
+    operate_time_ms?: number;
+    release_time_ms?: number;
+    /** Coil-to-contact dielectric strength in V rms. */
+    isolation_V?: number;
+    /** Operations: mechanical and electrical (at a stated rating). */
+    life?: { mechanical?: number; electrical?: number };
+    source?: string;
+    assumption?: string;
+  };
+}
+
+/**
+ * A storage device or memory (PB-866): a memory chip, an eMMC, a memory
+ * card, an SSD. `storageTrait()` in src/protocols builds and checks it. The
+ * interfaces it is reached over are interfaces of the part (`SPI`, `I2C`,
+ * `SDCard`, `M2`...); `interfaces` names them for search and review.
+ */
+export interface StorageTrait extends TraitDef {
+  type: "storage";
+  params: {
+    medium:
+      | "nor_flash"
+      | "nand_flash"
+      | "eeprom"
+      | "fram"
+      | "mram"
+      | "sram"
+      | "psram"
+      | "dram"
+      | "emmc"
+      | "ufs"
+      | "sd_card"
+      | "ssd"
+      | "hdd"
+      | "usb_flash";
+    /** User capacity in bytes (a 256 Kbit memory is 32768). */
+    capacity_bytes: number;
+    /** Loses its data without power. Set by the medium unless given. */
+    volatile: boolean;
+    /** Organisation as the source writes it ("32K × 8"). */
+    organization?: string;
+    interfaces: (
+      | "spi"
+      | "dual_spi"
+      | "quad_spi"
+      | "octal_spi"
+      | "i2c"
+      | "microwire"
+      | "parallel"
+      | "sdio"
+      | "sd_spi"
+      | "emmc"
+      | "nvme"
+      | "sata"
+      | "usb"
+      | "onfi"
+    )[];
+    /** "M.2 2280", "microSD", "2.5 inch". */
+    form_factor?: string;
+    removable?: boolean;
+    /** Write endurance: per-cell cycles and/or terabytes written. */
+    endurance?: { cycles?: number; tbw?: number };
+    retention_years?: number;
+    /** Sequential speeds in MB/s and speed classes ("U3", "V30", "A2"). */
+    speed?: { read_MBps?: number; write_MBps?: number; classes?: string[] };
+    source?: string;
+    assumption?: string;
+  };
+}
