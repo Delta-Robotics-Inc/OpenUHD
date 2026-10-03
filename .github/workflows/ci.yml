@@ -10,8 +10,11 @@ on:
 permissions:
   contents: read
 
+# One run per branch: a push and the pull request from the same branch share
+# a group, so the later one cancels the earlier. Fork pull requests group by
+# their own repository.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
