@@ -1,7 +1,7 @@
 {
   "$schema": "./uhd-taxonomy.schema.json",
   "id": "uhd",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "The UHD category taxonomy: a tree of hardware categories addressed by dotted paths of node ids (sensor.distance, actuator.motor.servo). A ModuleDef lists the paths it belongs to in `categories`, at any depth; consumers derive the ancestor paths for subtree filtering. Libraries extend it with nodes under their own x-<library> root (docs/taxonomy.md).",
   "delimiter": ".",
   "provenance": {
@@ -12,12 +12,13 @@
       "nodes": 77
     },
     "notes": [
-      "Every node of ProtoPart taxonomy 2.1.0 is kept with the same id, in the same order, and with the same name, description, docs_url, links and agent_notes, byte for byte. A part categorised against ProtoPart 2.1.0 is valid against UHD 1.1.0 unchanged. test/taxonomy.test.ts checks this against a copy of the ProtoPart file in test/fixtures/protopart.",
+      "Every node of ProtoPart taxonomy 2.1.0 is kept with the same id, in the same order, and with the same name, description, docs_url, links and agent_notes, byte for byte. A part categorised against ProtoPart 2.1.0 is valid against UHD 1.2.0 unchanged. test/taxonomy.test.ts checks this against a copy of the ProtoPart file in test/fixtures/protopart.",
       "UHD adds 26 nodes for hardware the source did not cover, after the source's own children of each parent: microcontroller.chip, .module, .single_board_computer, .flight_controller; sensor.magnetic, .gnss, .force; actuator.solenoid, .haptic; power.monitor, .distribution; connectivity.wireless.video; robotics.drone; mechanical.hydraulic, .motion, .enclosure, .seal, .fastener.screw, .fastener.nut, .fastener.insert; connector.usb, .rf; component.passive.ferrite_bead, .crystal; component.protection, component.relay. Their names and descriptions follow the source's style.",
       "The kit node kit.freenove_fnk0082 keeps the source's sku and vendor. The source's kit block also has controller_part_id (freenove-esp32-s3-wroom-dev-board) and manifest (kits/freenove-fnk0082.json). Both point into ProtoPart's own parts library and contribution folder, which are not part of UHD, so they are not carried. A library that holds the kit's manifest states it in its own taxonomy extension (docs/taxonomy.md).",
       "The kit and kit.freenove_fnk0082 agent notes are the source's text unchanged. Where they mention a library search parameter (taxonomyPath) or a manifest, read them as: filter by the kit's category path, and use the kit's contents list from the library that publishes it.",
       "aliases maps category paths that ProtoPart 2.1.0 parts used but the ProtoPart taxonomy did not define to the UHD paths that hold the same parts. validateCategories suggests the alias targets for them. One such path, power.distribution, became a UHD node in 1.0.0 and so needs no alias.",
-      "1.0.0 had reworded 45 names, descriptions and agent notes on 41 of the source's nodes. 1.1.0 restores the source's text, and rewrites the added nodes in the source's style; no path was added, renamed or removed."
+      "1.0.0 had reworded 45 names, descriptions and agent notes on 41 of the source's nodes. 1.1.0 restores the source's text, and rewrites the added nodes in the source's style; no path was added, renamed or removed.",
+      "1.2.0 adds 10 nodes, again after the source's own children of each parent: connectivity.wireless.ieee802154, connectivity.wired.ethernet, mechanical.fastener.standoff, expansion.pcie, component.ic.analog_switch, component.ic.led_driver, and component.storage with .memory, .memory_card and .ssd. No source node changed."
     ]
   },
   "aliases": {
@@ -268,12 +269,22 @@
             "video": {
               "name": "Wireless Video",
               "description": "Video transmitters and receivers (analog and digital FPV, camera links)"
+            },
+            "ieee802154": {
+              "name": "Zigbee & Thread",
+              "description": "IEEE 802.15.4 radios and modules for Zigbee, Thread and Matter"
             }
           }
         },
         "wired": {
           "name": "Wired",
-          "description": "Ethernet, CAN, RS-485 interfaces"
+          "description": "Ethernet, CAN, RS-485 interfaces",
+          "children": {
+            "ethernet": {
+              "name": "Ethernet",
+              "description": "Ethernet PHYs, jacks with magnetics, PoE injectors and splitters, SFP modules, and media converters"
+            }
+          }
         },
         "networking": {
           "name": "Networking Equipment",
@@ -359,6 +370,10 @@
             "insert": {
               "name": "Threaded Inserts",
               "description": "Heat-set, press-fit, and helical threaded inserts"
+            },
+            "standoff": {
+              "name": "Standoffs & Spacers",
+              "description": "Threaded standoffs, unthreaded spacers, and board supports"
             }
           }
         },
@@ -423,6 +438,10 @@
         "breakout": {
           "name": "Breakout Boards",
           "description": "IC breakout and adapter boards"
+        },
+        "pcie": {
+          "name": "PCIe & M.2 Adapters",
+          "description": "Boards that carry PCIe lanes to M.2 sockets, PCIe slots, or cable connectors"
         }
       }
     },
@@ -485,7 +504,17 @@
         },
         "ic": {
           "name": "Integrated Circuits",
-          "description": "Bare logic, driver and interface ICs (shift registers, H-bridges, port expanders)"
+          "description": "Bare logic, driver and interface ICs (shift registers, H-bridges, port expanders)",
+          "children": {
+            "analog_switch": {
+              "name": "Analog Switches & Multiplexers",
+              "description": "Analog and signal switches, multiplexers, and demultiplexers"
+            },
+            "led_driver": {
+              "name": "LED Drivers",
+              "description": "Constant-current and PWM LED driver ICs"
+            }
+          }
         },
         "display": {
           "name": "Displays",
@@ -502,6 +531,24 @@
         "relay": {
           "name": "Relays",
           "description": "Electromechanical and solid-state relays"
+        },
+        "storage": {
+          "name": "Storage & Memory",
+          "description": "Memory chips, memory cards, and solid-state drives",
+          "children": {
+            "memory": {
+              "name": "Memory ICs",
+              "description": "Flash, EEPROM, FRAM, SRAM, PSRAM, and eMMC chips"
+            },
+            "memory_card": {
+              "name": "Memory Cards",
+              "description": "SD, microSD, and other removable memory cards"
+            },
+            "ssd": {
+              "name": "Solid-State Drives",
+              "description": "NVMe and SATA SSDs in M.2 and other form factors"
+            }
+          }
         }
       }
     },

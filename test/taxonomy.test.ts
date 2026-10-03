@@ -82,6 +82,14 @@ const ADDED_IN_1_0_0 = [
   "component.passive.ferrite_bead", "component.passive.crystal", "component.protection", "component.relay",
 ];
 
+/** Nodes 1.2.0 adds (PB-866): storage, Ethernet, 802.15.4, PCIe adapters, and the nodes the first migration wave filed elsewhere. */
+const ADDED_IN_1_2_0 = [
+  "connectivity.wireless.ieee802154", "connectivity.wired.ethernet", "mechanical.fastener.standoff", "expansion.pcie",
+  "component.ic.analog_switch", "component.ic.led_driver",
+  "component.storage", "component.storage.memory", "component.storage.memory_card", "component.storage.ssd",
+];
+const ADDED = [...ADDED_IN_1_0_0, ...ADDED_IN_1_2_0];
+
 const ACME: TaxonomyExtension = {
   library: "acme",
   taxonomy: { id: "uhd", version: "1.0.0" },
@@ -97,21 +105,21 @@ const ACME: TaxonomyExtension = {
 };
 
 describe("the UHD taxonomy file", () => {
-  it("is a valid taxonomy document, version 1.1.0, with 103 nodes under 11 roots", () => {
+  it("is a valid taxonomy document, version 1.2.0, with 113 nodes under 11 roots", () => {
     expect(validateTaxonomyDocument(UHD_TAXONOMY_DOCUMENT)).toEqual([]);
     expect(UHD_TAXONOMY.id).toBe("uhd");
-    expect(UHD_TAXONOMY.version).toBe("1.1.0");
+    expect(UHD_TAXONOMY.version).toBe("1.2.0");
     expect(UHD_TAXONOMY.roots.map((r) => r.id)).toEqual([
       "microcontroller", "sensor", "actuator", "power", "connectivity", "robotics", "mechanical", "connector", "expansion", "component", "kit",
     ]);
-    expect(UHD_TAXONOMY.nodes()).toHaveLength(103);
+    expect(UHD_TAXONOMY.nodes()).toHaveLength(113);
   });
 
   it("keeps every ProtoPart 2.1.0 path, and adds exactly the nodes its provenance lists", () => {
     const paths = UHD_TAXONOMY.nodes().map((n) => n.path);
     expect(PROTOPART_2_1_0).toHaveLength(77);
     for (const p of PROTOPART_2_1_0) expect(UHD_TAXONOMY.has(p), p).toBe(true);
-    expect(paths.filter((p) => !PROTOPART_2_1_0.includes(p)).sort()).toEqual([...ADDED_IN_1_0_0].sort());
+    expect(paths.filter((p) => !PROTOPART_2_1_0.includes(p)).sort()).toEqual([...ADDED].sort());
     const provenance = UHD_TAXONOMY_DOCUMENT.provenance as { derivedFrom: { name: string; version: string; nodes: number } };
     expect(provenance.derivedFrom).toMatchObject({ name: "ProtoPart category taxonomy", version: "2.1.0", nodes: 77 });
   });
@@ -147,8 +155,8 @@ describe("the UHD taxonomy file", () => {
   });
 
   it("the added nodes name no application, part library or library-internal field", () => {
-    const added = nodesByPath(UHD_TAXONOMY_DOCUMENT.categories).filter(([p]) => ADDED_IN_1_0_0.includes(p));
-    expect(added).toHaveLength(ADDED_IN_1_0_0.length);
+    const added = nodesByPath(UHD_TAXONOMY_DOCUMENT.categories).filter(([p]) => ADDED.includes(p));
+    expect(added).toHaveLength(ADDED.length);
     for (const [path, n] of added) expect(nodeText(n), path).not.toMatch(/protopart|protoboard|taxonomyPath|contribution\//i);
   });
 
@@ -261,7 +269,7 @@ describe("validating a module's categories", () => {
       ["hardware", "unknown", []],
       ["flight-controller", "syntax", []],
     ]);
-    expect(issues[0].message).toMatch(/not in the uhd taxonomy 1\.1\.0; did you mean component\.passive\.capacitor\?/);
+    expect(issues[0].message).toMatch(/not in the uhd taxonomy 1\.2\.0; did you mean component\.passive\.capacitor\?/);
   });
 
   it("maps every off-taxonomy path ProtoPart 2.1.0 parts used, through the published legacy aliases", () => {
@@ -315,7 +323,7 @@ describe("library extensions", () => {
     expect(t.extensions).toEqual([{ library: "acme", root: "x-acme", taxonomyVersion: "1.0.0" }]);
     expect(t.node("x-acme.fixtures")).toMatchObject({ source: "acme", depth: 1, parent: "x-acme" });
     expect(t.node("x-acme.starter")!.kit).toEqual({ sku: "ACME-1", vendor: "acme", manifest: "kits/acme-1.json" });
-    expect(t.nodes()).toHaveLength(106);
+    expect(t.nodes()).toHaveLength(116);
     // the built-in taxonomy is not changed by building another
     expect(UHD_TAXONOMY.has("x-acme")).toBe(false);
   });
@@ -323,7 +331,7 @@ describe("library extensions", () => {
   it("a declaration without nodes only states the version", () => {
     const decl: TaxonomyExtension = { library: "plain", taxonomy: { id: "uhd", version: "1.0.0" } };
     expect(validateTaxonomyExtension(decl, UHD_TAXONOMY)).toEqual([]);
-    expect(buildTaxonomy(UHD_TAXONOMY_DOCUMENT, [decl]).nodes()).toHaveLength(103);
+    expect(buildTaxonomy(UHD_TAXONOMY_DOCUMENT, [decl]).nodes()).toHaveLength(113);
   });
 
   it("refuses nodes outside the library's namespace, malformed nodes and duplicate libraries", () => {
@@ -342,7 +350,7 @@ describe("library extensions", () => {
     expect(compareTaxonomyVersions("1.0.0", "1.3.0")).toBe("compatible");
     expect(compareTaxonomyVersions("1.4.0", "1.3.9")).toBe("newer");
     expect(compareTaxonomyVersions("2.0.0", "1.3.0")).toBe("incompatible");
-    const newer = { ...ACME, taxonomy: { id: "uhd", version: "1.2.0" } };
+    const newer = { ...ACME, taxonomy: { id: "uhd", version: "1.3.0" } };
     expect(validateTaxonomyExtension(newer, UHD_TAXONOMY).map((p) => p.code)).toEqual(["TAXONOMY_VERSION_NEWER"]);
     expect(() => buildTaxonomy(UHD_TAXONOMY_DOCUMENT, [newer])).not.toThrow();
     const major = { ...ACME, taxonomy: { id: "uhd", version: "2.0.0" } };
