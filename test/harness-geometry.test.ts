@@ -1,5 +1,5 @@
 /**
- * Routed harnesses (PB-805 harness geometry): a harness whose ends carry
+ * Routed harnesses: a harness whose ends carry
  * frames is placed by the part it lands on, never the other way round, and
  * every other end is checked against the frame it should meet.
  */

@@ -1,5 +1,5 @@
 /**
- * Tools a build needs (PB-797), derived from the fasteners in the model
+ * Tools a build needs, derived from the fasteners in the model
  * rather than listed by hand:
  *
  *   socket head cap screws  hex key sized by the screw's own stated socket

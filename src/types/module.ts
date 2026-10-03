@@ -23,7 +23,7 @@ export interface ChildModuleRef {
   exposedInterfaces?: string[];
   overrides?: Record<string, unknown>;
   /**
-   * Rotation sense of this instance (PB-797), viewed from the output end of
+   * Rotation sense of this instance, viewed from the output end of
    * the shaft, i.e. from above on a multirotor. On a motor: the direction it
    * is configured to turn. On a handed part (a propeller with a `handedness`
    * trait): the variant fitted, a "cw" prop being the one made to turn
@@ -32,8 +32,8 @@ export interface ChildModuleRef {
    */
   spin?: SpinDirection;
   /**
-   * Interfaces of this instance left unconnected on purpose, each with why
-   * (PB-870): a DC jack unused because the product runs from USB, a motor
+   * Interfaces of this instance left unconnected on purpose, each with why:
+   * a DC jack unused because the product runs from USB, a motor
    * supply terminal waiting for a battery that is not chosen yet. Like a
    * no-connect flag on a schematic: the system checks do not report a
    * marked power input as unpowered (they say it is marked instead), and
@@ -74,7 +74,7 @@ export type EndpointTarget =
   | { child: string; interfaceId: string; profileInstanceId?: string; compose?: LinkComposition };
 
 /**
- * Link-scoped composition (PB-805): the end is an ad-hoc connector made on
+ * Link-scoped composition: the end is an ad-hoc connector made on
  * the child for this link only, because the child has no interface grouping
  * these pads (solder pads, flying leads). `interfaceId` names it; it must not
  * be an existing interface of the child.

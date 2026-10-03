@@ -24,7 +24,7 @@ export interface ConnectorDetail {
    */
   mates?: "a" | "b";
   /**
-   * How the connector comes with the part (PB-870): "fitted" (the default)
+   * How the connector comes with the part: "fitted" (the default)
    * when it is attached, "loose" when it ships in the bag and is fitted
    * during assembly (a shield's header strips, soldered by the builder).
    */
@@ -63,7 +63,7 @@ export function looseConnectors(def: { interfaces: InterfaceDef[] }): { iface: I
 }
 
 // ---------------------------------------------------------------------------
-// Connector composites (PB-805)
+// Connector composites
 // ---------------------------------------------------------------------------
 
 
@@ -93,7 +93,7 @@ export function isConnector(iface: InterfaceDef): boolean {
 }
 
 /**
- * A physical connector as one interface (PB-805): one slot per position
+ * A physical connector as one interface: one slot per position
  * (`p1…pN`) and a default profile binding each used position to the pad or
  * leaf interface it carries. Links between two connectors are matched by
  * position; the functional links (power, UART, …) are derived by tracing

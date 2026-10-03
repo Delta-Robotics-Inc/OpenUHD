@@ -1,6 +1,6 @@
 # Connectors, link-scoped composition and physical harnesses
 
-Status: implemented (PB-805). Code: `src/protocols/connector.ts`
+Status: implemented. Code: `src/protocols/connector.ts`
 (`Connector`, `isConnector`), `src/system/connectors.ts` (mating),
 `src/system/derive.ts` (`deriveLinks`, `systemLinks`), `src/system/checks.ts`
 (`checkSystem` runs on stored + derived links). Tests: `test/connectors.test.ts`.
@@ -9,7 +9,7 @@ Status: implemented (PB-805). Code: `src/protocols/connector.ts`
 
 One line in a diagram should be one physical thing. A cable that carries
 power, ground and a UART is one object: it plugs into one socket at each end.
-Before PB-805, UHD could only say "these three logical links are carried by
+Before connector composites, UHD could only say "these three logical links are carried by
 that harness", so the cable had no pins, the sockets it plugs into did not
 exist as interfaces, and nothing checked that the cable was wired correctly.
 
@@ -140,7 +140,7 @@ Two extra checks run on derived links:
 | Code | When |
 |---|---|
 | `harness_wiring` | a conductor inside a composite lands on a different leaf than the protocol pairs it with (TX wired to TX) |
-| `bus_incomplete` | a required pairing of a lifted composite has no conductor inside it: the pad reaches the other module only through some other pad (PB-824) |
+| `bus_incomplete` | a required pairing of a lifted composite has no conductor inside it: the pad reaches the other module only through some other pad |
 
 `systemLinks(def, lookup)` returns stored plus derived results, and
 `checkSystem` runs every system rule on that set, so supply budgets, interface

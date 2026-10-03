@@ -5,7 +5,7 @@ import type { PassivePartNumberRule, PassiveTrait, TraitDef } from "../types/tra
 import { defineModule } from "./define-module.js";
 
 /**
- * Two-terminal passives (PB-824): resistors, capacitors, inductors and
+ * Two-terminal passives: resistors, capacitors, inductors and
  * ferrite beads placed on a board.
  *
  * A passive is an ordinary module with two leaf terminals, `pin_1` and

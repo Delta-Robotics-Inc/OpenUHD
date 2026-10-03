@@ -53,7 +53,7 @@ export function parsePath(path: string): { modules: string[]; interfaceId?: stri
  * bound as a leaf into another interface's profile (pins behind a UART port
  * are revealed by opening the link, not drawn on the outline). Power and
  * ground leaves stay primary even when a connector binds them, because a
- * supply net is shared by every consumer. Connector composites (PB-805) do
+ * supply net is shared by every consumer. Connector composites do
  * not hide what they bind: a pad on a socket is still a pad.
  */
 export function primaryInterfaces(def: ModuleDef): InterfaceDef[] {
@@ -219,7 +219,7 @@ export function resolveBelow(def: ModuleDef, childId: string, value: string, loo
 }
 
 /**
- * A link-scoped composition (PB-805): an ad-hoc connector on the child,
+ * A link-scoped composition: an ad-hoc connector on the child,
  * valid for this link only, whose slots are the other end's positions.
  */
 function resolveComposition(def: ModuleDef, childId: string, interfaceId: string, compose: Record<string, string>, lookup: ModuleLookup): ResolvedEndpoint {
@@ -248,7 +248,7 @@ export type LinkState = "configured" | "partial" | "incompatible" | "unconfigure
 export interface LinkChildResult {
   a: { slotId?: string; leafId: string; pin?: string };
   b: { slotId?: string; leafId: string; pin?: string };
-  /** protocol: derived by DRC; manual: stored child links; wired: traced through a harness (PB-805). */
+  /** protocol: derived by DRC; manual: stored child links; wired: traced through a harness. */
   method: "protocol" | "manual" | "wired";
   locked: boolean;
 }
@@ -264,9 +264,9 @@ export interface LinkResult {
   unresolvedSlots: string[];
   diagnostics: Diagnostic[];
   /**
-   * Set on links derived from conductors (PB-805): the stored connector links
+   * Set on links derived from conductors: the stored connector links
    * and harness children the conductors run through, and the board nets
-   * (PB-824) they join through, when any.
+   * they join through, when any.
    */
   derived?: { via: string[]; harnesses: string[]; nets?: string[] };
 }

@@ -1,5 +1,5 @@
 /**
- * Spin direction and propeller handedness (PB-797).
+ * Spin direction and propeller handedness.
  *
  * Spin is instance data (`ChildModuleRef.spin`), inherited down the child
  * tree: an arm instance can say "ccw" once for its motor and prop. A handed

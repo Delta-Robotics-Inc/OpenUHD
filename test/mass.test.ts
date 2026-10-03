@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { massByDefinition, moduleMass, systemMass } from "../src/system/mass.js";
 import { DRONE, FRAME, MOTOR, MOTOR_SCREW, STANDOFF, cadVolumeMm3, lookup } from "./fixtures/drone.js";
 
-describe("mass from the model (PB-797)", () => {
+describe("mass from the model", () => {
   it("custom plates: CAD volume x declared density", () => {
     const m = moduleMass(FRAME, cadVolumeMm3)!;
     expect(m.basis).toBe("cad_volume");

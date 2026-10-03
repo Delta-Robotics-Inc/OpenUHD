@@ -1,5 +1,5 @@
 /**
- * System mass (PB-797): every instance's mass summed by quantity, with the
+ * System mass: every instance's mass summed by quantity, with the
  * instances that have none listed instead of guessed.
  *
  * A module's own mass is, in order:

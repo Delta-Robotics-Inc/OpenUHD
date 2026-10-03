@@ -1,5 +1,5 @@
 /**
- * Propulsion helpers (PB-797): read a motor's manufacturer thrust tables and
+ * Propulsion helpers: read a motor's manufacturer thrust tables and
  * interpolate them. Figures derived here come straight from the table rows
  * (linear interpolation between neighbouring rows, zero at zero throttle),
  * so a document can say exactly which rows a number sits between.

@@ -16,7 +16,7 @@ import {
 } from "../src/protocols/index.js";
 import type { ModuleDef } from "../src/types/index.js";
 
-/** Minimal drone stubs exercising the drone vocabulary (PB-780). */
+/** Minimal drone stubs exercising the drone vocabulary. */
 
 const motorSignals = (role: "output" | "input", protocols: Parameters<typeof EscSignal>[0]["protocols"]) =>
   [1, 2, 3, 4].map((n) => EscSignal({ id: `m${n}`, name: `M${n}`, role, protocols, motorIndex: n }));

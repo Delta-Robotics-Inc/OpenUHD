@@ -1,5 +1,5 @@
 /**
- * Geometry bindings (PB-775): tying CAD artifacts to modules and interfaces.
+ * Geometry bindings: tying CAD artifacts to modules and interfaces.
  *
  * Geometry stays in the CAD artifact; UHD records *references* into it.
  * Three binding directions are supported, so they can be compared on real
@@ -97,7 +97,7 @@ export interface ArtifactProvenance {
 }
 
 /**
- * How a fastener harness's parts sit on the joint it carries (PB-775).
+ * How a fastener harness's parts sit on the joint it carries.
  *
  * Positions are measured along the normal of the joint's *structure-side*
  * interface frame (the end whose bolt pattern role is "structure"; else end
@@ -121,7 +121,7 @@ export interface FastenerStackItem {
   /** In-plane hole positions in the frame's x/y (mm); default: the bolt pattern's holes. */
   positions?: [number, number][];
   /**
-   * Tightening torque for this item (PB-797), set on the part that is turned
+   * Tightening torque for this item, set on the part that is turned
    * (the screw, or the nut when the screw is held). Omit on parts that are
    * not turned (spacers).
    */
@@ -129,7 +129,7 @@ export interface FastenerStackItem {
 }
 
 /**
- * A tightening torque and where it comes from (PB-797). Exactly one of
+ * A tightening torque and where it comes from. Exactly one of
  * `source` (a maker or supplier statement for this joint) or `assumption`
  * (why this value, when nobody states one) should be given; the
  * fastener_torque check reports a torque with neither. Threadlocker advice

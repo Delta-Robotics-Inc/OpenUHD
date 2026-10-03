@@ -1,6 +1,6 @@
 /**
- * Interfaces an instance leaves unconnected on purpose (PB-870,
- * ChildModuleRef.unconnected): a marked power input is said, not warned
+ * Interfaces an instance leaves unconnected on purpose
+ * (ChildModuleRef.unconnected): a marked power input is said, not warned
  * about; a link to a marked interface, or a mark naming no interface, is a
  * warning.
  */
@@ -52,7 +52,7 @@ describe("unconnected interfaces", () => {
   });
 });
 
-describe("I2C addresses other than the device's own (PB-870)", () => {
+describe("I2C addresses other than the device's own", () => {
   const i2c = (id: string, roles: string[], params: [string, number][] = []): InterfaceDef => ({ id, name: "I2C", domain: "electrical", exposed: true, protocols: [{ type: "i2c", roles }], parameters: params.map(([pid, value]) => ({ id: pid, unit: "dimensionless", value })) });
   const MCU: ModuleDef = { id: "mcu", name: "MCU", interfaces: [i2c("i2c", ["master"])] };
   const PWM: ModuleDef = { id: "pwm", name: "PWM driver", interfaces: [i2c("i2c", ["slave"], [["i2c_address", 0x60], ["i2c_address_all_call", 0x70]])] };
@@ -85,7 +85,7 @@ describe("I2C addresses other than the device's own (PB-870)", () => {
   });
 });
 
-describe("connectors supplied loose (PB-870)", () => {
+describe("connectors supplied loose", () => {
   it("connectorTrait and Connector record supplied, and looseConnectors finds them", async () => {
     const { connectorTrait, Connector, looseConnectors } = await import("../src/protocols/connector.js");
     expect(connectorTrait("pin_header", { supplied: "loose" }).params).toEqual({ connector_type: "pin_header", supplied: "loose" });

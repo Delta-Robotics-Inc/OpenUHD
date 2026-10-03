@@ -887,8 +887,7 @@ proto-core/                    # New standalone TypeScript package
 
 > This was the original layout. UHD keeps no part library: `src/protocols` holds
 > the interface builders, and parts live in a library served over the open
-> library protocol ([library-protocol.md](library-protocol.md)); ProtoBoard's
-> lives in its parts service.
+> library protocol ([library-protocol.md](library-protocol.md)).
 
 TypeScript-first authoring enables:
 - **Inheritance/composition** — `mcu-base.ts` exports base interfaces, specific MCUs spread + extend

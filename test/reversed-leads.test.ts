@@ -1,13 +1,12 @@
 /**
- * PB-869: a two-lead part soldered the wrong way round through a harness.
+ * A two-lead part soldered the wrong way round through a harness.
  *
  * The cell's leads (+ and -) are bound by a composite supply port; the board
  * has two lone pads (BAT+ and BAT-). Reversing the link-scoped composition
  * puts + on BAT- and - on BAT+. Each derived link must then be validated pad
  * against pad: validating the cell's composite against the lone pad finds the
- * composite's own matching pad and passes the wire that is wrong (the
- * regression the smart bottle's cell-leads-reversed scenario caught, from the
- * merge of the watch and bottle board rules, d63a5ed).
+ * composite's own matching pad and passes the wire that is wrong (a
+ * regression from merging two sets of board rules, d63a5ed).
  */
 import { describe, expect, it } from "vitest";
 import type { InterfaceDef, ModuleDef } from "../src/types/index.js";
@@ -89,7 +88,7 @@ const DEFS = [CELL, BOARD, LEADS];
 const lookup = (id: string) => DEFS.find((d) => d.id === id);
 const derived = (def: ModuleDef) => deriveLinks(def, lookup).map((r) => `${r.a.path} ↔ ${r.b.path} [${r.state}]`).sort();
 
-describe("leads soldered through a harness (PB-869)", () => {
+describe("leads soldered through a harness", () => {
   it("pair + with BAT+ and - with BAT- when soldered right", () => {
     expect(derived(system({ p1: "bat_pos", p2: "bat_neg" }))).toEqual([
       "cell:lead_neg ↔ board:bat_neg [configured]",

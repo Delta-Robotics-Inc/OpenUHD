@@ -1,5 +1,5 @@
 /**
- * Geometry resolution for interfaces and assemblies (PB-775).
+ * Geometry resolution for interfaces and assemblies.
  *
  * - interfaceGeometry: an interface's own geometry, or — for a parent
  *   interface without its own (I2C, a 3-phase port) — the geometry of the
@@ -146,7 +146,7 @@ export interface GeometryManifest {
   toolVersion?: string;
   sourceDigest?: string;
   units: "mm";
-  /** Solid volume of the body, feature pads excluded (PB-797): mass = volume × material density. */
+  /** Solid volume of the body, feature pads excluded: mass = volume × material density. */
   volume_mm3?: number;
   /** Volume of each named body in the artifact (mm³). */
   bodies?: Record<string, number>;
@@ -322,7 +322,7 @@ export interface HardwarePlacement {
 }
 
 /**
- * One end of a routed harness (PB-805 harness geometry): the harness's end
+ * One end of a routed harness: the harness's end
  * interface, the link it takes part in, and how well the routed geometry
  * still meets the part it lands on.
  */
@@ -693,7 +693,7 @@ function placeHardware(
 }
 
 // ---------------------------------------------------------------------------
-// Routed harnesses (PB-805): harness geometry bound to the frames it lands on
+// Routed harnesses: harness geometry bound to the frames it lands on
 // ---------------------------------------------------------------------------
 
 /** Tolerances for a routed end meeting its counterpart. */

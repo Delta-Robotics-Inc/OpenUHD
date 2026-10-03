@@ -1,5 +1,5 @@
 /**
- * Connector links (PB-805): a link between two connector composites (or a
+ * Connector links: a link between two connector composites (or a
  * connector and a link-scoped composition) mates positions, not protocols.
  * Checked here: connector type, gender, position count and compose slots.
  * What the positions carry is checked on the links derived from them

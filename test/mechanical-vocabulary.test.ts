@@ -1,5 +1,5 @@
 /**
- * PB-862: vocabulary for the REV and motor waves of the ProtoPart migration:
+ * Mechanical and current-rating vocabulary:
  * bolt pattern rows and slots, shaft profiles and genders, linear motion,
  * and the minimum current an input needs from its source.
  */

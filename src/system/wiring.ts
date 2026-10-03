@@ -1,5 +1,5 @@
 /**
- * Wiring / assembly checklist from a system's stored links (PB-792).
+ * Wiring / assembly checklist from a system's stored links.
  *
  * One step per link, grouped by the harness that carries it. Composed links
  * expand into their child links, so the checklist reads pad-to-pad

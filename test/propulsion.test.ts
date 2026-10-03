@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { fullThrottle, thrustAtThrottle, thrustAtThrust, thrustRow, thrustTests } from "../src/system/propulsion.js";
 import { MOTOR } from "./fixtures/drone.js";
 
-describe("motor thrust tables (PB-797)", () => {
+describe("motor thrust tables", () => {
   const tests = thrustTests(MOTOR);
 
   it("reads every table of the performance trait, with its test prop and supply", () => {

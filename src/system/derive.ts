@@ -1,5 +1,5 @@
 /**
- * Derived links (PB-805): the functional connections a physical wiring makes.
+ * Derived links: the functional connections a physical wiring makes.
  *
  * Stored links between connectors mate positions; harness modules carry
  * conductors between their own ends (internal `self` ↔ `self` links whose
@@ -15,7 +15,7 @@
  * The walk also checks the wiring: conductor pairs inside a composite must
  * match the pairing the protocol expects (TX to RX).
  *
- * Board nets (PB-824) join the same walk: each net is a node that its
+ * Board nets join the same walk: each net is a node that its
  * member pins' membership links reach, so every pin on a net reaches every
  * other. On a net, a pair of pads is a link only when the interfaces they
  * lift to pair by protocol (a supply output with an input, an I2C master
@@ -133,7 +133,7 @@ const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
  * and the link reports the mismatch; on a net the pads only share the net.
  * A composite is never validated against the lone pad a wire lands on: that
  * finds the composite's own matching pad and passes the wire that is wrong
- * (a cell's + lead on the board's BAT- pad, PB-869). Two ground pads on a net share it without a link; as
+ * (a cell's + lead on the board's BAT- pad). Two ground pads on a net share it without a link; as
  * conductors of two composites they still pair.
  */
 function lift(a: Candidate[], b: Candidate[], onNet: boolean, joined: (la: string, lb: string) => boolean = () => true): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
@@ -212,7 +212,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     }
   }
 
-  // 1b. net memberships (PB-824): each pin is joined to its net's node
+  // 1b. net memberships: each pin is joined to its net's node
   const rails = new Set<string>();
   for (const r of stored) {
     if (r.protocol !== NET_PROTOCOL || r.state === "incompatible") continue;

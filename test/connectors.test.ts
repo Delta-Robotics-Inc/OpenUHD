@@ -1,5 +1,5 @@
 /**
- * PB-805: connector composites, link-scoped composition, physical harnesses
+ * Connector composites, link-scoped composition, physical harnesses
  * and the functional links derived through them. Uses the fixture flight
  * controller, video unit and GNSS (fixtures/drone.ts); the cables are defined here.
  */

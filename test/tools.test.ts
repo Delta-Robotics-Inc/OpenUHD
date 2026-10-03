@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ISO_4762_SOCKET_MM, systemTools, toolFor, toolLabel } from "../src/system/tools.js";
 import { DRONE, GPS_SCREW, GPS_SPACER, M2_NUT, M3_NUT, MOTOR_SCREW, STACK_SPACER, STANDOFF, lookup } from "./fixtures/drone.js";
 
-describe("tool sizes from the fasteners (PB-797)", () => {
+describe("tool sizes from the fasteners", () => {
   it("ISO 4762 socket sizes: M2 takes 1.5 mm, M3 takes 2.5 mm", () => {
     expect(ISO_4762_SOCKET_MM["2"]).toBe(1.5);
     expect(ISO_4762_SOCKET_MM["3"]).toBe(2.5);
