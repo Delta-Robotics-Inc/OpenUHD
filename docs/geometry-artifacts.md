@@ -84,7 +84,12 @@ placed part (`assembly.hardware`) and checks:
 
 - that each item's count matches the harness quantity; and
 - that each nut sits on thread. For example, M2 × 10 on the GPS would stop
-  0.8 mm inside the nut, so the model uses M2 × 12.
+  0.8 mm inside the nut, so the model uses M2 × 12. A nut may also sit on a
+  threaded shaft: when the joint's structure side is a shaft whose `shaft`
+  trait states a `thread` (a motor's M5 prop shaft), the shaft is the
+  screw, from its frame outward, so a prop nut needs no screw in the stack
+  (`fastenerStack: [{ child: "nut", atMm: 6, positions: [[0, 0]] }]` over a
+  6 mm hub).
 
 The quadcopter places 72 parts from 9 harness instances:
 
