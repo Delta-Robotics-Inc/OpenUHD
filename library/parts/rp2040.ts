@@ -1964,8 +1964,6 @@ export const RP2040: ModuleDef = defineModule({
         { id: "gnd", name: "Ground (exposed pad)", nominal_voltage_V: 0, voltage_range_V: [0, 0], max_current_mA: 1000 },
       ],
       metadata: {
-        pin_count: 56,
-        package_pins: "56 perimeter pins + exposed ground pad",
         cpu: "Dual-core Arm Cortex-M0+, up to 133 MHz default system clock",
         sram_KB: 264,
         internal_flash: "none — external QSPI flash required (XIP)",
@@ -2001,12 +1999,11 @@ export const RP2040: ModuleDef = defineModule({
         pitch_mm: 0.4,
         exposed_pad: true,
         exposed_pad_pin: 57,
+        exposed_pad_mm: [3.1, 3.1],
         source:
-          "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf (build-date 2025-02-20: §5.1 \"The RP2040 7×7 mm QFN-56 package\", \"0.4mm QFN-56\", central GND pad (ePad); §5.5 Pinout, Table 621: GND 57, \"Common ground connection via central pad\")",
+          "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf (build-date 2025-02-20: §5.1 \"The RP2040 7×7 mm QFN-56 package\", \"0.4mm QFN-56\", central GND pad (ePad), D2/E2 3.0-3.2 mm, nominal 3.1; §5.5 Pinout, Table 621: GND 57, \"Common ground connection via central pad\")",
       },
       metadata: {
-        package_type: "QFN-56 (7x7) EP",
-        exposed_pad_mm: "3.0-3.2 (nominal 3.1) square (Datasheet §5.1 D2/E2)",
         max_height_mm: 0.9, // Datasheet Table §5.1: A max 0.900 mm
         mounting_method: "surface_mount",
         enclosure_type: "ic_package",

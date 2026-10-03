@@ -1026,8 +1026,6 @@ export const ICM_42688_P: ModuleDef = defineModule({
         },
       ],
       metadata: {
-        package_type: "LGA-14",
-        pin_count: 14,
         supply_voltage_V: [1.71, 3.6],
         power_consumption_mW: 1.584,
         i2c_addresses_7bit: ["0x68", "0x69"],
@@ -1062,7 +1060,7 @@ export const ICM_42688_P: ModuleDef = defineModule({
         pitch_mm: 0.5,
         exposed_pad: false,
         source:
-          "https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/ds-000347-icm-42688-p-v1.6.pdf (DS-000347 rev 1.6 §10.2 Package Dimensions: 14 Lead LGA 2.5x3x0.91 mm, e 0.5 BSC, n 14)",
+          "https://odcec.cdiweb.com/datasheets/invensense/ds-000347-icm-42688-p-1p6.pdf (sha256 88081406c4380bf8debd7773a8ebbf0f0df0c8e601dee87bad48fbaae3c5a00a; distributor copy of DS-000347 rev 1.6, whose canonical copy is https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/ds-000347-icm-42688-p-v1.6.pdf) §10.2 Package Dimensions: 14 Lead LGA 2.5x3x0.91 mm, e 0.5 BSC, n 14",
       },
       metadata: {
         mounting_method: "surface_mount",

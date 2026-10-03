@@ -130,6 +130,10 @@ describe("chip parts carry package facts and complete designators", () => {
       expect(pkg.source).toMatch(/^https:\/\//);
       expect(pkg.size_mm?.length).toBeGreaterThan(0);
       expect(pinDesignatorIssues(def)).toEqual([]);
+      // the package is stated once, not also as free-form metadata
+      const meta = def.domains?.find((d) => d.domain === "mechanical")?.metadata ?? {};
+      expect(Object.keys(meta).filter((k) => /package|exposed_pad|pitch/.test(k))).toEqual([]);
+      if (ep) expect(pkg.exposed_pad_mm).toHaveLength(2);
     });
   }
 
