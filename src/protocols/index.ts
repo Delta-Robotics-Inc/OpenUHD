@@ -22,3 +22,6 @@ export * from "./motor.js";
 export * from "./rc.js";
 export * from "./mechanical.js";
 export * from "./define-module.js";
+export * from "./net.js";
+export * from "./passive.js";
+export * from "./package.js";

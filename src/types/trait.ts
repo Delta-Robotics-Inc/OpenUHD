@@ -68,3 +68,48 @@ export interface HandednessTrait extends TraitDef {
     note?: string;
   };
 }
+
+/**
+ * A two-terminal passive component (PB-824): a resistor, capacitor,
+ * inductor or ferrite bead on a board. The value is a fact of the part; its
+ * terminals are `passive` leaves (see `Passive()` in src/protocols). The
+ * bus_pullup check reads resistors from it.
+ */
+export interface PassiveTrait extends TraitDef {
+  type: "passive";
+  params: {
+    kind: "resistor" | "capacitor" | "inductor" | "ferrite_bead";
+    /** In `unit`: ohms, farads, henries (impedance in ohms for a ferrite bead). */
+    value: number;
+    unit: "Ω" | "F" | "H";
+    /** Fractional tolerance, e.g. 0.01 for ±1 %. */
+    tolerance?: number;
+    source?: string;
+    assumption?: string;
+  };
+}
+
+/** An axis-aligned box in the module's own coordinates (mm). */
+export interface Region {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
+/**
+ * Requirements a custom module (a board, an enclosure) must meet, stated
+ * before it is designed (PB-824): the largest body it may have and regions it
+ * must keep clear. A design tool honours them; the design_envelope check
+ * compares the stated body (`dimensions_mm`) with `max_mm`. Layout itself is
+ * never UHD.
+ */
+export interface DesignEnvelopeTrait extends TraitDef {
+  type: "design_envelope";
+  params: {
+    /** Largest allowed body, length × width × height (any axis may be omitted). */
+    max_mm: { length?: number; width?: number; height?: number };
+    keep_outs?: { name: string; region: Region; reason?: string }[];
+    /** Where the requirement comes from (a brief, an enclosure, a mating part). */
+    reason?: string;
+    source?: string;
+  };
+}

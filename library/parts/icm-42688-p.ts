@@ -36,6 +36,14 @@
  *     decoupling at pins 5 and 8, I2C pull-ups to VDDIO on AP_SDA/AP_SCL.
  *   - Usage restrictions (`usage_restriction` traits): pin 7 RESV must be
  *     tied to GND; pins 2/3/10/11 RESV are no-connect-or-GND.
+ *   - Package facts (PB-824, mechanical domain `package`): DS-000347 rev 1.6
+ *     §10.2 "14 Lead LGA (2.5x3x0.91) mm NiAu pad finish": lead pitch e 0.5
+ *     BSC, lead count 14, total thickness A 0.85/0.91/0.97 mm, body D 2.5 x
+ *     E 3 BSC, no exposed pad. Read from the distributor copy
+ *     https://odcec.cdiweb.com/datasheets/invensense/ds-000347-icm-42688-p-1p6.pdf
+ *     (sha256 88081406c4380bf8debd7773a8ebbf0f0df0c8e601dee87bad48fbaae3c5a00a,
+ *     2026-10-02) because the TDK URL in `artifacts` refused the download;
+ *     same document number and revision.
  */
 
 import type {
@@ -902,7 +910,7 @@ const pcbMount: InterfaceDef = {
 export const ICM_42688_P: ModuleDef = defineModule({
   id: "icm-42688-p",
   name: "TDK InvenSense ICM-42688-P",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "TDK InvenSense",
   part_number: "ICM-42688-P",
   description:
@@ -1018,8 +1026,6 @@ export const ICM_42688_P: ModuleDef = defineModule({
         },
       ],
       metadata: {
-        package_type: "LGA-14",
-        pin_count: 14,
         supply_voltage_V: [1.71, 3.6],
         power_consumption_mW: 1.584,
         i2c_addresses_7bit: ["0x68", "0x69"],
@@ -1048,8 +1054,15 @@ export const ICM_42688_P: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 3, width: 2.5, height: 0.91 },
+      package: {
+        name: "LGA-14",
+        pin_count: 14,
+        pitch_mm: 0.5,
+        exposed_pad: false,
+        source:
+          "https://odcec.cdiweb.com/datasheets/invensense/ds-000347-icm-42688-p-1p6.pdf (sha256 88081406c4380bf8debd7773a8ebbf0f0df0c8e601dee87bad48fbaae3c5a00a; distributor copy of DS-000347 rev 1.6, whose canonical copy is https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/ds-000347-icm-42688-p-v1.6.pdf) §10.2 Package Dimensions: 14 Lead LGA 2.5x3x0.91 mm, e 0.5 BSC, n 14",
+      },
       metadata: {
-        package_type: "LGA-14",
         mounting_method: "surface_mount",
         requires_special_tools: false,
         field_serviceable: false,

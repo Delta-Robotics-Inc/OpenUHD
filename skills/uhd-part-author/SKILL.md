@@ -57,6 +57,13 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
    pattern, using builders wherever one fits (`Pin`, `PowerIn`, `PowerOut`,
    `Ground`, `EscSignal`, `BoltPattern`, `Shaft`), or the inline signal specs
    of bus builders. Set `pin` to the silkscreen or pad label.
+   For a chip (any component soldered to a PCB), declare the datasheet pin
+   table with `pinTable` (ids `pin_<n>`, the datasheet name, a cited
+   `pin_functions` trait per row). Every pin and the exposed pad gets a leaf
+   with its designator, including NC and reserved pins (type `nc`). A
+   peripheral function that is not a pin (a PWM block, a PIO) is marked
+   `geometry: { logical: true }`. See
+   [docs/boards-and-nets.md](../../docs/boards-and-nets.md).
 2. **Composed interfaces next:** buses and bundles (`UART`, `I2C`, `CRSF`,
    `BrushlessPhases`, `FcEscPort`) bind the leaves through profiles. Every
    slot must set `match.protocol`; capability-only slots don't pair in DRC.
@@ -89,14 +96,35 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
 | `usage_note` | Wiring, firmware, or configuration notes from the source. |
 | `supplied_from` | A power output that branches from another output on the same module (e.g. 4.5 V pads behind the 5 V BEC): `{ interfaceId, via?, source? \| assumption? }` (`SuppliedFromTrait`). Its loads are budgeted on the parent. |
 | `handedness` | A part sold in rotation-handed variants (propellers): `{ variants: ["cw", "ccw"], pack?, source }` (`HandednessTrait`). The fitted variant is chosen per instance with `ChildModuleRef.spin`. |
+| `passive` | The value of a resistor, capacitor, inductor or ferrite bead: `{ kind, value, unit, tolerance?, source? }` (`PassiveTrait`, written by `Passive()`). |
 
 - Every trait that states a fact carries `source: SRC.<key>` (or several).
 
 ## Domains metadata
 
 Add a `domains[]` entry for each relevant domain, using the fields that exist
-(`dimensions_mm`, `weight_g`, `power_domains`) and `metadata` for the rest.
-Thermal is present whenever a source gives an operating temperature.
+(`dimensions_mm`, `weight_g`, `power_domains`, `material`, `package`) and
+`metadata` for the rest. Thermal is present whenever a source gives an
+operating temperature.
+
+A chip states its **package** on the mechanical domain, from the datasheet's
+package section, with `dimensions_mm` as the overall size:
+
+```ts
+{
+  domain: "mechanical",
+  dimensions_mm: { length: 3.0, width: 2.5, height: 0.83 },
+  package: { name: "LGA-14", pin_count: 14, pitch_mm: 0.5, exposed_pad: false, source: `${SRC.datasheet} (§8.1)` },
+}
+```
+
+Use the manufacturer's package name and code (`"VSON-14"`, code
+`"DSJ (R-PVSON-N14)"`); with an exposed pad set `exposed_pad: true` and
+`exposed_pad_pin` to its leaf's designator. Never record a footprint,
+land-pattern, symbol or library name, or anything named after a PCB or CAD
+tool: those belong to the tool. Verify reports `[pins]` warnings when a part
+with a package has a pin without a designator, a repeated designator, or a
+package pin no leaf carries.
 
 ## Geometry (CAD)
 

@@ -27,7 +27,10 @@
  *   - INT1/INT2 are interrupt outputs that can also be inputs for FIFO
  *     external sync (Table 22 note *), so they carry interrupt output plus
  *     digital input/output.
- *   - `pcb_mount` is the SMD land pattern (mechanical_connection), bound to
+ *   - Package facts (LGA-14, 14 pads, 0.5 mm pitch, no exposed pad, body
+ *     3.0 x 2.5 x 0.83 mm) are the mechanical domain's `package`; every pad
+ *     leaf carries its Table 22 designator.
+ *   - `pcb_mount` is the SMD pad set (mechanical_connection), bound to
  *     the 14 pad faces of the generated package; there is no bolt pattern on
  *     a bare IC, so the frame is the seating plane (normal -Z).
  *   - Geometry is generated from the §8.1 drawing (no manufacturer CAD found:
@@ -182,7 +185,7 @@ const oisSpi = withTraits(
 
 const pcbMount: InterfaceDef = {
   id: "pcb_mount",
-  name: "LGA-14 land pattern (SMD)",
+  name: "LGA-14 pads (SMD)",
   domain: "mechanical",
   exposed: true,
   default_active: true,
@@ -207,7 +210,7 @@ const pcbMount: InterfaceDef = {
 const BOSCH_BMI270_BASE: ModuleDef = defineModule({
   id: "bosch-bmi270",
   name: "Bosch BMI270",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "Bosch Sensortec",
   part_number: "BMI270",
   description:
@@ -240,7 +243,13 @@ const BOSCH_BMI270_BASE: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 3.0, width: 2.5, height: 0.83 },
-      metadata: { package: "LGA-14", pitch_mm: 0.5, source: `${SRC.datasheet} (§8.1)` },
+      package: {
+        name: "LGA-14",
+        pin_count: 14,
+        pitch_mm: 0.5,
+        exposed_pad: false,
+        source: `${SRC.datasheet} (Basic description: "LGA mold package, 14 pins, footprint 2.5x3.0mm², height 0.83mm"; §8.1 package outline)`,
+      },
     },
     { domain: "thermal", operating_temperature_C: [-40, 85], metadata: { source: `${SRC.datasheet} (Table 1)` } },
   ],

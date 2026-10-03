@@ -12,6 +12,9 @@
  *   harness_connector   harness end connectors vs the interfaces they mate
  *   prop_handedness     each motor's spin vs the handed prop on it (rotation.ts)
  *   fastener_torque     every fastener joint states a sourced or assumed torque (fasteners.ts)
+ *   net                 board nets: dangling, shorted, driven twice, wrong voltage (nets.ts)
+ *   bus_pullup          an I2C bus over board nets with no pull-up (nets.ts)
+ *   design_envelope     a stated body larger than the module's envelope (nets.ts)
  *
  * Each diagnostic names canonical paths (`child:interface`, `link:<id>`) so
  * a viewer can select what it refers to.
@@ -22,6 +25,7 @@ import type { Parameter } from "../types/parameter.js";
 import type { SuppliedFromTrait } from "../types/trait.js";
 import {
   boundaryInterfaces,
+  formatPath,
   type LinkResult,
   type ModuleLookup,
   type ResolvedEndpoint,
@@ -31,6 +35,7 @@ import { fastenerTorqueRule } from "./fasteners.js";
 import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { systemLinks } from "./derive.js";
+import { busPullupRule, designEnvelopeRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage } from "./nets.js";
 
 export type SystemRule =
   | "link_state"
@@ -41,7 +46,10 @@ export type SystemRule =
   | "unpowered"
   | "harness_connector"
   | "prop_handedness"
-  | "fastener_torque";
+  | "fastener_torque"
+  | "net"
+  | "bus_pullup"
+  | "design_envelope";
 
 export interface SystemDiagnostic {
   id: string;
@@ -125,6 +133,8 @@ interface SupplyGroup {
   /** Canonical path of the source output (first link that names it), or `owner#iface` if unlinked. */
   path: string;
   owner: ModuleDef;
+  /** Instance path of `owner` below the checked module. */
+  ownerPath: string[];
   iface: InterfaceDef;
   /** Loads linked directly to this output. */
   edges: PowerEdge[];
@@ -132,12 +142,44 @@ interface SupplyGroup {
   branches: SupplyGroup[];
 }
 
-function supplyBudgetRule(links: LinkResult[]): SystemDiagnostic[] {
+/**
+ * The design voltage of the board net a derived link runs over (PB-824), if
+ * it states one: an adjustable regulator's output is what its net says, not
+ * the low end of what the part allows.
+ */
+function railVoltageOf(def: ModuleDef): (r: LinkResult) => number | undefined {
+  const nets = new Map(def.interfaces.map((i) => [i.id, i]));
+  return (r) => {
+    for (const id of r.derived?.nets ?? []) {
+      const net = nets.get(id);
+      const v = net ? netVoltage(net) : undefined;
+      if (v) return v;
+    }
+    return undefined;
+  };
+}
+
+/**
+ * The output port a supply pin belongs to: a power-output composite on the
+ * same module binding it (a regulator's doubled VOUT pins), so the pins are
+ * budgeted together against the port's rating. Else the pin itself.
+ */
+function supplyPort(source: ResolvedEndpoint): { iface: InterfaceDef; path: string } {
+  if (source.iface.slots?.length) return { iface: source.iface, path: source.path };
+  const port = source.owner.interfaces.find(
+    (i) => i.slots?.length && hasRole(i, "power", "output") && Object.values(slotBindings(i)).includes(source.iface.id),
+  );
+  return port ? { iface: port, path: `${source.path.slice(0, source.path.lastIndexOf(":"))}:${port.id}` } : { iface: source.iface, path: source.path };
+}
+
+function supplyBudgetRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[] {
+  const railOf = railVoltageOf(def);
   const groups = new Map<string, SupplyGroup>();
-  const keyOf = (owner: ModuleDef, ifaceId: string) => `${owner.id}#${ifaceId}`;
+  const keyOf = (ownerPath: string[], ifaceId: string) => `${ownerPath.join("/")}#${ifaceId}`;
   for (const edge of powerEdges(links)) {
-    const key = keyOf(edge.source.owner, edge.source.iface.id);
-    const g = groups.get(key) ?? { path: edge.source.path, owner: edge.source.owner, iface: edge.source.iface, edges: [], branches: [] };
+    const port = supplyPort(edge.source);
+    const key = keyOf(edge.source.ownerPath, port.iface.id);
+    const g = groups.get(key) ?? { path: port.path, owner: edge.source.owner, ownerPath: edge.source.ownerPath, iface: port.iface, edges: [], branches: [] };
     g.edges.push(edge);
     groups.set(key, g);
   }
@@ -147,8 +189,8 @@ function supplyBudgetRule(links: LinkResult[]): SystemDiagnostic[] {
     if (!from) continue;
     const parentIface = g.owner.interfaces.find((i) => i.id === from.interfaceId);
     if (!parentIface) continue;
-    const key = keyOf(g.owner, parentIface.id);
-    const parent = groups.get(key) ?? { path: `${g.path.split(":")[0]}:${parentIface.id}`, owner: g.owner, iface: parentIface, edges: [], branches: [] };
+    const key = keyOf(g.ownerPath, parentIface.id);
+    const parent = groups.get(key) ?? { path: `${g.path.split(":")[0]}:${parentIface.id}`, owner: g.owner, ownerPath: g.ownerPath, iface: parentIface, edges: [], branches: [] };
     parent.branches.push(g);
     groups.set(key, parent);
   }
@@ -173,13 +215,18 @@ function supplyBudgetRule(links: LinkResult[]): SystemDiagnostic[] {
       });
       continue;
     }
-    const volts = nominal(param(iface, "voltage"));
+    const netV = allEdges.map((e) => railOf(e.link)).find((v) => v !== undefined);
+    const volts = netV ?? nominal(param(iface, "voltage"));
     const amps = toAmps(param(iface, "max_current"));
     const unknown: string[] = [];
     let loadW = 0;
-    for (const { load, source } of allEdges) {
+    const counted = new Set<string>();
+    for (const { load, source, link } of allEdges) {
+      // a load reached through both of a port's doubled pins draws once
+      if (counted.has(load.path)) continue;
+      counted.add(load.path);
       // each load draws at its own rail's voltage (a branch rail may sit lower)
-      const railV = nominal(param(source.iface, "voltage")) ?? volts;
+      const railV = railOf(link) ?? nominal(param(source.iface, "voltage")) ?? volts;
       const draw = toAmps(param(load.iface, "current_draw"));
       const minW = nominal(param(load.iface, "min_supply_power"));
       if (minW !== undefined) loadW += minW;
@@ -314,19 +361,23 @@ function shareable(iface: InterfaceDef): boolean {
 }
 
 function reuseRule(links: LinkResult[]): SystemDiagnostic[] {
-  const uses = new Map<string, { end: ResolvedEndpoint; links: string[] }>();
+  const uses = new Map<string, { end: ResolvedEndpoint; links: string[]; connections: Set<string> }>();
   for (const r of links) {
+    if (isNetMembership(r)) continue;
+    // a pin on a net is one connection however many pins share the net
+    const connection = r.derived?.nets?.length ? `net:${r.derived.nets.join("+")}` : r.link.id;
     for (const end of [r.a, r.b]) {
-      const entry = uses.get(end.path) ?? { end, links: [] };
+      const entry = uses.get(end.path) ?? { end, links: [], connections: new Set<string>() };
       entry.links.push(r.link.id);
+      entry.connections.add(connection);
       uses.set(end.path, entry);
     }
   }
   const out: SystemDiagnostic[] = [];
-  for (const [path, { end, links: ids }] of uses) {
+  for (const [path, { end, links: ids, connections }] of uses) {
     if (shareable(end.iface)) continue;
     const limit = end.iface.max_instances ?? 1;
-    if (ids.length <= limit) continue;
+    if (connections.size <= limit) continue;
     out.push({
       id: `interface_reuse:${path}`,
       rule: "interface_reuse",
@@ -339,7 +390,19 @@ function reuseRule(links: LinkResult[]): SystemDiagnostic[] {
 }
 
 function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
-  const linked = new Set(links.flatMap((r) => [r.a.path, r.b.path]));
+  const linked = new Set<string>();
+  for (const r of links) {
+    if (isNetMembership(r)) continue;
+    linked.add(r.a.path);
+    linked.add(r.b.path);
+    // the pads a link to a composite carries (a supply port's VIN pins)
+    for (const c of r.children) {
+      linked.add(formatPath(r.a.ownerPath, c.a.leafId));
+      linked.add(formatPath(r.b.ownerPath, c.b.leafId));
+    }
+  }
+  // inputs on a board's edge are supplied by whatever the board plugs into
+  const fed = edgeFedPaths(def, lookup, moduleNets(def, links));
   const out: SystemDiagnostic[] = [];
   for (const ref of def.children ?? []) {
     const child = lookup(ref.moduleDefId);
@@ -347,7 +410,10 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
     for (const iface of boundaryInterfaces(child, lookup)) {
       if (!hasRole(iface, "power", "input")) continue;
       const path = `${ref.id}:${iface.id}`;
-      if (linked.has(path)) continue;
+      if (linked.has(path) || fed.has(path)) continue;
+      // a supply port whose input pads are all supplied (doubled VIN pins on a net)
+      const pads = Object.values(slotBindings(iface)).filter((id) => child.interfaces.some((i) => i.id === id && hasRole(i, "power", "input")));
+      if (pads.length && pads.every((id) => linked.has(`${ref.id}:${id}`) || fed.has(`${ref.id}:${id}`))) continue;
       out.push({
         id: `unpowered:${path}`,
         rule: "unpowered",
@@ -431,7 +497,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
   const via = new Map(links.filter((r) => r.derived).map((r) => [`link:${r.link.id}`, r.derived!.via.map((id) => `link:${id}`)]));
   const diagnostics = [
     ...linkStateRule(links),
-    ...supplyBudgetRule(links),
+    ...supplyBudgetRule(def, links),
     ...propulsionRule(links),
     ...busAddressRule(links),
     ...reuseRule(links),
@@ -439,6 +505,9 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
     ...harnessConnectorRule(def, links, lookup),
     ...propHandednessRule(def, lookup),
     ...fastenerTorqueRule(def, lookup),
+    ...netRule(def, links),
+    ...busPullupRule(def, links, lookup),
+    ...designEnvelopeRule(def),
   ]
     .map((d) => {
       const extra = d.refs.flatMap((r) => via.get(r) ?? []).filter((r) => !d.refs.includes(r));

@@ -15,6 +15,8 @@ import { validatePair } from "../drc/validate-pair.js";
 import { matchProtocols } from "../matching/protocol-match.js";
 import { validateConnectorLink } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
+import { isNet } from "../protocols/net.js";
+import { validateNetLink } from "./nets.js";
 
 /** Resolves a child's `moduleDefId` to its definition. */
 export type ModuleLookup = (moduleDefId: string) => ModuleDef | undefined;
@@ -263,9 +265,10 @@ export interface LinkResult {
   diagnostics: Diagnostic[];
   /**
    * Set on links derived from conductors (PB-805): the stored connector links
-   * and harness children the conductors run through.
+   * and harness children the conductors run through, and the board nets
+   * (PB-824) they join through, when any.
    */
-  derived?: { via: string[]; harnesses: string[] };
+  derived?: { via: string[]; harnesses: string[]; nets?: string[] };
 }
 
 const STATE_MAP: Record<ConnectionState, LinkState> = {
@@ -319,6 +322,7 @@ function storedChildren(stored: ChildLink[], a: ResolvedEndpoint, b: ResolvedEnd
 export function validateLink(def: ModuleDef, link: InterfaceLink, lookup: ModuleLookup): LinkResult {
   const a = resolveEndpoint(def, link.a, lookup);
   const b = resolveEndpoint(def, link.b, lookup);
+  if (isNet(a.iface) || isNet(b.iface)) return validateNetLink(link, a, b);
   if (isConnector(a.iface) && isConnector(b.iface)) return validateConnectorLink(link, a, b);
   return validateResolved(link, a, b);
 }

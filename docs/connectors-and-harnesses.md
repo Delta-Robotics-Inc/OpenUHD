@@ -135,11 +135,12 @@ parameters), its `children` are the physical conductors (`method: "wired"`),
 and it is tagged `derived: { via: [stored link ids], harnesses: [child ids] }`.
 Its id is `<via links>~<a interface>~<b interface>`.
 
-One extra check runs on derived links:
+Two extra checks run on derived links:
 
 | Code | When |
 |---|---|
 | `harness_wiring` | a conductor inside a composite lands on a different leaf than the protocol pairs it with (TX wired to TX) |
+| `bus_incomplete` | a required pairing of a lifted composite has no conductor inside it: the pad reaches the other module only through some other pad (PB-824) |
 
 `systemLinks(def, lookup)` returns stored plus derived results, and
 `checkSystem` runs every system rule on that set, so supply budgets, interface

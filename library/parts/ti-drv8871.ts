@@ -275,7 +275,7 @@ const bridgeControl: InterfaceDef = {
 const TI_DRV8871_BASE: ModuleDef = defineModule({
   id: "ti-drv8871",
   name: "TI DRV8871 Brushed DC Motor Driver (HSOP-8)",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "Texas Instruments",
   part_number: "DRV8871DDAR",
   description:
@@ -295,16 +295,23 @@ const TI_DRV8871_BASE: ModuleDef = defineModule({
       power_domains: [
         { id: "vm", name: "Motor / device supply (VM)", nominal_voltage_V: 24, voltage_range_V: VM_RANGE, max_current_mA: 3600 },
       ],
-      metadata: { pin_count: 8, exposed_pad: true, package: "HSOP-8 PowerPAD (DDA)" },
     },
     {
       domain: "mechanical",
       dimensions_mm: { length: 4.9, width: 6.0, height: 1.7 },
-      metadata: {
-        package: "DDA0008B PowerPAD SOIC, 1.7 mm max height (JEDEC MS-012)",
-        body_mm: "4.8-5.0 x 3.8-4.0; lead span 5.8-6.2",
+      package: {
+        name: "HSOP-8",
+        code: "DDA (DDA0008B)",
+        pin_count: 8,
         pitch_mm: 1.27,
-        exposed_pad_mm: "2.11-2.71 x 2.8-3.4",
+        exposed_pad: true,
+        exposed_pad_pin: "PAD",
+        exposed_pad_mm: [3.1, 2.41],
+        source: `${SRC.datasheet} (Device Information: HSOP (8) 4.90 mm × 6.00 mm; §5 "DDA Package 8-Pin HSOP", PAD row; DDA0008B PowerPAD SOIC outline, 1.7 mm max height, JEDEC MS-012: 6X 1.27 pitch, exposed thermal pad 2.8-3.4 along the pin rows × 2.11-2.71 across)`,
+        assumption: "Exposed pad size is the midpoint of the outline's min-max ranges; the drawing states no nominal.",
+      },
+      metadata: {
+        body_mm: "4.8-5.0 x 3.8-4.0; lead span 5.8-6.2",
         mounting_method: "surface_mount",
         msl: "Level-2-260C-1 YEAR",
       },

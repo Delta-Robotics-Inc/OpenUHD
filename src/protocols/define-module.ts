@@ -11,6 +11,7 @@ import { validateProfile } from "../binding/profile.js";
  *   - every declared profile passes validateProfile (bindings exist,
  *     required slots are bound, bound pins carry the slot's capability)
  *   - interfaceGroups members reference existing interfaces
+ *   - export ids are unique and do not repeat an interface id
  *
  * Throws an Error listing every problem found, so a bad part fails at
  * import time rather than after it reaches the database.
@@ -33,6 +34,15 @@ export function defineModule(def: ModuleDef): ModuleDef {
         problems.push(`interface "${iface.id}" profile "${profile.id}": ${error}`);
       }
     }
+  }
+
+  // an export shares the boundary namespace with the module's own interfaces
+  // (a board's internal nets included), which would shadow it
+  const exportIds = new Set<string>();
+  for (const ex of def.exports ?? []) {
+    if (interfaceIds.has(ex.id)) problems.push(`export "${ex.id}" has the id of an interface on the module`);
+    if (exportIds.has(ex.id)) problems.push(`duplicate export id "${ex.id}"`);
+    exportIds.add(ex.id);
   }
 
   for (const group of def.interfaceGroups ?? []) {

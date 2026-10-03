@@ -4,7 +4,8 @@
  *   npx tsx scripts/verify-part.ts <id> [--mate <other-id>]... [--json]
  *
  * Imports library/parts/<id>.ts (so defineModule runs), then checks metadata,
- * citations, structure, parameters, vocabulary, and hygiene. Each --mate runs
+ * citations, structure, parameters, vocabulary, pin designators (parts with
+ * a package fact), and hygiene. Each --mate runs
  * validatePair against another part and lists the resulting connections.
  * Exits 1 when any error is found.
  */
@@ -16,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import type { InterfaceDef, ModuleDef } from "../src/types/index.js";
 import { validatePair } from "../src/drc/index.js";
 import { isConnector } from "../src/protocols/connector.js";
+import { partPackage, pinDesignatorIssues } from "../src/protocols/package.js";
 import * as library from "../library/parts/index.js";
 import { checkCad } from "../library/cad/checks.js";
 import { manifestLookup } from "../library/cad/manifests.js";
@@ -28,6 +30,8 @@ const BUILDER_PROTOCOLS = [
   "digital", "pwm", "interrupt", "analog", "power", "i2c", "spi", "uart",
   "bldc_phase", "bldc_3phase", "dshot", "oneshot125", "oneshot42", "multishot",
   "pwm_esc", "fc_esc_connector", "connector", "crsf", "sbus", "bolt_pattern", "shaft", "custom",
+  // PB-824: passive terminals (pinTable "passive", Passive()); nets live on boards, not parts
+  "passive",
 ];
 
 /** Trait types new parts should use (skills/uhd-part-author). */
@@ -36,6 +40,8 @@ const CANONICAL_TRAITS = new Set([
   "performance", "assumption", "source_discrepancy", "data_gap", "usage_note",
   // PB-797: typed relations (src/types/trait.ts)
   "supplied_from", "handedness",
+  // PB-824: passives and design requirements
+  "passive", "design_envelope",
   // emitted by builders
   "phase_order", "esc_signal_protocols", "serial_rx_protocol", "bolt_pattern", "shaft",
 ]);
@@ -219,6 +225,11 @@ function check(def: ModuleDef, id: string): Finding[] {
     warn("coverage", "no thermal domain or operating_conditions trait — confirm the sources give no operating temperature");
   }
   if (!domains.has("mechanical")) warn("coverage", "no mechanical interfaces (mounting, shaft) — confirm this is intended");
+
+  // Package and pin designators (PB-824): a chip states its package and every pad carries `pin`
+  for (const issue of pinDesignatorIssues(def)) warn("pins", issue);
+  const pkg = partPackage(def);
+  if (pkg && !pkg.source && !pkg.assumption) warn("pins", `package ${pkg.name} cites no source`);
 
   // CAD (PB-796): a body, bindings, frames, frame plausibility, vendor licence
   for (const issue of checkCad(def, manifestLookup(def))) {
