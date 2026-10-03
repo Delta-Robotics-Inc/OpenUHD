@@ -48,6 +48,13 @@ export interface I2CConfig {
   voltageV?: number;
   /** 7-bit device address, for slave-only devices such as sensors. */
   address?: number;
+  /**
+   * Other 7-bit addresses the device answers at by default, by name: a
+   * PCA9685's all-call address `{ all_call: 0x70 }`, enabled sub-addresses.
+   * Each becomes an `i2c_address_<name>` parameter; a bus scan finds them and
+   * no other device on the bus may use them.
+   */
+  otherAddresses?: Record<string, number>;
   /** SDA signal: inline spec (pin number, name, V/mA/Hz) or existing pin interface id. */
   sda?: SignalRef;
   /** SCL signal: inline spec or existing pin interface id. */
@@ -87,6 +94,9 @@ export function I2C(config: I2CConfig): InterfaceDef[] {
   if (config.address !== undefined) {
     parameters.push({ id: "i2c_address", unit: "dimensionless", value: config.address });
   }
+  for (const [name, value] of Object.entries(config.otherAddresses ?? {})) {
+    parameters.push({ id: `i2c_address_${name}`, unit: "dimensionless", value });
+  }
 
   const bus: InterfaceDef = {
     id,
@@ -114,4 +124,20 @@ export function I2C(config: I2CConfig): InterfaceDef[] {
   };
 
   return [...generated, bus];
+}
+
+/**
+ * The 7-bit addresses an I2C interface answers at: its `i2c_address` first,
+ * then every other `i2c_address_<name>` parameter (an all-call address,
+ * enabled sub-addresses), each with its name.
+ */
+export function i2cAddresses(iface: { parameters?: { id: string; value?: number; range?: [number, number] }[] }): { name: string; address: number }[] {
+  const out: { name: string; address: number }[] = [];
+  for (const p of iface.parameters ?? []) {
+    const m = /^i2c_address(?:_(.+))?$/.exec(p.id);
+    const v = p.value ?? p.range?.[0];
+    if (!m || v === undefined) continue;
+    out.push({ name: m[1] ?? "address", address: v });
+  }
+  return out.sort((a, b) => (a.name === "address" ? -1 : b.name === "address" ? 1 : 0));
 }

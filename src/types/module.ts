@@ -31,6 +31,24 @@ export interface ChildModuleRef {
    * that does not set its own. Checked by the prop_handedness system rule.
    */
   spin?: SpinDirection;
+  /**
+   * Interfaces of this instance left unconnected on purpose, each with why
+   * (PB-870): a DC jack unused because the product runs from USB, a motor
+   * supply terminal waiting for a battery that is not chosen yet. Like a
+   * no-connect flag on a schematic: the system checks do not report a
+   * marked power input as unpowered (they say it is marked instead), and
+   * tools that plan bring-up do not power it. A link to a marked interface
+   * is a warning (the `unconnected` rule).
+   */
+  unconnected?: UnconnectedInterface[];
+}
+
+/** One interface of an instance that is intentionally left without a link. */
+export interface UnconnectedInterface {
+  /** The interface on the child's definition (a leaf, a composite or an export). */
+  interfaceId: string;
+  /** Why it stays open ("powered from USB; the DC jack is not used"). */
+  reason: string;
 }
 
 /** Clockwise or counter-clockwise, viewed from the shaft's output end. */
