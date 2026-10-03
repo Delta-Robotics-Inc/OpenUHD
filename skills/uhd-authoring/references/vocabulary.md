@@ -38,7 +38,7 @@ peer.
 `hole_spacing_y` (mm), `hole_count`, `fastener_diameter` (mm),
 `shaft_diameter` (mm), `resolution`, `max_frequency` (Hz).
 
-## Existing types in the library
+## Existing types in use
 
 `power`, `digital`, `i2c`, `spi`, `uart`, `usb`, `analog`, `pwm`,
 `interrupt`, `can`, `bluetooth`, `wifi`, `rf`, `i2s`, `jtag`, `swd`,

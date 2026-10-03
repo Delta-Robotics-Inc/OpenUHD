@@ -20,7 +20,7 @@ npm-debug.log*
 .env
 .env.local
 
-# Part research working memory (skills/uhd-part-research)
+# Part research working memory (library/MOVED.md)
 library/parts/*/.research/
 
 .venv-cad/

@@ -26,10 +26,6 @@ def part_dir(part_id: str) -> Path:
     return ROOT / "library/parts" / part_id / "artifacts/cad"
 
 
-def system_dir(system_id: str) -> Path:
-    return ROOT / "library/systems" / system_id / "artifacts/cad"
-
-
 def digest(*paths: Path) -> str:
     h = hashlib.sha256()
     for p in paths:

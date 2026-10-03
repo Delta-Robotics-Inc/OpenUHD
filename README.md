@@ -165,6 +165,16 @@ We are actively interested in:
 - [docs/drc-spec.md](docs/drc-spec.md) — Design Rule Check tier model and connection-state semantics.
 - [docs/connectors-and-harnesses.md](docs/connectors-and-harnesses.md) — connector composites, link-scoped composition, physical harness wiring and derived links; the part-authoring rule for connectors.
 - [docs/boards-and-nets.md](docs/boards-and-nets.md) — a custom PCB as a module: nets, passives, the board edge, the board checks; package facts and pin designators on components; what stays out of UHD.
+- [skills/uhd-authoring](skills/uhd-authoring/SKILL.md) — an agent skill and reference for writing UHD definitions by hand: interfaces, pin tables, buses, connectors, parameters, traits, package facts, geometry frames and refs.
+
+### What is not in this repository
+
+UHD holds the schema, pure helpers and test fixtures. Tools that run on UHD
+(CAD generators, document generators, part research and verification
+workflows) live with the tools built on it. The part library that used to
+be in `library/` has moved to the ProtoBoard Cloud parts service and is no
+longer maintained here; the copy that remains is read only and will be
+removed ([library/MOVED.md](library/MOVED.md)).
 
 ---
 

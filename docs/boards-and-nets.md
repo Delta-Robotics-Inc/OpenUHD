@@ -261,7 +261,7 @@ Pin types are `power_in`, `power_out`, `ground`, `io`, `input`, `output`,
 `analog_in`, `analog_out`, `passive` and `nc`. Buses are composed over the
 returned ids with the bus builders, as before.
 
-`pinDesignatorIssues(def)` (run by `scripts/verify-part.ts` as `[pins]`
+`pinDesignatorIssues(def)` (part verification tools report it as `[pins]`
 warnings) reports, for parts with a package: electrical leaves without `pin`,
 a designator on more than one leaf, numbered pins no leaf carries, and
 designators outside the package. A peripheral function that is not a pin (a

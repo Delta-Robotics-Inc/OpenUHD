@@ -1,7 +1,11 @@
-"""Regenerate every build123d artifact (PB-775, PB-796).
+"""Regenerate every part-body build123d artifact (PB-775, PB-796).
 
   npx tsx library/cad/params.ts            # UHD -> params.json / params.kcl
   .venv-cad/bin/python library/cad/py/build_all.py [part-id ...]
+
+The quadcopter frame and mounting-hardware generators (frame.py,
+hardware.py) moved out of UHD with the other tools; their committed outputs
+under library/systems/quadcopter-5in/artifacts/cad stay.
 
 Per-part catalog scripts (library/cad/py/catalog/<id>.py, PB-796) each
 define `build()`: vendor-STEP bindings (vendor_step.py; skipped when the
@@ -29,16 +33,10 @@ def catalog(only: list[str]) -> None:
 if __name__ == "__main__":
     only = sys.argv[1:]
     if not only:
-        import frame
         import gnss_vendor
-        import hardware
         import parts
 
         parts.build()
-        print("frame:")
-        frame.build()
-        print("hardware:")
-        hardware.build()
         print("gnss (vendor):")
         gnss_vendor.build()
     print("catalog:")

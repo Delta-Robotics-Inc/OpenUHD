@@ -19,6 +19,7 @@
     "dist",
     "src",
     "library",
+    "skills",
     "docs/**/*.md",
     "LICENSE",
     "NOTICE",

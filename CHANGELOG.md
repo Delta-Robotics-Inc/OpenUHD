@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Boards and nets (PB-824, `docs/boards-and-nets.md`): a custom PCB is a module whose children are its components, whose nets are `Net` interfaces on the board (protocol `net`, not exposed, optional design `voltage`), and whose edge is its exports. `netLinks` writes one membership link per pin (`<net>.<child>.<interface>`); `validateLink` checks them (`net_to_net`, `net_member_composite`, `net_not_own`). `deriveLinks` walks nets like harness conductors and keeps only pad pairs whose lifted interfaces pair by protocol; over a rail (a net with a supply or ground pin, or a design voltage) only power pins pair, so a logic pin tied to a rail is a strap, and ground pins share their net without a link per pair. Supply budgets, bus addresses, interface reuse and unpowered inputs work over boards. `LinkResult.derived` gains `nets`. New system rules `net` (fewer than two pins, a pin on two nets, several supplies on one net, ground joined to a supply, a supply pin outside the net's design voltage, a logic pin rated below it), `bus_pullup` (I2C over nets with no pull-up to a supply) and `design_envelope`.
-- Package facts (PB-824): `PackageSpec` on the mechanical domain (`package`: manufacturer name and code, pin count, pitch, exposed pad and its designator); `partPackage` reads it with the overall size. `pinTable` declares a chip's pin table (every pin with its designator and a cited `pin_functions` trait); `pinDesignatorIssues` reports missing, repeated and uncovered designators, and `scripts/verify-part.ts` runs it as `[pins]` warnings. Nothing tool-specific (footprints, land patterns, symbols) is part of UHD.
+- Package facts (PB-824): `PackageSpec` on the mechanical domain (`package`: manufacturer name and code, pin count, pitch, exposed pad and its designator); `partPackage` reads it with the overall size. `pinTable` declares a chip's pin table (every pin with its designator and a cited `pin_functions` trait); `pinDesignatorIssues` reports missing, repeated and uncovered designators (part verification tools report it as `[pins]` warnings). Nothing tool-specific (footprints, land patterns, symbols) is part of UHD.
 - `Passive()` (two `passive` terminals and a `passive` trait), `PassiveTrait`, and `DesignEnvelopeTrait` (largest outline and keep-outs a custom module must meet).
 - Package facts on BMI270, ICM-42688-P, LSM6DS3TR-C, TPS63020, DRV8871, L293DNE and RP2040 (minor version bumps), cited to the datasheets already in their evidence. The free-form `metadata` copies of the same facts on DRV8871 (`package`, `pin_count`, `exposed_pad`, `exposed_pad_mm`), RP2040 (`package_type`, `pin_count`, `package_pins`, `exposed_pad_mm`) and ICM-42688-P (`package_type`, `pin_count`) are removed in favour of `package`.
 - Example board fixture (`test/fixtures/imu-board.ts`: RP2040 + BMI270 + TPS63020) with seeded faults.
@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Drone protocol vocabulary: `BrushlessPhases`, `EscSignal`, `FcEscPort`, `CRSF`, `SBUS`, `BoltPattern`, `Shaft`, `connectorTrait`, and parameters for cell count, capacity, hole spacing, fastener and shaft diameter, burst current, and ESC signal rate.
 - Module kinds (`module`, `group`, `harness`), `exports` (child interfaces on a parent boundary; groups export implicitly), stored `links` (`InterfaceLink` with explicit `EndpointTarget`s and optional stored `childLinks`), and `display` hints on `ModuleDef`. Harness endpoints gain topology roles; harnesses gain parameters, artifacts, and traits.
 - `src/system`: canonical paths, `primaryInterfaces`, `resolveExports`, `boundaryInterfaces`, `resolveEndpoint`, and `validateLink`/`validateLinks` (per-link DRC on sliced modules, with stored child links overriding derived ones).
-- Part pipeline skills (`skills/`) and `scripts/verify-part.ts`.
+- `skills/uhd-authoring`: a reference skill for writing UHD definitions (interfaces, pin tables, buses, connectors, parameters, traits, package facts, geometry frames and refs), with the vocabulary and the evidence-to-UHD mapping rules. It runs no tool. The package ships `skills/`. (The part-pipeline skills and `scripts/verify-part.ts` added earlier in this cycle have moved out of UHD; see Removed.)
 - Eight quadcopter parts and the `library/systems/quadcopter-5in` reference system.
 
 ### Changed
@@ -35,6 +35,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Deprecated
 
 - `ChildModuleRef.exposedInterfaces` (never read); use `ModuleDef.exports`.
+- The part library (`library/`) has moved out of UHD to the ProtoBoard Cloud parts service and is no longer maintained here (`library/MOVED.md`). The remaining copy is read only and will be removed; UHD keeps the schema, pure helpers and test fixtures.
+
+### Removed
+
+- `cadArtifacts` and `CadOptions` (`src/authoring/cad.ts`): which files a CAD generator writes is the generator's knowledge, so the helper lives with the generators. `feature`, `own`, `procedural` and `withGeometry` stay. Migration: declare the artifacts your generator writes (or use your generator's own helper); the shape was `cad_source`, `cad_step`, `cad_glb`, `cad_manifest` and `cad_if_<interface>`.
+- Tool code, moved out of UHD: the technical-documents generator (`scripts/docs`) and its skills (`uhd-tech-docs`, `uhd-tech-docs-verify`); the part research, authoring and verification skills (`uhd-part-research`, `uhd-part-author`, `uhd-part-verify`) with `scripts/verify-part.ts` and `scripts/record-verification.ts`; the quadcopter frame and mounting-hardware CAD generators (`library/cad/py/frame.py`, `hardware.py`) and the quadcopter's doc spec. Their committed outputs stay with the library copy.
 
 ## [0.2.0] — 2026-09-26
 

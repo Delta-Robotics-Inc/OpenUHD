@@ -1,79 +1,32 @@
-# skills/ — UHD part pipeline
+# skills/
 
-Agent skills for adding a purchased part to the UHD library
-(`library/parts/`) as a datasheet-honest `ModuleDef`. Adapted from the
-ProtoPart pipeline (`Delta-Robotics-Inc/ProtoPart/skills`) for UHD: the output
-is a TypeScript `ModuleDef` built with `src/protocols` builders instead of a
-ProtoPart `definition.json`, and there is no Firestore/deploy or affiliate
-step. They work in any agent harness that has a shell, web search, and web
-fetch.
+Agent skills shipped with UHD. UHD keeps one: a reference for writing UHD
+definitions. Workflows that run tools or keep a part library (part research,
+authoring and verification, technical documents) are not part of UHD; tools
+built on UHD provide them and can point their agents at this reference.
 
-## Pipeline
+| Skill | What |
+| --- | --- |
+| [`uhd-authoring`](uhd-authoring/SKILL.md) | How to express hardware facts as a `ModuleDef` with the `@deltarobotics/uhd` builders: leaves with pin designators, pin tables, composed buses and connectors, canonical parameters and traits, domains and package facts, and geometry frames and refs. References: [vocabulary](uhd-authoring/references/vocabulary.md) (builders, protocol types, canonical parameter ids) and [mapping rules](uhd-authoring/references/mapping-rules.md) (evidence → UHD). |
 
-```
-brief → research → author ↻ verify → audit → register
-                      (repair loop, max 5)
-```
+A skill is a folder with a `SKILL.md` (front matter `name` and
+`description`, then the instructions) and optional `references/`. They work
+in any agent harness that reads Markdown; nothing in them runs a tool.
 
-| Skill | When | Reads | Writes |
-| --- | --- | --- | --- |
-| [`uhd-part-research`](uhd-part-research/SKILL.md) | After a brief names the part | brief | `library/parts/<id>/sources.json`, `.research/` notes, `.research/cad/` downloads |
-| [`uhd-part-author`](uhd-part-author/SKILL.md) | After research | research notes, vocabulary, CAD | `library/parts/<id>.ts`, `library/cad/py/catalog/<id>.py`, CAD manifest |
-| [`uhd-part-verify`](uhd-part-verify/SKILL.md) | After authoring; loops with author | part file, sources | `.research/acceptance.json`, `.research/gaps.json` |
-
-**Register** (done by whoever integrates, not the per-part agent): export the
-part from `library/parts/index.ts`, run `npm test`, `npm run type-check`, and
-`npm run build:library`.
-
-## Files per part
-
-| Path | Committed | Contents |
-| --- | --- | --- |
-| `library/parts/<id>.ts` | yes | The `ModuleDef`, with a citation header. |
-| `library/parts/<id>/sources.json` | yes | Every source used: URL, type, what it supported, fetch time, sha256 of downloaded bytes. |
-| `library/parts/<id>/verification.json` | yes | Committed evidence record: audit counts, repairs, assumptions, open data and vocabulary gaps (`npx tsx scripts/record-verification.ts <id>`). |
-| `library/parts/<id>/artifacts/thumbnail.png` | optional | Product thumbnail, if its licence allows redistribution. |
-| `library/cad/py/catalog/<id>.py` | yes | The part's CAD script: vendor STEP binding (`vendor_step.py`) or generated geometry (`partkit.py`). |
-| `library/parts/<id>/artifacts/cad/<id>-vendor.manifest.json` | yes | Vendor CAD: named features, signatures, hole axes, bbox, licence. |
-| `library/parts/<id>/artifacts/cad/vendor/` | no (gitignored) | GLB converted from the vendor STEP. |
-| `library/parts/<id>/artifacts/cad/<name>.{step,glb,manifest.json}` | yes | Generated geometry (representative, from the drawing). |
-| `library/parts/<id>/.research/` | no (gitignored) | Downloads, extracted notes, gaps, acceptance report. Working memory. |
-
-Datasheet PDFs and vendor STEP files are **not** committed unless their
-licence clearly permits redistribution (redistribution rights vary). The part
-links them through `artifacts[].url`, and `sources.json` records the sha256
-of the bytes that were read, so a later reader can tell if the document
-changed.
-
-## Principles carried over from ProtoPart
+## Principles
 
 - **Every value traces to a source.** A value no source states is either
   omitted or marked with an `assumption` trait that says why.
-- **Variant lock.** Keep the exact product, revision, and variant (KV, cell
-  count, V2 vs V3) end to end. Never merge variants.
-- **Pin table first.** Extract pinouts and pad labels before anything else.
+- **Variant lock.** Keep the exact product, revision, and variant end to end.
+  Never merge variants.
+- **Pin table first.** Model the pinout and pad labels before anything else.
 - **No inferred capabilities.** Don't claim a pin can do something the
   source doesn't say.
 - **Check every domain.** Electrical, mechanical, thermal, network, and the
   fluid domains are each considered, and a domain is only omitted with a
   reason.
-- **Vocabulary is not invented silently.** New protocol types or roles go to
-  `gaps.json` and are escalated, not quietly added to a part.
-- **State lives on disk,** so work survives context compaction.
-- **Every part has geometry** (PB-796): manufacturer CAD when it exists,
-  representative geometry from the drawing when it doesn't, with every
-  physical interface bound to it by a frame and refs.
-
-## Differences from ProtoPart
-
-- The output is a TypeScript `ModuleDef` that `defineModule` validates when
-  the file is imported. It is not JSON schema validated.
-- The protocol vocabulary is whatever the `src/protocols` builders emit, plus
-  what the existing library uses (see
-  [vocabulary](uhd-part-author/references/vocabulary.md)).
-- Purchase and pricing data is out of scope: supplier offers are kept separate
-  from technical facts (architecture decision). Vendor pages may still be
-  sources for technical facts.
-- Verification runs `scripts/verify-part.ts` for the structural checks and
-  pair DRC against mating parts, then an **independent evidence audit** by a
-  fresh agent that re-checks facts against the sources.
+- **Vocabulary is not invented silently.** A missing protocol type or role is
+  `custom` plus a trait until UHD's vocabulary gains it.
+- **Tool knowledge stays out.** Footprints, land patterns, symbols, layer
+  stacks, CAD feature trees and anything named after a tool belong to that
+  tool.

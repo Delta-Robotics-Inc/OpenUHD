@@ -122,9 +122,15 @@ pads. `cadVolumeMm3(def)` (`library/cad/manifests.ts`) reads it, and
 does standard hardware with no supplier weight. That hardware's CAD is
 nominal geometry, so its material carries an `assumption`.
 
-`library/cad/artifacts.ts` (`cadArtifacts`, `feature`, `own`, `procedural`,
-`withGeometry`) attaches them; `withGeometry` throws on an unknown interface
-id so a renamed interface can't silently lose its geometry.
+`feature`, `own`, `procedural` and `withGeometry` (`src/authoring/cad.ts`)
+attach them; `withGeometry` throws on an unknown interface id so a renamed
+interface can't silently lose its geometry. Which artifacts a generator
+writes (the layout above) is the generator's knowledge, so the helper that
+lists them (`cadArtifacts`) lives with the generators, not in UHD.
+
+> The library, its generators and the tools below have moved out of UHD
+> (`library/MOVED.md`). This section records how they worked; the files
+> named here remain only in the library copy until it is removed.
 
 ## Tracks explored
 
@@ -133,10 +139,10 @@ id so a renamed interface can't silently lose its geometry.
 - `library/cad/py/parts.py`: motor, prop, ESC, FC, O4 (+ camera body),
   battery, screw, nut, spacer — representative geometry from UHD dimensions,
   not manufacturer CAD.
-- `library/cad/py/frame.py`: the custom frame, **derived from its interfaces**
-  (every mount placed from the bolt pattern it mirrors). The frame's UHD frames
-  are the same numbers; a test compares them with the generator's
-  `frames.json`.
+- `frame.py` (moved out of UHD): the custom frame, **derived from its
+  interfaces** (every mount placed from the bolt pattern it mirrors). The
+  frame's UHD frames are the same numbers; a test compares them with the
+  generator's committed `frames.json`.
 - Named features survive STEP and GLB export as node names, so D1 works
   end-to-end in the browser.
 
