@@ -8,7 +8,7 @@
 | A resistor, capacitor, inductor or ferrite bead | `Passive({ kind, value, unit, tolerance, package })`: two `passive` terminals and a `passive` trait. |
 | A bus or port made of several pads | A composed interface (builder) whose default profile binds the leaves. |
 | A pad with several selectable functions | One leaf with every capability the source states, plus an `interfaceGroups` entry when functions exclude each other. |
-| A connector with several positions (JST-SH 8, XT60, a DJI socket, a GH-6P) | A connector composite: `Connector({ id, connector, gender, pins: [[label, leafId], …], note })`, positions in pin-1-first (or printed) order, each bound to the pad it shares; unused positions have no leaf. The pads keep only their own `solder_pad` trait. See `docs/connectors-and-harnesses.md`. |
+| A connector with several positions (JST-SH 8, XT60, a DJI socket, a GH-6P) | A connector composite: `Connector({ id, connector, gender, pins: [[label, leafId], …], note })`, positions in pin-1-first (or printed) order, each bound to the pad it shares; unused positions have no leaf. The pads keep only their own `solder_pad` trait. See [connectors and harnesses](../../../docs/connectors-and-harnesses.md). |
 | A connector carrying exactly one functional interface (USB-C, MMCX/U.FL antenna, a balance lead) | `connectorTrait` on that interface. |
 | Two identical sockets in parallel | Two connector composites binding the same leaves (`gh6p_1`, `gh6p_2`). |
 | A supply input range ("2–6S", "3.7–13.2 V") | `PowerIn` with a `voltage` range; add `cellCount([min, max])` when the source states it in cells. |
@@ -35,9 +35,9 @@ protocol, role, or connector pinout.
 
 | Evidence | UHD |
 | --- | --- |
-| Manufacturer STEP | `library/cad/py/catalog/<id>.py` using `vendor_step.py`; `vendorCadArtifacts(...)` on the part. |
-| No usable CAD | `catalog/<id>.py` using `partkit.py` from the drawing; `cadArtifacts(...)`; a `data_gap` trait "manufacturer CAD". |
-| Mounting holes in the CAD | `frame` at the pattern centre on the mounting face, normal outward, xAxis along the pattern; `feature`/`vendorFeature` ref to the holes plus `procedural("bolt_pattern")`. |
+| Manufacturer CAD | A body artifact (`role: "body"`) with its feature manifest; the CAD's licence recorded with the source. |
+| No usable CAD | Representative geometry from the drawing dimensions, and a `data_gap` trait "manufacturer CAD" saying where you looked. |
+| Mounting holes in the CAD | `frame` at the pattern centre on the mounting face, normal outward, xAxis along the pattern; `feature` ref to the holes plus `procedural("bolt_pattern")`. |
 | Irregular hole pattern (e.g. Arduino UNO) | The largest square/rectangle subset as the `BoltPattern`, the remaining holes in its `note`, and an `assumption` trait saying which holes were modelled. |
 | Shaft | `frame` on the axis at the mounting face, normal along the shaft; feature ref plus `procedural("shaft")`. |
 | Connector | A feature on the connector body, on the connector composite (one ref per socket). Functional interfaces carried by it may also ref it. |

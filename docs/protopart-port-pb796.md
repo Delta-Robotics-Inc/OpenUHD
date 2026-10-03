@@ -1,5 +1,9 @@
 # ProtoPart → UHD port: 30 robotics parts with CAD (PB-796)
 
+> Historical record. The part library, its CAD generators and the part
+> skills and scripts named below have since moved out of UHD (see
+> `library/MOVED.md`); UHD keeps the `uhd-authoring` reference skill.
+
 Thirty parts from the ProtoPart library
 (`Delta-Robotics-Inc/ProtoPart/protoparts/`) are now UHD modules in
 `library/parts/`. Each one went through the part skills

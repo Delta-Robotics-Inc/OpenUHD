@@ -1,7 +1,8 @@
 # Reference documents (style study only)
 
 Official, publicly downloadable manufacturer documents, kept locally as **visual style
-references** for `skills/uhd-tech-docs`. The files themselves are git-ignored (see
+references** for the technical-documents skill (`uhd-tech-docs`, which has moved out of
+UHD with the documents generator). The files themselves are git-ignored (see
 `.gitignore`); only this list is tracked. We study layout and presentation; we do not copy
 their content, illustrations, or branding.
 

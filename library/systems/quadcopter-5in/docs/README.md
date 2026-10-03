@@ -1,31 +1,23 @@
 # Documents — 5-inch 6S quadcopter
 
-Generated from the UHD model by `scripts/docs` (skill: `skills/uhd-tech-docs`). Do not edit the
-HTML or PDF by hand: change the model, the doc spec or the builders, and rebuild.
+Generated from the UHD model by the technical-documents generator that UHD held in `scripts/docs`
+(skill `uhd-tech-docs`). The generator, its skills and this system's doc spec (`docspec.ts`) moved
+out of UHD with the other tools (see `library/MOVED.md`); the quadcopter's documents are now built
+in the ProtoBoard quadcopter project. The files here are the last ones built in UHD and are not
+regenerated here. Do not edit the HTML or PDF by hand.
 
 | File | What |
 | --- | --- |
 | `quadcopter-5in-datasheet.html` / `.pdf` | Datasheet: specifications, mechanical drawings with interface geometry, pinout, electrical, performance, design checks, BOM, evidence, value provenance |
 | `quadcopter-5in-assembly-guide.html` / `.pdf` | Assembly guide: kit, fastener stack-ups, 11 steps from the model's mates, fastener stacks and wiring, coverage appendix |
 | `*.values.json` | Every value each document shows: query, formatted text, status, source / formula |
-| `docspec.ts` | Presentation spec: key figures, spec rows, callouts, step order, cameras, notes |
 | `images/` | Figures rendered from the CAD artifacts (content-hash cached) |
 | `test-data/` | Test data, one JSON per test (`status: standin` until measured) |
 | `assets/fonts/` | Fonts copied in at build time (git-ignored; ProtoMono is licensed) |
 | `.review/` | Page PNGs and `verify-report.json` (git-ignored) |
 
-## Regenerate
-
-```bash
-npx tsx library/systems/quadcopter-5in/generate.ts            # BOM, wiring, checks (generated/)
-npx tsx scripts/docs/build.ts library/systems/quadcopter-5in  # stand-ins, figures, HTML, PDF
-npx tsx scripts/docs/verify.ts library/systems/quadcopter-5in # must exit 0
-```
-
-Needs Google Chrome, poppler (`pdftoppm`, `pdfinfo`, `pdffonts`), three.js (from
-`$UHD_THREE_DIR` or the sibling `uhd-viewer` checkout) and the brand fonts (`$UHD_DOC_FONTS`,
-default `~/repos/Protoboard/next-alpha/public/fonts`). `--only datasheet|assembly` and `--no-pdf`
-speed up iteration.
+`npx tsx library/systems/quadcopter-5in/generate.ts` still writes the BOM, wiring and checks in
+`generated/`.
 
 ## Test data
 
@@ -35,7 +27,7 @@ listed in each file; the documents watermark them "STAND-IN DATA — NOT MEASURE
 
 To use real results, replace `test-data/<test-id>.json` with a file of the same id and columns
 and `"status": "measured"` plus `provenance.date` and `operator`/`instruments`
-(schema and example: `skills/uhd-tech-docs/templates/`), then rebuild. Measured files are never
+(schema and example: the `uhd-tech-docs` skill's `templates/`), then rebuild. Measured files are never
 overwritten; the watermark disappears and values get the M marker.
 
 | Test id | Content |

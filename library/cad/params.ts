@@ -9,7 +9,11 @@
  *   library/cad/kcl/params.kcl — KCL sources (library/cad/kcl)
  *
  * Values not stated by any part are marked `design` with a reason; they are
- * design choices for the custom frame, not facts about purchased parts.
+ * design choices for the custom frame, not facts about purchased parts. The
+ * frame and hardware generators that read the `frame` and `hardware` groups
+ * moved out of UHD with the other tools (see library/MOVED.md); the groups
+ * stay so params.json, which every part manifest's sourceDigest hashes, is
+ * unchanged.
  */
 import { writeFileSync } from "fs";
 import { join } from "path";
@@ -137,7 +141,8 @@ const params = {
   },
 };
 
-// Mounting hardware (library/systems/quadcopter-5in/hardware.ts) for library/cad/py/hardware.py
+// Mounting hardware (library/systems/quadcopter-5in/hardware.ts); its generator
+// (hardware.py) moved out of UHD, the group is kept so params.json is unchanged
 const hardware = HARDWARE_PARTS.map((def) => {
   const i = def.interfaces[0];
   const kind = (["screw", "nut", "spacer", "standoff"] as const).find((k) => def.tags?.includes(k))!;
