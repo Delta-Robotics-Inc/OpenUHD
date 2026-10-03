@@ -194,15 +194,30 @@ function ancestorConsumed(node: RegionNode, consumed: Set<RegionNode>): boolean 
 function isUnambiguous(c: Candidate, aliveCandidates: Candidate[]): boolean {
   for (const side of ["a", "b"] as const) {
     const other = side === "a" ? "b" : "a";
+    // a pairing with a region inside c's other end (a power port's own pin, when the ports match) is
+    // the same connection at a lower altitude, not a rival to it; and a composite and the leaves it
+    // binds are one choice, not several: when a composite pairs with a composite and also with that
+    // composite's own leaves, the composite pairing counts (highest altitude first). A composite
+    // against a lone leaf stays ambiguous with the leaves inside it.
     const below = new Set(descendants(c[other]));
-    // a pairing with a region inside c's other end (a power port's own pin, when the ports
-    // match) is the same connection at a lower altitude, not a rival to it
-    const forEndpoint = aliveCandidates.filter((x) => x[side] === c[side] && !below.has(x[other]));
+    const composite = (n: RegionNode) => Boolean(n.iface.slots?.length);
+    const forEndpoint = aliveCandidates
+      .filter((x) => x[side] === c[side] && !below.has(x[other]))
+      .filter((x, _, all) => !all.some((y) => y !== x && composite(y[side]) && composite(y[other]) && isAncestor(y[other], x[other])));
     const clean = forEndpoint.filter((x) => x.clean);
     const pool = clean.length > 0 ? clean : forEndpoint;
     if (pool.length !== 1 || pool[0] !== c) return false;
   }
   return true;
+}
+
+function isAncestor(node: RegionNode, of: RegionNode): boolean {
+  let current = of.parent;
+  while (current) {
+    if (current === node) return true;
+    current = current.parent;
+  }
+  return false;
 }
 
 function buildConnection(c: Candidate, moduleIdA: string, moduleIdB: string): ConnectionResult {

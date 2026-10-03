@@ -25,6 +25,12 @@
  * to it is a strap and pairs with nothing, and ground pins on one net share
  * it without a link per pair. The net rule checks what pairs cannot (nets.ts).
  *
+ * A supply output on a rail that states its design voltage (a `Net` with a
+ * `voltage`) is validated at that voltage: the board sets the rail (an
+ * adjustable regulator by its feedback divider, a charger by its cell), so
+ * the output's full adjustable or charge range is not what its loads see.
+ * The net rule still checks every pin against the rail's voltage.
+ *
  * A composite lifts when every pad it binds reaches the other module. Each
  * pairing its protocol expects must then be wired inside it: a pad wired to
  * the wrong counterpart is `harness_wiring`, a required one wired elsewhere
@@ -51,6 +57,7 @@ import { positionPairs, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { isNet, NET_PROTOCOL } from "../protocols/net.js";
 import { matchProtocols } from "../matching/protocol-match.js";
+import { getEffectiveRange } from "../parameters/range.js";
 
 interface Terminal {
   key: string;
@@ -309,7 +316,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
         b: targetFor(b),
         ...(harnesses.length ? { harness: harnesses[0] } : {}),
       };
-      const result = validateResolved(link, a, b);
+      const result = { ...validateResolved(link, atRail(def, nets, a), atRail(def, nets, b)), a, b };
       const wired: LinkChildResult[] = wires
         .filter((w) => w.a.leaf.id !== fa.id || w.b.leaf.id !== fb.id)
         .map((w) => ({
@@ -319,22 +326,15 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
           locked: false,
         }));
       const problems = [...wiringProblems(result, wired), ...(isComposite(fa) ? missingConductors(result, fa, fb, wired) : [])];
-      // slots the protocol left unpaired (a second VLED pin, an exposed pad beside GND) are complete
-      // when a conductor joins their pads to the other side (doubled supply pins on one rail)
-      const wiredLeaves = new Set(wires.flatMap((w) => [`a:${w.a.leaf.id}`, `b:${w.b.leaf.id}`]));
-      const bindA = slotBindings(fa);
-      const bindB = slotBindings(fb);
-      const unpairedWired =
-        result.state === "partial" &&
-        result.unresolvedSlots.length > 0 &&
-        result.unresolvedSlots.every((u) => {
-          const slot = u.slice(u.lastIndexOf(":") + 1);
-          return (bindA[slot] && wiredLeaves.has(`a:${bindA[slot]}`)) || (bindB[slot] && wiredLeaves.has(`b:${bindB[slot]}`));
-        });
+      // slots the 1:1 slot pairing leaves open (a second VLED pin, an exposed pad beside GND, VIN and
+      // VINA on one rail against one VBAT slot) are complete when a conductor (a wire or a board net)
+      // joins every pad of the slot to the other side of the link
+      const unresolved = result.unresolvedSlots.filter((u) => !reachedByConductor(u, fa, fb, a, b, wired));
+      const state = problems.length ? "incompatible" : result.state === "partial" && !unresolved.length && !result.diagnostics.some((d) => d.severity !== "info") ? "configured" : result.state;
       out.push({
         ...result,
-        ...(unpairedWired ? { unresolvedSlots: [] } : {}),
-        state: problems.length ? "incompatible" : unpairedWired ? "configured" : result.state,
+        unresolvedSlots: unresolved,
+        state,
         children: wired.length ? wired : result.children,
         diagnostics: [...problems, ...result.diagnostics],
         derived: { via, harnesses, ...(nets.length ? { nets } : {}) },
@@ -346,6 +346,34 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
 
 const isPower = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power");
 const isPassive = (i: InterfaceDef) => i.protocols.length > 0 && i.protocols.every((p) => p.type === "passive");
+
+/**
+ * A supply output on a rail whose net states a design voltage, as the board
+ * runs it: its voltage narrowed to the rail's when the rail lies inside the
+ * output's own range (outside it, the output keeps its range and the link
+ * fails as it should). Used for validation only.
+ */
+function atRail(def: ModuleDef, nets: string[], end: ResolvedEndpoint): ResolvedEndpoint {
+  if (!isPowerOutput(end.iface)) return end;
+  const own = end.iface.parameters?.find((p) => p.id === "voltage");
+  const ownRange = own && getEffectiveRange(own);
+  if (!own || !ownRange) return end;
+  for (const id of nets) {
+    const net = def.interfaces.find((i) => i.id === id && isNet(i));
+    const v = net?.parameters?.find((p) => p.id === "voltage");
+    const rail = v && getEffectiveRange(v);
+    if (!rail || rail[0] < ownRange[0] || rail[1] > ownRange[1]) continue;
+    // the composite and the output leaves it binds, all at the rail's voltage (validation slices the owner by id)
+    const bound = new Set([end.iface.id, ...(end.iface.profiles ?? []).flatMap((pr) => Object.values(pr.bindings).flat().filter((x): x is string => typeof x === "string"))]);
+    const narrow = (i: InterfaceDef): InterfaceDef =>
+      bound.has(i.id) && isPowerOutput(i) && i.parameters?.some((p) => p.id === "voltage")
+        ? { ...i, parameters: i.parameters.map((p) => (p.id === "voltage" ? { ...p, value: v!.value ?? (rail[0] + rail[1]) / 2, range: rail as [number, number] } : p)) }
+        : i;
+    const owner = { ...end.owner, interfaces: end.owner.interfaces.map(narrow) };
+    return { ...end, owner, iface: owner.interfaces.find((i) => i.id === end.iface.id)! };
+  }
+  return end;
+}
 const isGround = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("ground"));
 const isPowerOutput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("output"));
 const isPowerInput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("input"));
@@ -357,14 +385,32 @@ function slotOf(composite: InterfaceDef, leafId: string): string | undefined {
   return Object.entries(slotBindings(composite)).find(([, id]) => id === leafId)?.[0];
 }
 
+/** A `module:slot` the slot pairing left open, all of whose pads reach the other end of the link over a conductor. */
+function reachedByConductor(slot: string, fa: InterfaceDef, fb: InterfaceDef, a: ResolvedEndpoint, b: ResolvedEndpoint, wired: LinkChildResult[]): boolean {
+  const [moduleId, slotId] = [slot.slice(0, slot.lastIndexOf(":")), slot.slice(slot.lastIndexOf(":") + 1)];
+  const sides = [
+    { owner: a.owner, iface: fa, reached: new Set(wired.map((w) => w.a.leafId)) },
+    { owner: b.owner, iface: fb, reached: new Set(wired.map((w) => w.b.leafId)) },
+  ].filter((x) => x.owner.id === moduleId);
+  return sides.some(({ iface, reached }) => {
+    const bound = iface.profiles?.[0]?.bindings[slotId];
+    const leaves = (Array.isArray(bound) ? bound : bound ? [bound] : []).filter((l): l is string => typeof l === "string");
+    return leaves.length > 0 && leaves.every((l) => reached.has(l));
+  });
+}
+
 /** Conductors inside a composite must land where the protocol pairing expects. */
 function wiringProblems(result: LinkResult, wired: LinkChildResult[]): Diagnostic[] {
   if (result.state === "incompatible") return [];
   const expected = new Map(result.children.filter((c) => c.method === "protocol").map((c) => [c.a.leafId, c.b.leafId]));
+  // what each pad reaches: one counterpart through a conductor, every pad of a net through the net
+  // (two supply pins on one net are one conductor, so either is the pairing the protocol expects)
+  const reaches = new Map<string, Set<string>>();
+  for (const w of wired) reaches.set(w.a.leafId, (reaches.get(w.a.leafId) ?? new Set()).add(w.b.leafId));
   const out: Diagnostic[] = [];
   for (const w of wired) {
     const want = expected.get(w.a.leafId);
-    if (want && want !== w.b.leafId) {
+    if (want && want !== w.b.leafId && !reaches.get(w.a.leafId)!.has(want)) {
       out.push({
         severity: "error",
         code: "harness_wiring",
