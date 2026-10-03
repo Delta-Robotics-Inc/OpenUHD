@@ -12,6 +12,10 @@
  *                     to a supply; a supply pin whose voltage range
  *                     excludes the net's design voltage, or a logic pin
  *                     rated below it
+ *                     (netRule); a passive with every terminal on one net, a
+ *                     part's power input on the net of an output it feeds,
+ *                     a strap on a net that carries another part's signal
+ *                     (partWiringRule)
  *   bus_pullup        an I2C link over nets with no pull-up resistor to a supply
  *   design_envelope   a stated body larger than the module's design envelope
  *
@@ -20,7 +24,7 @@
 import type { InterfaceDef } from "../types/interface.js";
 import type { InterfaceLink, ModuleDef } from "../types/module.js";
 import type { Parameter } from "../types/parameter.js";
-import type { DesignEnvelopeTrait } from "../types/trait.js";
+import type { DesignEnvelopeTrait, StrapTrait } from "../types/trait.js";
 import type { Diagnostic } from "../drc/types.js";
 import { getEffectiveRange, rangesOverlap } from "../parameters/range.js";
 import { isNet, NET_PROTOCOL } from "../protocols/net.js";
@@ -294,6 +298,135 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
       message: `${path} is on nets ${ids.join(", ")}, which joins them into one conductor.`,
       refs: [path, ...ids.map((n) => formatPath([], n))],
     });
+  }
+  return out;
+}
+
+/**
+ * Faults of one part's own pins on the board's nets (PB-869). Each is stated
+ * from the model, not from a part's name:
+ *
+ * - **A shorted passive.** A two-terminal passive (resistor, capacitor,
+ *   inductor, ferrite bead) with every terminal on one net is a component
+ *   that does nothing: a capacitor across nothing, a resistor in series with
+ *   nothing. Its terminals belong on two nets.
+ * - **An output tied back to its own input.** A part's power output (output
+ *   only) on one net with a power input (input only) of the same part that
+ *   feeds it short-circuits the converter: VOUT on VIN. Which input feeds
+ *   which output is the part's `bridgesTo` (a leaf or the composite binding
+ *   it); a part that states no bridge for its supply pins is taken as a
+ *   converter whose every power input feeds every power output. A part that
+ *   states its bridges may supply its own other inputs (the RP2040's
+ *   VREG_VOUT on its DVDD pins). Connectors and lands carry power, they do
+ *   not convert it, and are skipped.
+ * - **A strap on a signal.** A leaf with a `strap` trait, while its part runs
+ *   an interface in the strap's `when` (or always, without `when`), must sit
+ *   at a fixed level: on a supply or ground net, or on a net of its own with
+ *   a resistor to one (a pull-up or pull-down). On a net that carries
+ *   another pin's logic signal (a bus line) and no supply or ground pin, its
+ *   level follows the signal, whatever pull-up the line has: the BMI270's
+ *   address strap SDO moved onto SDA.
+ */
+export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[] {
+  const nets = moduleNets(def, links);
+  const out: SystemDiagnostic[] = [];
+  const ownerKey = (m: NetMember) => m.end.ownerPath.join("/");
+  const label = (n: BoardNet) => (n.iface.name && n.iface.name !== n.iface.id ? `${n.iface.id} (${n.iface.name})` : n.iface.id);
+  const netsOfPin = new Map<string, BoardNet[]>();
+  for (const n of nets) for (const m of n.members) netsOfPin.set(m.path, [...(netsOfPin.get(m.path) ?? []), n]);
+  const isPower = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power");
+  const isPassivePin = (i: InterfaceDef) => i.protocols.length > 0 && i.protocols.every((p) => p.type === "passive");
+  const isConnectorPart = (d: ModuleDef) => (d.categories ?? []).some((c) => c === "connector" || c.startsWith("connector."));
+
+  // 1. passives with every terminal on one net
+  const passives = new Map<string, { owner: ModuleDef; ownerPath: string[]; members: NetMember[] }>();
+  for (const n of nets) {
+    for (const m of n.members) {
+      if (!passiveOf(m.end.owner)) continue;
+      const k = ownerKey(m);
+      const e = passives.get(k) ?? { owner: m.end.owner, ownerPath: m.end.ownerPath, members: [] };
+      e.members.push(m);
+      passives.set(k, e);
+    }
+  }
+  for (const [path, { owner, ownerPath, members }] of passives) {
+    const terminals = owner.interfaces.filter(isPassivePin);
+    if (terminals.length < 2) continue;
+    const netIds = terminals.map((t) => (netsOfPin.get(formatPath(ownerPath, t.id)) ?? []).map((n) => n.iface.id));
+    if (netIds.some((ids) => ids.length !== 1) || new Set(netIds.map((ids) => ids[0])).size !== 1) continue;
+    const net = nets.find((n) => n.iface.id === netIds[0][0])!;
+    const kind = passiveOf(owner)!.kind.replace("_", " ");
+    out.push({
+      id: `net:${net.iface.id}:shorted:${path}`,
+      rule: "net",
+      severity: "error",
+      message: `${path} (${kind}, ${owner.name ?? owner.id}) has every terminal on net ${label(net)}: it is shorted and does nothing. Its terminals belong on two nets.`,
+      refs: [net.path, ...members.map((m) => m.path)],
+      details: { part: path, kind, net: net.iface.id },
+    });
+  }
+
+  // 2. a power output on a net with an input of the same part that feeds it
+  const outputOnly = (i: InterfaceDef) => hasRole(i, "power", "output") && !hasRole(i, "power", "input") && !hasRole(i, "power", "ground");
+  const inputOnly = (i: InterfaceDef) => hasRole(i, "power", "input") && !hasRole(i, "power", "output") && !hasRole(i, "power", "ground");
+  /** The ids an interface stands for: itself and every composite binding it. */
+  const withComposites = (owner: ModuleDef, id: string) => [id, ...owner.interfaces.filter((c) => Object.values(slotBindings(c)).includes(id)).map((c) => c.id)];
+  const bridges = (owner: ModuleDef, inputId: string, outputId: string) => {
+    const targets = new Set(withComposites(owner, outputId));
+    return withComposites(owner, inputId).some((id) => (owner.interfaces.find((i) => i.id === id)?.bridgesTo ?? []).some((t) => targets.has(t)));
+  };
+  const statesBridges = (owner: ModuleDef) =>
+    owner.interfaces.some((i) => isPower(i) && (i.bridgesTo ?? []).some((t) => { const x = owner.interfaces.find((j) => j.id === t); return !!x && isPower(x); }));
+  for (const n of nets) {
+    const byOwner = new Map<string, NetMember[]>();
+    for (const m of n.members) byOwner.set(ownerKey(m), [...(byOwner.get(ownerKey(m)) ?? []), m]);
+    for (const [path, ms] of byOwner) {
+      const owner = ms[0].end.owner;
+      if (isConnectorPart(owner) || passiveOf(owner)) continue;
+      const outs = ms.filter((m) => outputOnly(m.end.iface));
+      const ins = ms.filter((m) => inputOnly(m.end.iface));
+      if (!outs.length || !ins.length) continue;
+      const declared = statesBridges(owner);
+      const fed = ins.filter((i) => outs.some((o) => !declared || bridges(owner, i.end.iface.id, o.end.iface.id)));
+      if (!fed.length) continue;
+      const name = (m: NetMember) => `${m.path} (${m.end.iface.name ?? m.end.iface.id})`;
+      out.push({
+        id: `net:${n.iface.id}:feedback:${path}`,
+        rule: "net",
+        severity: "error",
+        message: `net ${label(n)} ties ${path}'s output ${outs.map(name).join(", ")} to its own input ${fed.map(name).join(", ")}, which feeds it: the output is shorted to the input.`,
+        refs: [n.path, ...outs.map((m) => m.path), ...fed.map((m) => m.path)],
+        details: { part: path, outputs: outs.map((m) => m.path), inputs: fed.map((m) => m.path) },
+      });
+    }
+  }
+
+  // 3. a strap on a net that carries another pin's signal and nothing that fixes its level
+  const inUse = (ownerPath: string, ids: string[]) =>
+    links.some((r) => !isNetMembership(r) && [r.a, r.b].some((e) => e.ownerPath.join("/") === ownerPath && ids.includes(e.iface.id)));
+  const strapOf = (m: NetMember) => {
+    const t = m.end.iface.traits?.find((x) => x.type === "strap") as StrapTrait | undefined;
+    if (!t) return undefined;
+    const when = t.params?.when ?? [];
+    return !when.length || inUse(ownerKey(m), when) ? t : undefined;
+  };
+  for (const n of nets) {
+    // a supply or ground pin on the net fixes its level (a strap through a resistor is on a net of its own)
+    if (n.members.some((m) => isPower(m.end.iface))) continue;
+    for (const s of n.members) {
+      const strap = strapOf(s);
+      if (!strap) continue;
+      const signals = n.members.filter((m) => m !== s && !isPower(m.end.iface) && !isPassivePin(m.end.iface) && !strapOf(m));
+      if (!signals.length) continue;
+      out.push({
+        id: `net:${n.iface.id}:strap:${s.path}`,
+        rule: "net",
+        severity: "error",
+        message: `${s.path} (${s.end.iface.name ?? s.end.iface.id}) is a strap (${strap.params.function}) but net ${label(n)} carries ${signals.map((m) => m.path).join(", ")}: its level follows that signal. Tie it to a supply or ground, directly or through a resistor.`,
+        refs: [n.path, s.path, ...signals.map((m) => m.path)],
+        details: { strap: s.path, function: strap.params.function, signals: signals.map((m) => m.path) },
+      });
+    }
   }
   return out;
 }

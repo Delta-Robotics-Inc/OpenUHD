@@ -190,3 +190,28 @@ export interface DesignEnvelopeTrait extends TraitDef {
     source?: string;
   };
 }
+
+/**
+ * A strap (PB-869): a configuration input the part samples as a fixed level,
+ * set on the board by tying the pin to a supply or ground, directly or
+ * through a resistor (the BMI270's SDO selects its I2C address; a boot-mode
+ * pin). On an interface leaf. A pin shared by several functions is a strap
+ * only while the part runs the interfaces in `when` (the BMI270's SDO is its
+ * SPI MISO, and an address strap only in I2C mode): the strap applies when a
+ * link to one of them is derived on the board. Without `when` it always is.
+ *
+ * The net rule reports a strap on a net that carries another part's signal
+ * (a bus line): its level then follows that signal instead of being set.
+ */
+export interface StrapTrait extends TraitDef {
+  type: "strap";
+  params: {
+    /** What the level selects, e.g. "I2C address bit 0". */
+    function: string;
+    /** Interface ids on the same part whose use makes the pin a strap. */
+    when?: string[];
+    /** What each level selects, e.g. { low: "address 0x68", high: "address 0x69" }. */
+    levels?: Record<string, string>;
+    source?: string;
+  };
+}

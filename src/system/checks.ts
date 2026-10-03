@@ -12,7 +12,8 @@
  *   harness_connector   harness end connectors vs the interfaces they mate
  *   prop_handedness     each motor's spin vs the handed prop on it (rotation.ts)
  *   fastener_torque     every fastener joint states a sourced or assumed torque (fasteners.ts)
- *   net                 board nets: dangling, shorted, driven twice, wrong voltage (nets.ts)
+ *   net                 board nets: dangling, shorted, driven twice, wrong voltage; a shorted
+ *                       passive, an output tied to its own input, a strap on a signal (nets.ts)
  *   bus_pullup          an I2C bus over board nets with no pull-up (nets.ts)
  *   design_envelope     a stated body larger than the module's envelope (nets.ts)
  *   unknown_category    a definition's category path is not in the taxonomy (taxonomy/)
@@ -36,7 +37,7 @@ import { fastenerTorqueRule } from "./fasteners.js";
 import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { systemLinks } from "./derive.js";
-import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage } from "./nets.js";
+import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage, partWiringRule } from "./nets.js";
 import { UHD_TAXONOMY, validateCategories, type Taxonomy } from "../taxonomy/index.js";
 
 export type SystemRule =
@@ -554,6 +555,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: Check
     ...propHandednessRule(def, lookup),
     ...fastenerTorqueRule(def, lookup),
     ...netRule(def, links),
+    ...partWiringRule(def, links),
     ...busPullupRule(def, links, lookup),
     ...designEnvelopeRule(def),
     ...passiveOverrideRule(def, lookup),

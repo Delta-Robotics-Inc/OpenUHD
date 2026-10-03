@@ -96,6 +96,15 @@ const OUT = [{ type: "digital", roles: ["output"] }];
 const pins: InterfaceDef[] = [
   logicPad(1, "SDO", BIDIR, ["digital_io", "spi_miso"], [
     fn("SDO — primary interface: serial data output in SPI 4W; I2C address bit-0 select in I2C mode.", "SPI4W: SDO; SPI3W: DNC; I2C: GND for default I2C address"),
+    {
+      type: "strap",
+      params: {
+        function: "I2C address bit 0",
+        when: ["i2c"],
+        levels: { low: "address 0x68 (SDO to GND)", high: "address 0x69 (SDO to VDDIO)" },
+        source: `${SRC.datasheet} (§6.5, Table 22)`,
+      },
+    },
   ]),
   logicPad(2, "ASDx", BIDIR, ["digital_io", "i2c_sda", "spi_mosi"], [
     fn("ASDx — secondary interface: Aux interface / OIS interface data (Aux SDA or OIS SDI).", "VDDIO or DNC or Aux SDA or OIS SDI; do not connect to GND if unused"),
@@ -210,7 +219,7 @@ const pcbMount: InterfaceDef = {
 const BOSCH_BMI270_BASE: ModuleDef = defineModule({
   id: "bosch-bmi270",
   name: "Bosch BMI270",
-  version: "1.1.0",
+  version: "1.2.0",
   manufacturer: "Bosch Sensortec",
   part_number: "BMI270",
   description:

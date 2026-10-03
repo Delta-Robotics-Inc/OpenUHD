@@ -243,6 +243,9 @@ boards unchanged:
 | `net` | error | the net joins ground pins to supply pins |
 | `net` | error | a supply pin's `voltage` range does not include the net's design voltage |
 | `net` | error | a logic or analog pin's `voltage` maximum is below the net's design voltage (never on a ground net) |
+| `net` | error | a passive (resistor, capacitor, inductor, ferrite bead) has every terminal on one net: it is shorted (`net:<net>:shorted:<part>`) |
+| `net` | error | a part's power output is on one net with a power input of the same part that feeds it: VOUT tied to VIN (`net:<net>:feedback:<part>`) |
+| `net` | error | a `strap` leaf, while its part runs an interface in the strap's `when`, is on a net with another pin's logic signal and no supply or ground pin (`net:<net>:strap:<pin>`) |
 | `bus_pullup` | warning | an I2C link over nets with no resistor from the net to a supply net |
 | `design_envelope` | error | the stated size exceeds the envelope |
 
@@ -253,6 +256,29 @@ is what it accepts or produces, so it must overlap the net's. A logic pin's
 range is its signal level: tied to a lower rail it is driven low, which is
 what a strap is for, so only a net above its maximum is reported. A 0 V or
 ground net is never reported against a logic pin.
+
+Which input feeds which output is the part's `bridgesTo`, on a leaf or on
+the composite that binds it (the RP2040's VREG_VIN bridges to VREG_VOUT). A
+part that states no bridge between its supply pins is taken as a converter
+whose every power input feeds every power output. A part that states its
+bridges may supply its own other inputs: the RP2040's VREG_VOUT on its DVDD
+pins is the design, VREG_VIN on that net is the fault. Connectors and lands
+carry power and are not checked.
+
+A strap is a configuration input the part samples as a fixed level, marked
+with a `strap` trait on the leaf (`StrapTrait`: `function`, optional `when`,
+`levels`, `source`):
+
+```ts
+{ type: "strap", params: { function: "I2C address bit 0", when: ["i2c"],
+  levels: { low: "address 0x68 (SDO to GND)", high: "address 0x69 (SDO to VDDIO)" } } }
+```
+
+A pin shared by several functions is a strap only while its part runs an
+interface named in `when`: the BMI270's SDO is its SPI MISO, and a strap
+only when a link to its `i2c` composite is derived. A strap is at a fixed
+level on a supply or ground net, or on a net of its own with a resistor to
+one; on a bus line it follows the signal, whatever pull-up the line has.
 
 ## Package facts and pin designators
 
