@@ -131,6 +131,8 @@ function lift(a: Candidate[], b: Candidate[], onNet: boolean): { fa: InterfaceDe
     for (const y of b) {
       if (x.size + y.size <= bestSize || isComposite(x.iface) !== isComposite(y.iface)) continue;
       if (onNet && !isComposite(x.iface) && isGround(x.iface) && isGround(y.iface)) continue;
+      // passive terminals (a resistor's, a capacitor's) on a net only share it: they pair only through an explicit conductor
+      if (onNet && isPassive(x.iface) && isPassive(y.iface)) continue;
       if (!matchProtocols(x.iface, y.iface).compatible) continue;
       best = { fa: x.iface, fb: y.iface };
       bestSize = x.size + y.size;
@@ -323,6 +325,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
 }
 
 const isPower = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power");
+const isPassive = (i: InterfaceDef) => i.protocols.length > 0 && i.protocols.every((p) => p.type === "passive");
 const isGround = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("ground"));
 const isPowerOutput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("output"));
 const isPowerInput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("input"));

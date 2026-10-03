@@ -411,10 +411,14 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
   for (const ref of def.children ?? []) {
     const child = lookup(ref.moduleDefId);
     if (!child || child.kind === "harness") continue;
+    // an export of a sub-module's interface is linked when the interface it exports is: a derived
+    // link lifted to a composite of the exporting part carries the pad as `<child>/<part>:<pad>`
+    const exported = new Map((child.exports ?? []).map((e) => [e.id, `${ref.id}/${e.from.child}:${e.from.interfaceId}`]));
     for (const iface of boundaryInterfaces(child, lookup)) {
       if (!hasRole(iface, "power", "input")) continue;
       const path = `${ref.id}:${iface.id}`;
-      if (linked.has(path) || fed.has(path)) continue;
+      const inner = exported.get(iface.id);
+      if (linked.has(path) || fed.has(path) || (inner && linked.has(inner))) continue;
       // a supply port whose input pads are all supplied (doubled VIN pins on a net)
       const pads = Object.values(slotBindings(iface)).filter((id) => child.interfaces.some((i) => i.id === id && hasRole(i, "power", "input")));
       if (pads.length && pads.every((id) => linked.has(`${ref.id}:${id}`) || fed.has(`${ref.id}:${id}`))) continue;
