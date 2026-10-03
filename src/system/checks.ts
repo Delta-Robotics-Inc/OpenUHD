@@ -36,7 +36,7 @@ import { fastenerTorqueRule } from "./fasteners.js";
 import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { systemLinks } from "./derive.js";
-import { busPullupRule, designEnvelopeRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage } from "./nets.js";
+import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage } from "./nets.js";
 import { UHD_TAXONOMY, validateCategories, type Taxonomy } from "../taxonomy/index.js";
 
 export type SystemRule =
@@ -52,6 +52,7 @@ export type SystemRule =
   | "net"
   | "bus_pullup"
   | "design_envelope"
+  | "passive_override"
   | "unknown_category";
 
 export interface SystemDiagnostic {
@@ -551,6 +552,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: Check
     ...netRule(def, links),
     ...busPullupRule(def, links, lookup),
     ...designEnvelopeRule(def),
+    ...passiveOverrideRule(def, lookup),
     ...unknownCategoryRule(def, lookup, options.taxonomy),
   ]
     .map((d) => {

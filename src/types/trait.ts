@@ -74,6 +74,15 @@ export interface HandednessTrait extends TraitDef {
  * inductor or ferrite bead on a board. The value is a fact of the part; its
  * terminals are `passive` leaves (see `Passive()` in src/protocols). The
  * bus_pullup check reads resistors from it.
+ *
+ * A series part (one definition for a manufacturer series and size, e.g. a
+ * chip-resistor range) states its default instance in `kind`, `value`,
+ * `unit` and `tolerance`, which is all a tool that knows nothing of series
+ * reads, and adds the series fields: the instance `parameters`, categorical
+ * `choices`, the keys a placement may set in `ChildModuleRef.overrides`
+ * (`overridable`), the `tolerances` grades, a value table (`values`) where
+ * only listed values exist, and the `part_number` rule. `passiveOf(def,
+ * overrides)` applies a placement's overrides (src/protocols/passive.ts).
  */
 export interface PassiveTrait extends TraitDef {
   type: "passive";
@@ -86,7 +95,75 @@ export interface PassiveTrait extends TraitDef {
     tolerance?: number;
     source?: string;
     assumption?: string;
+    /** Series name, e.g. "Yageo RC_L RC0402, standard power". */
+    series?: string;
+    /**
+     * Numeric parameters of an instance, typed with units. `value` is the
+     * default instance's; `range` the series limit where the source states
+     * one. The value parameter is named for the kind: `resistance`,
+     * `capacitance`, `inductance` or `impedance_100mhz`.
+     */
+    parameters?: Parameter[];
+    /** Categorical parameters (an MLCC's dielectric): allowed values and the default. */
+    choices?: Record<string, PassiveChoice>;
+    /** Keys a placement may set in `ChildModuleRef.overrides`: parameter ids, choice ids, `part_number`. */
+    overridable?: string[];
+    /** Tolerance grades, each with its ordering code and the value range it is made in. */
+    tolerances?: PassiveToleranceGrade[];
+    /** Only these values exist (a ferrite bead's impedance table), each with its ordering code. */
+    values?: PassiveValueRow[];
+    /** How the instance's manufacturer part number is formed and read. */
+    part_number?: PassivePartNumberRule;
   };
+}
+
+export interface PassiveChoice {
+  values: string[];
+  default: string;
+  source?: string;
+}
+
+export interface PassiveToleranceGrade {
+  /** Fraction, as in `tolerance` (0.01 = ±1 %). */
+  tolerance: number;
+  /** Ordering-code letter. */
+  code: string;
+  /** Values this grade is made in, in the passive's unit. */
+  range?: [number, number];
+}
+
+export interface PassiveValueRow {
+  value: number;
+  /** Ordering code of this value. */
+  code: string;
+  /** Parameters this value fixes (a bead's rated current, DC resistance). */
+  parameters?: Record<string, number>;
+}
+
+/**
+ * The ordering-code rule of a series. The rule itself is data of the part;
+ * `passiveOf` only interprets it.
+ */
+export interface PassivePartNumberRule {
+  /** The default instance's MPN. */
+  default: string;
+  /**
+   * How the MPN is formed from the instance: `{value}` and `{tolerance}` are
+   * replaced by their codes. Null when the MPN carries a manufacturer code no
+   * parameter decides: the placement then names `part_number` itself.
+   */
+  pattern: string | null;
+  /**
+   * How `{value}` is written: `rkm` R/K/M as the decimal point (4K7), or
+   * three EIA digits, significand and number of zeros, in pF (`eia3_pf`) or
+   * in the unit (`eia3_ohm`).
+   */
+  value_code: "rkm" | "eia3_pf" | "eia3_ohm";
+  /** Decodes an MPN: a regular expression whose named groups are `value` or keys of `codes`. */
+  decode?: string;
+  /** Code tables used by `decode`: group name -> code -> parameter value. */
+  codes?: Record<string, Record<string, number | string>>;
+  source?: string;
 }
 
 /** An axis-aligned box in the module's own coordinates (mm). */

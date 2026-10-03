@@ -124,6 +124,43 @@ Passive({ id: "r-4k7-0402", name: "4.7 kΩ 1 % 0402", kind: "resistor", value: 4
 Terminals pair with nothing, so a passive on a net never makes a functional
 link. Checks that care about passives read the trait (`bus_pullup`).
 
+#### Series passives: the value per placement
+
+A generic chip passive is better described once per manufacturer series and
+size than once per value. Such a part's `passive` trait states its default
+instance in the usual fields (`kind`, `value`, `unit`, `tolerance`: what a
+tool that knows nothing of series reads) and adds the series:
+
+| Field | Meaning |
+| --- | --- |
+| `parameters` | Numeric parameters of an instance (`Parameter`s with units). The value one is named for the kind: `resistance`, `capacitance`, `inductance`, `impedance_100mhz`. `range` is the series limit. |
+| `choices` | Categorical parameters (an MLCC's `dielectric`): allowed values and the default. |
+| `overridable` | The keys a placement may set: parameter ids, choice ids, `part_number`. |
+| `tolerances` | Tolerance grades, each with its ordering-code letter and the value range it is made in. |
+| `values` | For a table series (ferrite beads): the only values made, each with its code and the parameters it fixes. |
+| `part_number` | The default MPN; a `pattern` with `{value}` and `{tolerance}` (or null when a manufacturer code no parameter decides is part of it); how values are coded (`rkm`, `eia3_pf`, `eia3_ohm`); a `decode` expression and `codes` tables that read an MPN back into parameters. |
+
+A board places it with `ChildModuleRef.overrides`:
+
+```ts
+children: [
+  { id: "r3", moduleDefId: "rc0402-series", overrides: { resistance: 4700 } },             // 4.7 kΩ, default grade
+  { id: "r4", moduleDefId: "rc0402-series", overrides: { resistance: 100e3, tolerance: 0.05 } },
+  { id: "r5", moduleDefId: "rc0402-series" },                                               // the default instance
+]
+```
+
+`passiveInstance(def, overrides)` gives that placement's value, tolerance,
+MPN (named, else formed by the rule, else the default) and parameters, with
+the problems: a key not in `overridable`, a number outside its range, a
+choice not offered, a tolerance that is no grade or a value the grade is not
+made in, a value off a table, an MPN that cannot be formed or that decodes to
+other parameters. A fixed-value part (no `overridable`) accepts no override.
+`passiveOf(def, overrides)` is the trait as the placement has it.
+The rules are the part's data; UHD only interprets them. The
+`passive_override` system rule reports every placement's problems, at any
+depth, as errors.
+
 ### Design requirements
 
 A `design_envelope` trait on the board states what the design must fit,

@@ -24,7 +24,7 @@ import type { DesignEnvelopeTrait } from "../types/trait.js";
 import type { Diagnostic } from "../drc/types.js";
 import { getEffectiveRange, rangesOverlap } from "../parameters/range.js";
 import { isNet, NET_PROTOCOL } from "../protocols/net.js";
-import { passiveOf } from "../protocols/passive.js";
+import { passiveInstance, passiveOf } from "../protocols/passive.js";
 import { isConnector } from "../protocols/connector.js";
 import { slotBindings } from "./connectors.js";
 import { formatPath, type LinkResult, type ModuleLookup, type ResolvedEndpoint } from "./index.js";
@@ -289,6 +289,41 @@ export function busPullupRule(def: ModuleDef, links: LinkResult[], lookup: Modul
       });
     }
   }
+  return out;
+}
+
+/**
+ * Per-placement passive values (`ChildModuleRef.overrides` on a passive, at
+ * any depth): each override must be one the part allows and agree with its
+ * series (grades, ranges, ordering code). See `passiveInstance`.
+ */
+export function passiveOverrideRule(system: ModuleDef, lookup: ModuleLookup): SystemDiagnostic[] {
+  const out: SystemDiagnostic[] = [];
+  const seen = new Set<string>();
+  const visit = (d: ModuleDef, prefix: string[]) => {
+    if (seen.has(d.id)) return;
+    seen.add(d.id);
+    for (const c of d.children ?? []) {
+      const def = lookup(c.moduleDefId);
+      if (!def) continue;
+      const path = [...prefix, c.id].join("/");
+      if (c.overrides && Object.keys(c.overrides).length) {
+        const inst = passiveInstance(def, c.overrides);
+        for (const [i, problem] of (inst?.problems ?? []).entries()) {
+          out.push({
+            id: `passive_override:${path}:${i}`,
+            rule: "passive_override",
+            severity: "error",
+            message: `${path} (${def.id}): ${problem}`,
+            refs: [path],
+            details: { overrides: c.overrides },
+          });
+        }
+      }
+      visit(def, [...prefix, c.id]);
+    }
+  };
+  visit(system, []);
   return out;
 }
 
