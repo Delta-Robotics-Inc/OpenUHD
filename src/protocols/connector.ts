@@ -23,6 +23,12 @@ export interface ConnectorDetail {
    * connector mates with ("a" or "b"). Checked by the harness_connector rule.
    */
   mates?: "a" | "b";
+  /**
+   * How the connector comes with the part (PB-870): "fitted" (the default)
+   * when it is attached, "loose" when it ships in the bag and is fitted
+   * during assembly (a shield's header strips, soldered by the builder).
+   */
+  supplied?: "fitted" | "loose";
 }
 
 /**
@@ -39,8 +45,21 @@ export function connectorTrait(connectorType: string, detail: ConnectorDetail = 
       ...(detail.pinout !== undefined ? { pinout: detail.pinout } : {}),
       ...(detail.note !== undefined ? { note: detail.note } : {}),
       ...(detail.mates !== undefined ? { mates: detail.mates } : {}),
+      ...(detail.supplied !== undefined ? { supplied: detail.supplied } : {}),
     },
   };
+}
+
+/** The interfaces of a part whose connector ships loose, to be fitted during assembly (`supplied: "loose"`). */
+export function looseConnectors(def: { interfaces: InterfaceDef[] }): { iface: InterfaceDef; connectorType: string; note?: string }[] {
+  return def.interfaces.flatMap((iface) =>
+    (iface.traits ?? [])
+      .filter((t) => t.type === "connector" && (t.params as { supplied?: string } | undefined)?.supplied === "loose")
+      .map((t) => {
+        const p = t.params as { connector_type?: string; note?: string };
+        return { iface, connectorType: String(p.connector_type ?? "connector"), ...(p.note ? { note: p.note } : {}) };
+      }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +117,7 @@ export function Connector(config: ConnectorConfig): InterfaceDef {
     pinout: pins.map((p) => p.label),
     note: config.note,
     mates: config.mates,
+    supplied: config.supplied,
   });
   if (config.matesWith?.length) (trait.params as Record<string, unknown>).mates_with = config.matesWith;
   return {

@@ -84,3 +84,14 @@ describe("I2C addresses other than the device's own (PB-870)", () => {
     expect(d.message).toBe("mcu:i2c: 2 devices share I2C address 0x70 (pwm:i2c, at70:i2c); pwm:i2c answers at it as an all-call or sub-address.");
   });
 });
+
+describe("connectors supplied loose (PB-870)", () => {
+  it("connectorTrait and Connector record supplied, and looseConnectors finds them", async () => {
+    const { connectorTrait, Connector, looseConnectors } = await import("../src/protocols/connector.js");
+    expect(connectorTrait("pin_header", { supplied: "loose" }).params).toEqual({ connector_type: "pin_header", supplied: "loose" });
+    expect(connectorTrait("pin_header").params).toEqual({ connector_type: "pin_header" });
+    const header = Connector({ id: "j1", connector: "pin_header", pins: ["5V", "GND"], supplied: "loose", note: "header strip in the bag" });
+    const fitted = Connector({ id: "j2", connector: "jst_sh_4", pins: ["a", "b", "c", "d"] });
+    expect(looseConnectors({ interfaces: [header, fitted] }).map((x) => [x.iface.id, x.connectorType, x.note])).toEqual([["j1", "pin_header", "header strip in the bag"]]);
+  });
+});
