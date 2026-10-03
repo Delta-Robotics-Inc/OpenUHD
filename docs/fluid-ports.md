@@ -27,7 +27,7 @@ domain. It states three things.
 
    | Kind | Fields | Mates with |
    | --- | --- | --- |
-   | `thread` | `standard` (NPT, NPTF, BSPP, BSPT, metric, UNF, SAE_ORB), `size` as printed ("1/4", "G1/4", "M5"), `gender` | A thread of the same standard and size and the other gender. NPT and NPTF count as one standard. |
+   | `thread` | `standard` (NPT, NPTF, BSPP, BSPT, metric, UNF, SAE_ORB), `size` as printed ("1/4", "G1/4", "M5"), `gender` | A thread of the same standard and size and the other gender. NPT and NPTF count as one standard. A BSP size matches with or without its "G" or "R" prefix. |
    | `push_to_connect` | `tubeOdMm` | A tube of that outside diameter |
    | `tube` | `tubeOdMm`, optional `tubeIdMm` | A push-to-connect fitting, or a hose barb when the inside diameter is given |
    | `barb` | `tubeIdMm` | A tube of that inside diameter |
@@ -63,70 +63,47 @@ the source's port label as its name. A fitting with two ends (a push-to-connect
 fitting with an NPT thread) has two ports, one per end, both
 `bidirectional`.
 
-## Review against the ProtoPart library
+## Mapping from other part libraries
 
-Thirty ProtoPart definitions declare a pneumatic or hydraulic domain. Ten of
-them (REV brackets, a shaft collar, nyloc nuts and the SPARK Flex) declare
-empty pneumatic and hydraulic domains with no ports; a port of those parts
-should drop the empty domains rather than map them. The other twenty are
-cylinders, valves, a compressor, a regulator, pressure sensors and fittings,
-with 38 physical ports. This is how their vocabulary maps.
+Part libraries name these things in many ways. When porting a port from
+another library, map it by what the port does, not by the name it used.
 
-### Flow roles
-
-ProtoPart used ten role names on the protocol `pneumatic`, and
-`liquid_supply` once for a liquid pressure sensor.
-
-| ProtoPart role (count) | UHD role | Notes |
-| --- | --- | --- |
-| `supply` (11) | `source` or `bidirectional` | Used for compressor and regulator outlets, but also for regulator inlets and adapter ends. Decide per port: an outlet is a `source`, an inlet is a `sink`, a fitting end is `bidirectional`. |
-| `input` (5) | `sink` | Valve inlets and fitting ends that receive air. A fitting end is `bidirectional`. |
-| `output` (5) | `source` | Valve outlets. A fitting end is `bidirectional`. |
-| `sink` (2) | `sink` | Cylinder ports. |
-| `exhaust` (2) | `source` | A valve's exhaust port delivers air at about atmospheric pressure to a silencer or the open air. |
-| `sensing` (2) | `sensing` | Pressure transducers. |
-| `splitter` (2) | `bidirectional` | Tees and wyes: one port per branch. |
-| `connection` (2) | `bidirectional` | Tube ends. |
-| `control` (1) | `sink` | A pilot or control port. |
-| `liquid_supply` / `sensing` (1) | `hydraulic` / `sensing` | The liquid pressure sensor is a hydraulic port. |
-
-### Joints
-
-ProtoPart resources name the connector as `quick_connect` (16) or
-`threaded_port` (22), with the thread standard written five ways (`NPT`,
-`BSP`, `BSPP (G)`, `metric`, `Metric (M)`), the size in `port_size` or
-`thread_size`, the gender in `thread_gender` (9 ports) or only in the
-description, and the tube size in inches (`tube_od_inch`).
-
-- `threaded_port` maps to a `thread` joint. Write the standard as `NPT`,
-  `BSPP`, `BSPT` or `metric`; ProtoPart's `BSP` with a `G` size is `BSPP`.
-  Take the gender from `thread_gender`, or from the description where only
-  it says ("male 1/8-27 NPT").
-- `quick_connect` on a fitting maps to `push_to_connect`; on a cylinder or
-  piston port that takes tubing directly it is also `push_to_connect`; on a
-  length of tubing it is `tube`. Convert `tube_od_inch` to millimetres
+- **Roles.** A generic name such as `supply`, `input` or `output` does not
+  say which way air or fluid flows through that port. Decide per port: an
+  outlet that delivers pressure is a `source`, an inlet or a cylinder port is
+  a `sink`, a fitting end, tee branch or tube end is `bidirectional`, and a
+  gauge or transducer port is `sensing`. A valve's exhaust port is a
+  `source`, because it delivers air at about atmospheric pressure to a
+  silencer or the open air. A pilot or control port is a `sink`.
+- **Threads.** Write the standard as `NPT`, `NPTF`, `BSPP`, `BSPT`,
+  `metric`, `UNF` or `SAE_ORB`. A thread written as "BSP" with a "G" size is
+  `BSPP`, and one with an "R", "Rc" or "Rp" size is `BSPT`. The size may keep
+  its "G" or "R" prefix: the pair check ignores it for BSP threads. Take the
+  gender from the source, including its description when only that says
+  ("male 1/8-27 NPT").
+- **Push-in fittings and tubes.** A "quick connect" fitting that takes
+  tubing is `push_to_connect`, including a cylinder port that takes tubing
+  directly; a length of tubing is `tube`. Tube sizes go in millimetres
   (1/4 in = 6.35 mm, 5/32 in = 3.97 mm).
-
-### Parameters and constraints
-
-- `working_pressure_bar`, `min_pressure_bar` and `max_pressure_bar` become
-  the `pressure` range: `[min or 0, working]` for a rated port, or the
-  delivered value for a source. `max_pressure_bar` above the working value
-  and `burst_pressure_bar` go in the `fluid` trait.
-- `compatible_fluids`, `fluid_temperature_C` and `seal_type` go in the
-  `fluid` trait.
-- ProtoPart's interface `constraints` (`thread_gender: female`,
-  `max_pressure_bar: ">=10"`, `requires_port_size`) described what the other
-  side must be. In UHD the pair check derives the same from both ports'
-  joints and pressure ranges, so they are not copied.
-- `response_time_ms` and `control_method` describe the part, not the port;
-  they go in a `performance` or `usage_note` trait on the module.
+- **Pressure.** A rated port's working range is its `pressure` range
+  (`[minimum or 0, working pressure]`); a source states what it delivers.
+  A maximum above the working value and the burst pressure go in the
+  `fluid` trait, with the rated fluids, fluid temperature and seal type.
+- **Constraints on the other side.** A rule in the source that says what the
+  other side must be (its gender, its pressure rating, its port size) is not
+  copied: the pair check derives the same from both ports' joints and
+  pressure ranges.
+- **Part-level facts.** Response time and control method describe the part,
+  not the port; they go in a `performance` or `usage_note` trait on the
+  module.
+- **Empty domains.** A source part that declares a pneumatic or hydraulic
+  domain with no ports (brackets, nuts) has no fluid ports; drop the empty
+  domain rather than map it.
 
 ### What is not covered
 
 - **Flow capacity** (`flow_rate`, `max_flow`, Cv) is a capacity parameter,
-  like current: it is summed over a system, not compared pair by pair. No
-  ProtoPart port states one.
+  like current: it is summed over a system, not compared pair by pair.
 - **Valve function** (3/2, 5/2, normally closed) and which ports a valve
   connects in each state are part behaviour. Record them in a trait on the
   module, naming the ports.

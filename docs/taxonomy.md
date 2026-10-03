@@ -61,6 +61,12 @@ export const SG90: ModuleDef = defineModule({
   shield is `["actuator.motor_controller", "expansion.arduino_shield"]`; an
   FRC smart motor controller is `["actuator.motor_controller", "robotics.frc"]`;
   a flight controller is `["microcontroller.flight_controller", "robotics.drone"]`.
+- Some forms are easy to miss. A bare packaged IC that is not a
+  microcontroller (a regulator, a charger, a driver, a sensor chip) is also
+  `component.ic`, so an LDO is `["power.regulator", "component.ic"]`; a
+  microcontroller or SoC chip is `microcontroller.chip` instead. A
+  microcontroller board programmed over USB with its pins on headers is also
+  `microcontroller.development_board`, next to its brand family.
 - A part filed under one category when others plainly fit is incomplete.
   Part-authoring tools should warn about it.
 - Kit membership is a category: a part in a kit lists the kit's path.

@@ -25,7 +25,9 @@ export interface BoltPatternConfig {
   /**
    * "cross": four holes on two perpendicular diagonals of different
    * lengths, as on motor bases ("16 × 19"): one pair `spacingMm` apart on x,
-   * the other `spacingYmm` apart on y. A cross mates only another cross.
+   * the other `spacingYmm` apart on y. A cross mates another cross; one
+   * with equal diagonals d also mates a 4-hole circle of diameter d or a
+   * square of side d/√2, which have the same holes.
    */
   shape: "square" | "rectangle" | "circle" | "cross";
   /**

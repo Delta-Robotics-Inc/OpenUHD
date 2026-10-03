@@ -5,7 +5,7 @@
  * pneumatic and hydraulic ports.
  */
 import { describe, expect, it } from "vitest";
-import { validatePair } from "../src/drc/index.js";
+import { boltPatternsShareHoles, validatePair } from "../src/drc/index.js";
 import { areRolesCompatible } from "../src/matching/roles.js";
 import {
   BoltPattern,
@@ -319,6 +319,25 @@ describe("cross bolt patterns", () => {
     expect(c?.state ?? "incompatible").toBe("incompatible");
     if (c) expect(c.diagnostics.map((d) => d.code)).toContain("bolt_pattern_shape");
   });
+
+  it("a cross with equal diagonals has the holes of a 4-hole circle and of a square, and mates both", () => {
+    const motor16 = mod("stub-motor", [cross("component", 16, 16)]);
+    const circle = (d: number) => mod("arm", [BoltPattern({ id: "mount", role: "structure", shape: "circle", spacingMm: d, holeCount: 4, fastener: "M3", fastenerDiameterMm: 3 })]);
+    const square = (side: number) => mod("arm", [BoltPattern({ id: "mount", role: "structure", shape: "square", spacingMm: side, holeCount: 4, fastener: "M3", fastenerDiameterMm: 3 })]);
+    const c1 = connection(circle(16), motor16, "bolt_pattern")!;
+    expect([c1.state, c1.diagnostics]).toEqual(["valid", []]);
+    const c2 = connection(square(16 / Math.SQRT2), motor16, "bolt_pattern")!;
+    expect([c2.state, c2.diagnostics]).toEqual(["valid", []]);
+    expect(boltPatternsShareHoles(square(11.31).interfaces[0], motor16.interfaces[0])).toBe(true);
+    // the same shapes at another size, and an unequal cross against a circle, do not
+    const c3 = connection(square(16), motor16, "bolt_pattern");
+    expect(c3?.state ?? "incompatible").toBe("incompatible");
+    if (c3) expect(c3.diagnostics.find((d) => d.code === "bolt_pattern_shape")?.message).toMatch(/diagonals differ \(22\.63 mm and 16 mm\)/);
+    expect(boltPatternsShareHoles(circle(16).interfaces[0], motor.interfaces[0])).toBe(false);
+    // a 6-hole circle is never a cross
+    const six = mod("arm", [BoltPattern({ id: "mount", role: "structure", shape: "circle", spacingMm: 16, holeCount: 6, fastener: "M3", fastenerDiameterMm: 3 })]);
+    expect(boltPatternsShareHoles(six.interfaces[0], motor16.interfaces[0])).toBe(false);
+  });
 });
 
 describe("pneumatic and hydraulic ports", () => {
@@ -337,6 +356,16 @@ describe("pneumatic and hydraulic ports", () => {
     expect(codes({ kind: "thread", standard: "BSPP", size: "1/4", gender: "male" })[0][1]).toMatch(/different thread standards/);
     expect(codes(npt("1/4", "female"))[0][1]).toMatch(/both are female/);
     expect(codes({ kind: "thread", standard: "NPTF", size: "1/4", gender: "male" })).toEqual([]);
+  });
+
+  it("a BSP size matches with or without its G or R prefix, and only for BSP", () => {
+    const bsp = (standard: string, size: string, gender: "male" | "female") => port(`p_${gender}`, { role: "bidirectional", joint: { kind: "thread", standard, size, gender } });
+    expect(connection(bsp("BSPP", "G1/4", "male"), bsp("BSPP", "1/4", "female"), "pneumatic")!.diagnostics).toEqual([]);
+    expect(connection(bsp("BSPP", "g 1/4\"", "male"), bsp("BSPP", "G1/4", "female"), "pneumatic")!.diagnostics).toEqual([]);
+    expect(connection(bsp("BSPT", "R1/8", "male"), bsp("BSPT", "Rc1/8", "female"), "pneumatic")!.diagnostics).toEqual([]);
+    expect(connection(bsp("BSPP", "G1/4", "male"), bsp("BSPP", "G1/8", "female"), "pneumatic")!.diagnostics[0].message).toMatch(/different thread sizes/);
+    // the prefix is not stripped for other standards
+    expect(connection(bsp("NPT", "G1/4", "male"), bsp("NPT", "1/4", "female"), "pneumatic")!.diagnostics[0].message).toMatch(/different thread sizes/);
   });
 
   it("a push-to-connect fitting takes a tube of its size", () => {
