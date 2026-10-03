@@ -8,7 +8,9 @@
  *   propulsion_current  summed motor peak current vs battery and ESC ratings
  *   bus_address         duplicate I2C addresses on one master
  *   interface_reuse     a non-shareable interface linked more than once
- *   unpowered           a power input with no link
+ *   unpowered           a power input with no link (not one marked unconnected)
+ *   unconnected         interfaces an instance marks as unconnected on purpose:
+ *                       a link to one, or an unknown interface id
  *   harness_connector   harness end connectors vs the interfaces they mate
  *   prop_handedness     each motor's spin vs the handed prop on it (rotation.ts)
  *   fastener_torque     every fastener joint states a sourced or assumed torque (fasteners.ts)
@@ -36,6 +38,7 @@ import { propHandednessRule } from "./rotation.js";
 import { fastenerTorqueRule } from "./fasteners.js";
 import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
+import { i2cAddresses } from "../protocols/i2c.js";
 import { systemLinks } from "./derive.js";
 import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage, partWiringRule } from "./nets.js";
 import { UHD_TAXONOMY, validateCategories, type Taxonomy } from "../taxonomy/index.js";
@@ -47,6 +50,7 @@ export type SystemRule =
   | "bus_address"
   | "interface_reuse"
   | "unpowered"
+  | "unconnected"
   | "harness_connector"
   | "prop_handedness"
   | "fastener_torque"
@@ -329,25 +333,32 @@ function propulsionRule(links: LinkResult[]): SystemDiagnostic[] {
 }
 
 function busAddressRule(links: LinkResult[]): SystemDiagnostic[] {
-  const byMaster = new Map<string, { address: number; path: string; link: string }[]>();
+  type Answer = { address: number; path: string; link: string; own: boolean };
+  const byMaster = new Map<string, Answer[]>();
   for (const r of links) {
     if (r.protocol !== "i2c" || r.state === "incompatible") continue;
     const [master, slave] = hasRole(r.a.iface, "i2c", "master") ? [r.a, r.b] : [r.b, r.a];
-    const address = nominal(param(slave.iface, "i2c_address"));
-    if (address === undefined) continue;
-    byMaster.set(master.path, [...(byMaster.get(master.path) ?? []), { address, path: slave.path, link: r.link.id }]);
+    // every address the device answers at: its own, and any all-call or sub-address it states
+    for (const { name, address } of i2cAddresses(slave.iface)) {
+      byMaster.set(master.path, [...(byMaster.get(master.path) ?? []), { address, path: slave.path, link: r.link.id, own: name === "address" }]);
+    }
   }
   const out: SystemDiagnostic[] = [];
   for (const [masterPath, slaves] of byMaster) {
-    const seen = new Map<number, typeof slaves>();
-    for (const s of slaves) seen.set(s.address, [...(seen.get(s.address) ?? []), s]);
+    const seen = new Map<number, Answer[]>();
+    // one device stating the same address twice is one answer, not a clash
+    for (const s of slaves) if (!(seen.get(s.address) ?? []).some((x) => x.path === s.path)) seen.set(s.address, [...(seen.get(s.address) ?? []), s]);
     for (const [address, same] of seen) {
-      if (same.length < 2) continue;
+      // devices may share an all-call or sub-address (two stacked PCA9685s both answer 0x70);
+      // a clash is two devices at one address when it is the own address of at least one of them
+      if (same.length < 2 || !same.some((s) => s.own)) continue;
+      const hex = `0x${address.toString(16).padStart(2, "0").toUpperCase()}`;
+      const shared = same.filter((s) => !s.own);
       out.push({
         id: `bus_address:${masterPath}:${address}`,
         rule: "bus_address",
         severity: "error",
-        message: `${masterPath}: ${same.length} devices share I2C address 0x${address.toString(16).padStart(2, "0").toUpperCase()} (${same.map((s) => s.path).join(", ")}).`,
+        message: `${masterPath}: ${same.length} devices share I2C address ${hex} (${same.map((s) => s.path).join(", ")})${shared.length ? `; ${shared.map((s) => s.path).join(", ")} answer${shared.length === 1 ? "s" : ""} at it as an all-call or sub-address` : ""}.`,
         refs: [masterPath, ...same.map((s) => s.path), ...same.map((s) => `link:${s.link}`)],
       });
     }
@@ -394,18 +405,61 @@ function reuseRule(links: LinkResult[]): SystemDiagnostic[] {
   return out;
 }
 
-function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
+/** Interface paths (`child:interface`) that a link reaches, directly or through the pads of a composite. */
+function linkedPaths(links: LinkResult[]): Set<string> {
   const linked = new Set<string>();
   for (const r of links) {
     if (isNetMembership(r)) continue;
     linked.add(r.a.path);
     linked.add(r.b.path);
-    // the pads a link to a composite carries (a supply port's VIN pins)
     for (const c of r.children) {
       linked.add(formatPath(r.a.ownerPath, c.a.leafId));
       linked.add(formatPath(r.b.ownerPath, c.b.leafId));
     }
   }
+  return linked;
+}
+
+/** The interfaces a child instance marks as unconnected on purpose, by interface id. */
+export function unconnectedOf(ref: { unconnected?: { interfaceId: string; reason: string }[] }): Map<string, string> {
+  return new Map((ref.unconnected ?? []).map((u) => [u.interfaceId, u.reason]));
+}
+
+/**
+ * Interfaces marked unconnected (ChildModuleRef.unconnected): a link to one
+ * contradicts the mark, and a mark must name an interface the child has.
+ */
+function unconnectedRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
+  const linkedBy = new Map<string, string[]>();
+  for (const r of links) {
+    if (isNetMembership(r)) continue;
+    const ends = [r.a.path, r.b.path, ...r.children.flatMap((c) => [formatPath(r.a.ownerPath, c.a.leafId), formatPath(r.b.ownerPath, c.b.leafId)])];
+    for (const e of ends) linkedBy.set(e, [...new Set([...(linkedBy.get(e) ?? []), r.link.id])]);
+  }
+  const out: SystemDiagnostic[] = [];
+  for (const ref of def.children ?? []) {
+    const marks = unconnectedOf(ref);
+    if (!marks.size) continue;
+    const child = lookup(ref.moduleDefId);
+    if (!child) continue;
+    const ids = new Set([...child.interfaces.map((i) => i.id), ...(child.exports ?? []).map((e) => e.id)]);
+    for (const [id, reason] of marks) {
+      const path = `${ref.id}:${id}`;
+      if (!ids.has(id)) {
+        out.push({ id: `unconnected:${path}`, rule: "unconnected", severity: "warning", message: `${ref.id} marks "${id}" as unconnected, but ${child.id} has no such interface.`, refs: [ref.id] });
+        continue;
+      }
+      const by = linkedBy.get(path);
+      if (by?.length) {
+        out.push({ id: `unconnected:${path}`, rule: "unconnected", severity: "warning", message: `${path} is marked unconnected (${reason}), but ${by.map((l) => `link ${l}`).join(", ")} connects it.`, refs: [path, ...by.map((l) => `link:${l}`)] });
+      }
+    }
+  }
+  return out;
+}
+
+function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
+  const linked = linkedPaths(links);
   // inputs on a board's edge are supplied by whatever the board plugs into
   const fed = edgeFedPaths(def, lookup, moduleNets(def, links));
   const out: SystemDiagnostic[] = [];
@@ -415,11 +469,17 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
     // an export of a sub-module's interface is linked when the interface it exports is: a derived
     // link lifted to a composite of the exporting part carries the pad as `<child>/<part>:<pad>`
     const exported = new Map((child.exports ?? []).map((e) => [e.id, `${ref.id}/${e.from.child}:${e.from.interfaceId}`]));
+    const marks = unconnectedOf(ref);
     for (const iface of boundaryInterfaces(child, lookup)) {
       if (!hasRole(iface, "power", "input")) continue;
       const path = `${ref.id}:${iface.id}`;
       const inner = exported.get(iface.id);
       if (linked.has(path) || fed.has(path) || (inner && linked.has(inner))) continue;
+      // left open on purpose: said, not warned about
+      if (marks.has(iface.id)) {
+        out.push({ id: `unpowered:${path}`, rule: "unpowered", severity: "info", message: `${path} (${iface.name ?? iface.id}) is unconnected on purpose: ${marks.get(iface.id)}.`, refs: [path] });
+        continue;
+      }
       // a supply port whose input pads are all supplied (doubled VIN pins on a net)
       const pads = Object.values(slotBindings(iface)).filter((id) => child.interfaces.some((i) => i.id === id && hasRole(i, "power", "input")));
       if (pads.length && pads.every((id) => linked.has(`${ref.id}:${id}`) || fed.has(`${ref.id}:${id}`))) continue;
@@ -551,6 +611,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: Check
     ...busAddressRule(links),
     ...reuseRule(links),
     ...unpoweredRule(def, links, lookup),
+    ...unconnectedRule(def, links, lookup),
     ...harnessConnectorRule(def, links, lookup),
     ...propHandednessRule(def, lookup),
     ...fastenerTorqueRule(def, lookup),
