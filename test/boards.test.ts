@@ -9,7 +9,7 @@ import { checkSystem } from "../src/system/checks.js";
 import { systemLinks } from "../src/system/derive.js";
 import { validateLinks } from "../src/system/index.js";
 import { moduleNets } from "../src/system/nets.js";
-import { Ground, Net, PowerIn, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
+import { Ground, Net, Passive, PowerIn, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
 import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
 import { areRolesCompatible } from "../src/matching/roles.js";
@@ -398,5 +398,91 @@ describe("drive levels on a board's nets", () => {
   it("an open-drain output does not drive its net high", () => {
     const { board: b, lookup } = board(["digital_io", "open_drain"]);
     expect(checkSystem(b, lookup).diagnostics.filter((x) => x.id.includes(":drive:"))).toEqual([]);
+  });
+});
+
+describe("a part's own pins on the board's nets (PB-869)", () => {
+  // fixture part: a 100 nF decoupling capacitor
+  const C100N = Passive({ id: "fixture-c-100n-0402", name: "Capacitor 100 nF 0402", kind: "capacitor", value: 100e-9, unit: "F", assumption: "Fixture value." });
+  const withCap = (id: string) => (x: string) => (x === C100N.id ? C100N : lookupBoardModule(x));
+  const lookupC = withCap(C100N.id);
+  const errors = (board: ModuleDef, lookup = lookupC) => check(board, lookup).filter((x) => x.severity === "error");
+
+  it("a decoupling capacitor across 3V3 and GND is not a fault", () => {
+    const board = variant({ children: [{ id: "c1", moduleDefId: C100N.id }], add: [...netLinks("v3v3", ["c1:pin_1"]), ...netLinks("gnd", ["c1:pin_2"])] });
+    expect(errors(board)).toEqual([]);
+  });
+
+  it("a capacitor with both terminals on one net is shorted", () => {
+    const board = variant({ children: [{ id: "c1", moduleDefId: C100N.id }], add: netLinks("v3v3", ["c1:pin_1", "c1:pin_2"]) });
+    const d = errors(board).find((x) => x.id === "net:v3v3:shorted:c1")!;
+    expect(d.rule).toBe("net");
+    expect(d.message).toMatch(/c1 \(capacitor, .*\) has every terminal on net v3v3 \(3V3\)/);
+    expect(d.refs).toEqual(expect.arrayContaining(["c1:pin_1", "c1:pin_2"]));
+  });
+
+  it("the same rule holds for any passive: the SDA pull-up with both ends on SDA", () => {
+    const board = variant({ drop: ["v3v3.r3.pin_1"], add: netLinks("sda", ["r3:pin_1"]) });
+    expect(errors(board).map((x) => x.id)).toContain("net:sda:shorted:r3");
+  });
+
+  it("a passive with a terminal on no net is not reported as shorted", () => {
+    const board = variant({ children: [{ id: "c1", moduleDefId: C100N.id }], add: netLinks("v3v3", ["c1:pin_1"]) });
+    expect(errors(board).some((x) => x.id.includes(":shorted:"))).toBe(false);
+  });
+
+  it("the regulator's VOUT tied to its VIN shorts output to input", () => {
+    const board = variant({ drop: ["v3v3.u3.pin_4"], add: netLinks("vin", ["u3:pin_4"]) });
+    const d = errors(board).find((x) => x.id === "net:vin:feedback:u3")!;
+    expect(d.message).toMatch(/ties u3's output u3:pin_4 \(VOUT\) to its own input .*u3:pin_10 \(VIN\)/);
+    expect(d.refs).toEqual(expect.arrayContaining(["u3:pin_4", "u3:pin_10", "u3:pin_11", "u3:pin_1"]));
+  });
+
+  it("a part that states its bridges may feed its own other inputs: the RP2040's VREG_VOUT on DVDD", () => {
+    expect(check(IMU_BOARD).some((x) => x.id.includes(":feedback:"))).toBe(false);
+    // its regulator's own input (VREG_VIN bridges to VREG_VOUT) on the 1V1 net is the fault
+    const board = variant({ drop: ["v3v3.u1.pin_44"], add: netLinks("v1v1", ["u1:pin_44"]) });
+    const d = check(board).find((x) => x.id === "net:v1v1:feedback:u1")!;
+    expect(d.severity).toBe("error");
+    expect(d.details?.inputs).toEqual(["u1:pin_44"]);
+  });
+
+  it("the BMI270's address strap SDO moved from GND onto SDA follows the bus", () => {
+    const board = variant({ drop: ["gnd.u2.pin_1"], add: netLinks("sda", ["u2:pin_1"]) });
+    const d = errors(board).find((x) => x.id === "net:sda:strap:u2:pin_1")!;
+    expect(d.message).toMatch(/u2:pin_1 \(SDO\) is a strap \(I2C address bit 0\) but net sda \(SDA\) carries .*u1:pin_2/);
+  });
+
+  it("a strap is at a fixed level on a supply net, or on a net of its own through a resistor", () => {
+    const high = variant({ drop: ["gnd.u2.pin_1"], add: netLinks("v3v3", ["u2:pin_1"]) });
+    expect(check(high).some((x) => x.id.includes(":strap:"))).toBe(false);
+    const pulled = variant({
+      drop: ["gnd.u2.pin_1"],
+      nets: [Net({ id: "sdo", name: "SDO" })],
+      children: [{ id: "r9", moduleDefId: "fixture-r-4k7-0402" }],
+      add: [...netLinks("sdo", ["u2:pin_1", "r9:pin_1"]), ...netLinks("gnd", ["r9:pin_2"])],
+    });
+    expect(check(pulled).some((x) => x.id.includes(":strap:"))).toBe(false);
+  });
+
+  it("a strap with `when` applies only while its part runs that interface", () => {
+    // fixture part: a sensor whose MODE pin is a strap only in I2C mode, and a BOOT pin that always is
+    const sensor = defineModule({
+      id: "fixture-strapped-sensor",
+      name: "Fixture strapped sensor",
+      interfaces: [
+        ...pinTable([[1, "MODE", "input", "Mode select"], [2, "BOOT", "input", "Boot select"], [3, "GND", "ground"]], { source: "fixture", logicV: [0, 3.6] }).map((i) =>
+          i.id === "pin_1"
+            ? { ...i, traits: [...(i.traits ?? []), { type: "strap", params: { function: "mode", when: ["i2c"] } }] }
+            : i.id === "pin_2"
+              ? { ...i, traits: [...(i.traits ?? []), { type: "strap", params: { function: "boot mode" } }] }
+              : i,
+        ),
+      ],
+    });
+    const board = variant({ children: [{ id: "u6", moduleDefId: sensor.id }], add: [...netLinks("imu_int1", ["u6:pin_1", "u6:pin_2"]), ...netLinks("gnd", ["u6:pin_3"])] });
+    const ids = check(board, (x) => (x === sensor.id ? sensor : lookupBoardModule(x))).map((x) => x.id);
+    expect(ids).toContain("net:imu_int1:strap:u6:pin_2");
+    expect(ids).not.toContain("net:imu_int1:strap:u6:pin_1");
   });
 });

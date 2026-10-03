@@ -129,8 +129,11 @@ const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
  * The functional interfaces a pad pair lifts to: the largest pair that pairs
  * by protocol, composite with composite or pad with pad (a composite port is
  * not validated against a lone pad). With none, a conductor still links the
- * largest candidates (and the link reports the mismatch); on a net the pads
- * only share the net. Two ground pads on a net share it without a link; as
+ * largest candidates of one kind (two composites, else the two pads it joins)
+ * and the link reports the mismatch; on a net the pads only share the net.
+ * A composite is never validated against the lone pad a wire lands on: that
+ * finds the composite's own matching pad and passes the wire that is wrong
+ * (a cell's + lead on the board's BAT- pad, PB-869). Two ground pads on a net share it without a link; as
  * conductors of two composites they still pair.
  */
 function lift(a: Candidate[], b: Candidate[], onNet: boolean, joined: (la: string, lb: string) => boolean = () => true): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
@@ -151,7 +154,8 @@ function lift(a: Candidate[], b: Candidate[], onNet: boolean, joined: (la: strin
     }
   }
   if (best || onNet) return best;
-  return { fa: a[0].iface, fb: b[0].iface };
+  if (isComposite(a[0].iface) === isComposite(b[0].iface)) return { fa: a[0].iface, fb: b[0].iface };
+  return { fa: a[a.length - 1].iface, fb: b[b.length - 1].iface };
 }
 
 /** Root-relative endpoint for an interface owned at `ownerPath`: through an export when one exists. */
