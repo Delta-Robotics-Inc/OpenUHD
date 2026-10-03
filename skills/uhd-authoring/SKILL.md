@@ -99,7 +99,7 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
 | `usage_note` | Wiring, firmware, or configuration notes from the source. |
 | `supplied_from` | A power output that branches from another output on the same module (e.g. 4.5 V pads behind the 5 V BEC): `{ interfaceId, via?, source? \| assumption? }` (`SuppliedFromTrait`). Its loads are budgeted on the parent. |
 | `handedness` | A part sold in rotation-handed variants (propellers): `{ variants: ["cw", "ccw"], pack?, source }` (`HandednessTrait`). The fitted variant is chosen per instance with `ChildModuleRef.spin`. |
-| `passive` | The value of a resistor, capacitor, inductor or ferrite bead: `{ kind, value, unit, tolerance?, source? }` (`PassiveTrait`, written by `Passive()`). |
+| `passive` | The value of a resistor, capacitor, inductor or ferrite bead: `{ kind, value, unit, tolerance?, source? }` (`PassiveTrait`, written by `Passive()`). A series part (one definition for a range of values) adds `parameters`, `choices`, `overridable`, `tolerances`, `values` and the `part_number` rule; a board sets each placement's value in `ChildModuleRef.overrides`, read by `passiveInstance(def, overrides)`. |
 
 - Every trait that states a fact carries `source` (a URL, or a URL with a
   section). A value no source states is either omitted or carried in an
