@@ -4,6 +4,7 @@ import {
   burstCurrentA,
   escSignalRateKbps,
   maxCurrentA,
+  minSupplyCurrentA,
   voltageRangeV,
   voltageV,
 } from "./params.js";
@@ -36,6 +37,12 @@ export interface BrushlessPhasesConfig {
   maxCurrentA?: number;
   /** Burst current per phase in amps (note the duration in a trait). */
   burstCurrentA?: number;
+  /**
+   * Input (motor) only: the least continuous current per channel the driver
+   * or controller channel must be rated for, in amps, when the source states
+   * one. The pair check compares it with the channel's `max_current`.
+   */
+  minSupplyCurrentA?: number;
   /** Supply voltage the phases operate at: nominal or [min, max]. */
   voltageV?: number | [number, number];
   /** Termination of each phase, e.g. "solder_pad" or "bare_wire_lead". */
@@ -81,6 +88,10 @@ export function BrushlessPhases(config: BrushlessPhasesConfig): InterfaceDef[] {
   const parameters: Parameter[] = [];
   if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
   if (config.burstCurrentA !== undefined) parameters.push(burstCurrentA(config.burstCurrentA));
+  if (config.minSupplyCurrentA !== undefined) {
+    if (role !== "input") throw new Error(`${id}: minSupplyCurrentA is what a motor needs from its channel; a channel states maxCurrentA`);
+    parameters.push(minSupplyCurrentA(config.minSupplyCurrentA));
+  }
   if (config.voltageV !== undefined) {
     parameters.push(
       Array.isArray(config.voltageV)
@@ -342,6 +353,12 @@ export interface BrushedMotorTerminalsConfig {
   maxCurrentA?: number;
   /** Burst or peak current in amps (note the duration in a trait). */
   burstCurrentA?: number;
+  /**
+   * Input (motor) only: the least continuous current per channel the driver
+   * or controller channel must be rated for, in amps, when the source states
+   * one. The pair check compares it with the channel's `max_current`.
+   */
+  minSupplyCurrentA?: number;
   /** Motor or driver voltage: nominal or [min, max]. */
   voltageV?: number | [number, number];
   /** Termination of each terminal, e.g. "screw_terminal", "spade_terminal", "bare_wire_lead". */
@@ -381,6 +398,10 @@ export function BrushedMotorTerminals(config: BrushedMotorTerminalsConfig): Inte
   const parameters: Parameter[] = [];
   if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
   if (config.burstCurrentA !== undefined) parameters.push(burstCurrentA(config.burstCurrentA));
+  if (config.minSupplyCurrentA !== undefined) {
+    if (role !== "input") throw new Error(`${id}: minSupplyCurrentA is what a motor needs from its channel; a channel states maxCurrentA`);
+    parameters.push(minSupplyCurrentA(config.minSupplyCurrentA));
+  }
   if (config.voltageV !== undefined) {
     parameters.push(Array.isArray(config.voltageV) ? voltageRangeV(config.voltageV[0], config.voltageV[1]) : voltageV(config.voltageV));
   }

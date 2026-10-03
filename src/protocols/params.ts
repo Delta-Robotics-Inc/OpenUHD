@@ -166,3 +166,61 @@ export function tubeOdMm(value: number): Parameter {
 export function tubeIdMm(value: number): Parameter {
   return { id: "tube_id", unit: "mm", value };
 }
+
+/**
+ * The least continuous current a load needs its source to be rated for, in
+ * amps: a supply rail, a power distribution channel or a motor controller
+ * channel. Stated on an input; the pair check compares it with the source's
+ * `max_current` (`supply_current_rating`).
+ */
+export function minSupplyCurrentA(value: number): Parameter {
+  return { id: "min_supply_current", unit: "A", value };
+}
+
+/** Hole-to-hole pitch of a row of holes in mm (BoltPattern shape "row"). */
+export function holePitchMm(value: number): Parameter {
+  return { id: "hole_pitch", unit: "mm", value };
+}
+
+/** Usable length of a mounting slot in mm: fasteners sit anywhere along it (BoltPattern shape "slot"). */
+export function slotLengthMm(value: number): Parameter {
+  return { id: "slot_length", unit: "mm", value };
+}
+
+/** Width of a shaft key and of the keyway that takes it, in mm. */
+export function keyWidthMm(value: number): Parameter {
+  return { id: "key_width", unit: "mm", value };
+}
+
+/**
+ * Linear travel in mm. An actuator's output states the stroke it gives; a
+ * driven load may state the stroke it needs. A capacity: the pair check
+ * requires the output's stroke to cover the load's (`linear_motion_capacity`).
+ */
+export function strokeMm(value: number): Parameter {
+  return { id: "stroke", unit: "mm", value };
+}
+
+/** Travel per revolution of the input in mm (a screw's lead: pitch × starts). */
+export function leadMm(value: number): Parameter {
+  return { id: "lead", unit: "mm", value };
+}
+
+/** Thread pitch in mm (crest to crest), e.g. a lead screw and its nut. */
+export function threadPitchMm(value: number): Parameter {
+  return { id: "thread_pitch", unit: "mm", value };
+}
+
+/**
+ * Axial force in newtons. An actuator's output states the force it is
+ * rated for; a driven load may state the force it needs. A capacity, like
+ * `stroke`.
+ */
+export function forceN(value: number): Parameter {
+  return { id: "force", unit: "N", value };
+}
+
+/** Linear speed in mm/s: an actuator's rated speed (at its rated force, say which in a trait). */
+export function linearSpeedMmS(value: number): Parameter {
+  return { id: "linear_speed", unit: "mm/s", value };
+}

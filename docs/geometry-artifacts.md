@@ -78,7 +78,8 @@ fastenerStack: [
 
 Positions are measured along the normal of the joint's structure-side frame
 and repeated at every hole of its bolt pattern (`boltPatternHoles`; a
-circle's first hole is on the frame's xAxis). `assemble` returns every
+circle's first hole is on the frame's xAxis; a row lies along x, centred;
+a slot has no fixed holes, so a stack on a slot gives its `positions`). `assemble` returns every
 placed part (`assembly.hardware`) and checks:
 
 - that each item's count matches the harness quantity; and

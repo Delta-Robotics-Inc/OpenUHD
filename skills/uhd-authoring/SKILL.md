@@ -82,7 +82,9 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
 - Use the canonical parameter builders (`voltage`, `max_current`,
   `burst_current`, `cell_count`, `capacity`, `hole_spacing`,
   `fastener_diameter`, `shaft_diameter`, `esc_signal_rate`, `baud_rate`,
-  `clock_freq`, `i2c_address`). Parameters with the same id are range-checked
+  `clock_freq`, `i2c_address`, `hole_pitch`, `slot_length`, `stroke`,
+  `lead`, `force`, `min_supply_current`; the full list is in the
+  vocabulary reference). Parameters with the same id are range-checked
   against each other by DRC, so use the canonical id rather than a new one.
 - Use the canonical traits; don't invent module-specific trait types:
 
@@ -154,6 +156,8 @@ ref, best first:
 | --- | --- |
 | Mounting holes (`BoltPattern`) | `frame` required: `origin` = pattern centre on the mounting face, `normal` = outward from that face (the direction the mating part comes from), `xAxis` = pattern x (hole 1 for a circle), `symmetryDeg` only if the whole part may rotate (90 for a square pattern, unless a sensor axis or connector makes the orientation matter). Refs: the hole feature, then `procedural("bolt_pattern")`. |
 | Shaft (`Shaft`) | `frame` on the shaft axis at the mounting face, `normal` along the shaft outward. Refs: the shaft feature, then `procedural("shaft")`. |
+| Row or slot (`BoltPattern` shape `row`, `slot`) | `frame` at the middle of the row or slot on the mounting face, `normal` outward, `xAxis` along the row or slot. A slot has no hole axes to check, so ref its face. |
+| Linear output (`LinearMotion`) | `frame` on the moving member's end face (retracted), `normal` along the direction of extension. Refs: that face. |
 | Connector composite (`Connector`) | Refs to its connector body (a `frame` on its mating face if a cable plugs in). One composite per socket, so two identical sockets give two composites with one ref each. |
 | Connector-borne bus or supply | Optionally the same connector-body refs; two identical connectors give two refs. |
 | Solder pads, pins, headers | The header or pad-row feature, or no geometry. |
