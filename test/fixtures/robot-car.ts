@@ -5,7 +5,7 @@ export const RobotCar: ModuleDef = {
   name: "Robot Car",
   version: "1.0.0",
   tags: ["robot", "car", "project"],
-  categories: ["project.robotics"],
+  categories: ["robotics.educational"],
 
   interfaces: [
     // The robot car exposes a power input to the outside

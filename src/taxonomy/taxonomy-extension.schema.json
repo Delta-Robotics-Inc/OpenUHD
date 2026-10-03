@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/src/taxonomy/taxonomy-extension.schema.json",
+  "title": "UHD taxonomy extension (a library's taxonomy declaration)",
+  "description": "Names the taxonomy version a library's parts are categorised against and, optionally, adds the library's own nodes under one root, x-<library>. See docs/taxonomy.md.",
+  "type": "object",
+  "required": ["library", "taxonomy"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "library": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Library name; its extension root is x-<library>"
+    },
+    "taxonomy": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "The taxonomy used, \"uhd\" for UHD's" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "description": { "type": "string" },
+    "categories": {
+      "type": "object",
+      "description": "At most one root, x-<library>, holding the library's own nodes.",
+      "propertyNames": { "pattern": "^x-[a-z0-9]+(-[a-z0-9]+)*$" },
+      "maxProperties": 1,
+      "additionalProperties": { "$ref": "uhd-taxonomy.schema.json#/definitions/node" }
+    }
+  }
+}

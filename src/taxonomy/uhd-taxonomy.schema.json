@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/src/taxonomy/uhd-taxonomy.schema.json",
+  "title": "UHD category taxonomy",
+  "description": "A versioned tree of hardware categories. Nodes are addressed by dotted paths of ids from the root (sensor.distance). See docs/taxonomy.md.",
+  "type": "object",
+  "required": ["id", "version", "delimiter", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Taxonomy identifier; \"uhd\" for UHD's own" },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version. Within one major version paths are only added; a rename or removal is a new major version."
+    },
+    "description": { "type": "string" },
+    "delimiter": { "type": "string", "const": "." },
+    "provenance": { "type": "object", "description": "Where the taxonomy comes from and what changed on the way (free-form record)." },
+    "categories": { "$ref": "#/definitions/nodeMap" }
+  },
+  "definitions": {
+    "nodeMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/definitions/node" }
+    },
+    "link": {
+      "type": "object",
+      "required": ["label", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "docs_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://",
+          "description": "Canonical documentation for this category (vendor docs, tutorial index)."
+        },
+        "links": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/link" },
+          "description": "Further reference links."
+        },
+        "agent_notes": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "Short guidance for agents working with parts in this category."
+        },
+        "kit": {
+          "type": "object",
+          "required": ["sku", "vendor"],
+          "additionalProperties": false,
+          "description": "Present only on kit nodes.",
+          "properties": {
+            "sku": { "type": "string", "minLength": 1 },
+            "vendor": { "type": "string", "minLength": 1 },
+            "controller_part_id": { "type": "string", "description": "Id of the kit's main controller part in the declaring library" },
+            "manifest": { "type": "string", "description": "Where the declaring library keeps the kit's contents list (library-relative path or URL)" }
+          }
+        },
+        "children": { "$ref": "#/definitions/nodeMap" }
+      }
+    }
+  }
+}

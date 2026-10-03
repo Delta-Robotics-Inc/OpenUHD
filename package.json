@@ -13,7 +13,14 @@
     "./drc": {
       "types": "./dist/drc/index.d.ts",
       "import": "./dist/drc/index.js"
-    }
+    },
+    "./taxonomy": {
+      "types": "./dist/taxonomy/index.d.ts",
+      "import": "./dist/taxonomy/index.js"
+    },
+    "./taxonomy/uhd-taxonomy.json": "./src/taxonomy/uhd-taxonomy.json",
+    "./taxonomy/uhd-taxonomy.schema.json": "./src/taxonomy/uhd-taxonomy.schema.json",
+    "./taxonomy/taxonomy-extension.schema.json": "./src/taxonomy/taxonomy-extension.schema.json"
   },
   "files": [
     "dist",
@@ -28,6 +35,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:library": "tsx scripts/build-library.ts",
+    "build:taxonomy": "tsx scripts/build-taxonomy.ts",
     "prepack": "npm run build && npm run build:library",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -44,7 +52,8 @@
     "eda",
     "schematic",
     "interchange",
-    "open-standard"
+    "open-standard",
+    "taxonomy"
   ],
   "author": "Delta Robotics, Inc.",
   "license": "Apache-2.0",

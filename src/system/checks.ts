@@ -15,6 +15,7 @@
  *   net                 board nets: dangling, shorted, driven twice, wrong voltage (nets.ts)
  *   bus_pullup          an I2C bus over board nets with no pull-up (nets.ts)
  *   design_envelope     a stated body larger than the module's envelope (nets.ts)
+ *   unknown_category    a definition's category path is not in the taxonomy (taxonomy/)
  *
  * Each diagnostic names canonical paths (`child:interface`, `link:<id>`) so
  * a viewer can select what it refers to.
@@ -36,6 +37,7 @@ import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { systemLinks } from "./derive.js";
 import { busPullupRule, designEnvelopeRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage } from "./nets.js";
+import { UHD_TAXONOMY, validateCategories, type Taxonomy } from "../taxonomy/index.js";
 
 export type SystemRule =
   | "link_state"
@@ -49,7 +51,8 @@ export type SystemRule =
   | "fastener_torque"
   | "net"
   | "bus_pullup"
-  | "design_envelope";
+  | "design_envelope"
+  | "unknown_category";
 
 export interface SystemDiagnostic {
   id: string;
@@ -483,6 +486,46 @@ function harnessConnectorRule(def: ModuleDef, links: LinkResult[], lookup: Modul
   return out;
 }
 
+/**
+ * Every definition in the system (the root and each child definition once)
+ * lists only category paths the taxonomy has. A warning per unknown path,
+ * naming the instances that use the definition.
+ */
+export function unknownCategoryRule(system: ModuleDef, lookup: ModuleLookup, taxonomy: Taxonomy = UHD_TAXONOMY): SystemDiagnostic[] {
+  const byId = new Map<string, { def: ModuleDef; paths: string[] }>([[system.id, { def: system, paths: [] }]]);
+  const visit = (d: ModuleDef, prefix: string[], stack: Set<string>) => {
+    for (const c of d.children ?? []) {
+      const def = lookup(c.moduleDefId);
+      if (!def || stack.has(def.id)) continue;
+      const path = [...prefix, c.id];
+      const e = byId.get(def.id) ?? { def, paths: [] };
+      e.paths.push(path.join("/"));
+      byId.set(def.id, e);
+      visit(def, path, new Set([...stack, def.id]));
+    }
+  };
+  visit(system, [], new Set([system.id]));
+  const out: SystemDiagnostic[] = [];
+  for (const { def, paths } of byId.values()) {
+    for (const issue of validateCategories(def.categories, taxonomy)) {
+      out.push({
+        id: `unknown_category:${def.id}:${issue.path}`,
+        rule: "unknown_category",
+        severity: "warning",
+        message: `${def.name}: ${issue.message}`,
+        refs: paths,
+        details: { definition: def.id, category: issue.path, code: issue.code, suggestions: issue.suggestions },
+      });
+    }
+  }
+  return out;
+}
+
+export interface CheckSystemOptions {
+  /** Taxonomy the definitions' categories are checked against (default: UHD's, no extensions). */
+  taxonomy?: Taxonomy;
+}
+
 // ---------------------------------------------------------------------------
 
 const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 } as const;
@@ -492,7 +535,7 @@ const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 } as const;
  * links derived through its connectors and harnesses (PB-805). A diagnostic
  * on a derived link also names the stored links it runs through.
  */
-export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckResult {
+export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: CheckSystemOptions = {}): SystemCheckResult {
   const links = systemLinks(def, lookup);
   const via = new Map(links.filter((r) => r.derived).map((r) => [`link:${r.link.id}`, r.derived!.via.map((id) => `link:${id}`)]));
   const diagnostics = [
@@ -508,6 +551,7 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup): SystemCheckRe
     ...netRule(def, links),
     ...busPullupRule(def, links, lookup),
     ...designEnvelopeRule(def),
+    ...unknownCategoryRule(def, lookup, options.taxonomy),
   ]
     .map((d) => {
       const extra = d.refs.flatMap((r) => via.get(r) ?? []).filter((r) => !d.refs.includes(r));

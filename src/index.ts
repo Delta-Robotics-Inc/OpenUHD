@@ -62,3 +62,6 @@ export * from "./system/propulsion.js";
 export * from "./system/rotation.js";
 export * from "./system/tools.js";
 export * from "./system/bundle.js";
+
+// Category taxonomy (docs/taxonomy.md)
+export * from "./taxonomy/index.js";

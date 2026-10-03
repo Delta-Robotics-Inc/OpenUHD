@@ -69,7 +69,7 @@ export function Passive(config: PassiveConfig): ModuleDef {
     ...(config.manufacturer ? { manufacturer: config.manufacturer } : {}),
     ...(config.part_number ? { part_number: config.part_number } : {}),
     ...(config.description ? { description: config.description } : {}),
-    categories: [`passive.${config.kind}`],
+    categories: [`component.passive.${config.kind}`],
     interfaces: [PassiveTerminal(1), PassiveTerminal(2)],
     ...(mechanical ? { domains: [mechanical] } : {}),
     traits: [trait, ...(config.traits ?? [])],
