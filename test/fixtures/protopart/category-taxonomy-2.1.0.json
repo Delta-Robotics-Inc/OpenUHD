@@ -1,51 +1,7 @@
 {
-  "$schema": "./uhd-taxonomy.schema.json",
-  "id": "uhd",
-  "version": "1.1.0",
-  "description": "The UHD category taxonomy: a tree of hardware categories addressed by dotted paths of node ids (sensor.distance, actuator.motor.servo). A ModuleDef lists the paths it belongs to in `categories`, at any depth; consumers derive the ancestor paths for subtree filtering. Libraries extend it with nodes under their own x-<library> root (docs/taxonomy.md).",
+  "version": "2.1.0",
+  "description": "Hierarchical category taxonomy for ProtoPart library. Parts declare explicit taxonomy paths in their metadata.taxonomy field. Nodes may carry optional documentation metadata (docs_url, links, agent_notes) and kit nodes carry a kit block that points at a manifest in contribution/kits/. Schema: category-taxonomy.schema.json.",
   "delimiter": ".",
-  "provenance": {
-    "derivedFrom": {
-      "name": "ProtoPart category taxonomy",
-      "version": "2.1.0",
-      "publisher": "Delta Robotics, Inc.",
-      "nodes": 77
-    },
-    "notes": [
-      "Every node of ProtoPart taxonomy 2.1.0 is kept with the same id, in the same order, and with the same name, description, docs_url, links and agent_notes, byte for byte. A part categorised against ProtoPart 2.1.0 is valid against UHD 1.1.0 unchanged. test/taxonomy.test.ts checks this against a copy of the ProtoPart file in test/fixtures/protopart.",
-      "UHD adds 26 nodes for hardware the source did not cover, after the source's own children of each parent: microcontroller.chip, .module, .single_board_computer, .flight_controller; sensor.magnetic, .gnss, .force; actuator.solenoid, .haptic; power.monitor, .distribution; connectivity.wireless.video; robotics.drone; mechanical.hydraulic, .motion, .enclosure, .seal, .fastener.screw, .fastener.nut, .fastener.insert; connector.usb, .rf; component.passive.ferrite_bead, .crystal; component.protection, component.relay. Their names and descriptions follow the source's style.",
-      "The kit node kit.freenove_fnk0082 keeps the source's sku and vendor. The source's kit block also has controller_part_id (freenove-esp32-s3-wroom-dev-board) and manifest (kits/freenove-fnk0082.json). Both point into ProtoPart's own parts library and contribution folder, which are not part of UHD, so they are not carried. A library that holds the kit's manifest states it in its own taxonomy extension (docs/taxonomy.md).",
-      "The kit and kit.freenove_fnk0082 agent notes are the source's text unchanged. Where they mention a library search parameter (taxonomyPath) or a manifest, read them as: filter by the kit's category path, and use the kit's contents list from the library that publishes it.",
-      "aliases maps category paths that ProtoPart 2.1.0 parts used but the ProtoPart taxonomy did not define to the UHD paths that hold the same parts. validateCategories suggests the alias targets for them. One such path, power.distribution, became a UHD node in 1.0.0 and so needs no alias.",
-      "1.0.0 had reworded 45 names, descriptions and agent notes on 41 of the source's nodes. 1.1.0 restores the source's text, and rewrites the added nodes in the source's style; no path was added, renamed or removed."
-    ]
-  },
-  "aliases": {
-    "actuator.compressor": [
-      "mechanical.pneumatic"
-    ],
-    "actuator.pneumatic_controller": [
-      "mechanical.pneumatic"
-    ],
-    "computer.single_board": [
-      "microcontroller.single_board_computer"
-    ],
-    "discrete.transistor.mosfet": [
-      "component.discrete.transistor"
-    ],
-    "networking": [
-      "connectivity.networking"
-    ],
-    "networking.wireless": [
-      "connectivity.wireless"
-    ],
-    "sensor.imu": [
-      "sensor.motion"
-    ],
-    "sensor.light": [
-      "sensor.color"
-    ]
-  },
   "categories": {
     "microcontroller": {
       "name": "Microcontrollers",
@@ -93,23 +49,6 @@
         "development_board": {
           "name": "Development Boards",
           "description": "Generic development boards not brand-specific"
-        },
-        "chip": {
-          "name": "MCU Chips",
-          "description": "Bare microcontroller and wireless SoC chips"
-        },
-        "module": {
-          "name": "MCU Modules",
-          "description": "Shielded MCU and radio modules with castellated or LGA pads (ESP32-WROOM, nRF52 modules, etc.)"
-        },
-        "single_board_computer": {
-          "name": "Single-Board Computers",
-          "description": "Single-board computers and compute modules that run Linux or Windows"
-        },
-        "flight_controller": {
-          "name": "Flight Controllers",
-          "description": "Drone and aircraft flight controllers (Betaflight, ArduPilot, PX4, INAV)",
-          "agent_notes": "Motor outputs, UART assignments and pad voltages are firmware and board-revision specific; take them from the board's own pinout diagram and firmware target, not from a sibling board."
         }
       }
     },
@@ -156,18 +95,6 @@
         "camera": {
           "name": "Cameras",
           "description": "Camera modules and vision sensors (CSI/DVP/FPC camera modules, smart cameras)"
-        },
-        "magnetic": {
-          "name": "Magnetic",
-          "description": "Magnetometers, compasses, and Hall-effect sensors"
-        },
-        "gnss": {
-          "name": "GNSS",
-          "description": "GPS and other satellite navigation receivers and modules, often with a compass"
-        },
-        "force": {
-          "name": "Force & Strain",
-          "description": "Load cells, force-sensitive resistors, and strain gauges"
         }
       }
     },
@@ -208,14 +135,6 @@
         "linear_actuator": {
           "name": "Linear Actuators",
           "description": "Linear motion actuators"
-        },
-        "solenoid": {
-          "name": "Solenoids",
-          "description": "Solenoids and electromagnets"
-        },
-        "haptic": {
-          "name": "Haptics",
-          "description": "Vibration motors (ERM, LRA) and haptic drivers"
         }
       }
     },
@@ -242,14 +161,6 @@
         "power_supply": {
           "name": "Power Supplies",
           "description": "AC-DC and DC power supplies"
-        },
-        "monitor": {
-          "name": "Power Monitors",
-          "description": "Battery fuel gauges and current, voltage, and power monitors"
-        },
-        "distribution": {
-          "name": "Power Distribution",
-          "description": "Power distribution boards and hubs, breaker panels, and load switches"
         }
       }
     },
@@ -264,10 +175,6 @@
             "antenna": {
               "name": "Antennas",
               "description": "RF antennas (WiFi, Bluetooth, video TX, ELRS, GPS, etc.)"
-            },
-            "video": {
-              "name": "Wireless Video",
-              "description": "Video transmitters and receivers (analog and digital FPV, camera links)"
             }
           }
         },
@@ -302,11 +209,6 @@
         "rc": {
           "name": "RC Hobby",
           "description": "RC hobby servos, receivers, and ESCs"
-        },
-        "drone": {
-          "name": "Drones",
-          "description": "Multirotor and fixed-wing drone parts (flight controllers, ESCs, motors, props, FPV video, receivers)",
-          "agent_notes": "Check each part's cell-count (S) rating against the pack, and the motor's KV and prop size against each other; motor screw length must clear the windings."
         }
       }
     },
@@ -347,36 +249,8 @@
             "kit": {
               "name": "Fastener Kits",
               "description": "Pre-assorted hardware kits (e.g. M3 nylon kit for drones)"
-            },
-            "screw": {
-              "name": "Screws & Bolts",
-              "description": "Machine screws, bolts, and self-tapping screws"
-            },
-            "nut": {
-              "name": "Nuts",
-              "description": "Hex, lock, and other nuts"
-            },
-            "insert": {
-              "name": "Threaded Inserts",
-              "description": "Heat-set, press-fit, and helical threaded inserts"
             }
           }
-        },
-        "hydraulic": {
-          "name": "Hydraulic",
-          "description": "Hydraulic fittings, valves, hoses, and pumps"
-        },
-        "motion": {
-          "name": "Motion Components",
-          "description": "Bearings, shafts, gears, belts, and pulleys"
-        },
-        "enclosure": {
-          "name": "Enclosures",
-          "description": "Enclosures, cases, housings, and lids"
-        },
-        "seal": {
-          "name": "Seals",
-          "description": "O-rings, gaskets, and other seals"
         }
       }
     },
@@ -395,14 +269,6 @@
         "cable": {
           "name": "Cables",
           "description": "Pre-made cables and cable assemblies"
-        },
-        "usb": {
-          "name": "USB Connectors",
-          "description": "USB receptacles and plugs (Type-A, Micro-B, Type-C)"
-        },
-        "rf": {
-          "name": "RF Connectors",
-          "description": "Coaxial RF connectors (SMA, U.FL/IPEX, MMCX)"
         }
       }
     },
@@ -450,14 +316,6 @@
             "potentiometer": {
               "name": "Potentiometers",
               "description": "Rotary and slide potentiometers and trimmers"
-            },
-            "ferrite_bead": {
-              "name": "Ferrite Beads",
-              "description": "Chip and through-hole ferrite beads for EMI suppression"
-            },
-            "crystal": {
-              "name": "Crystals & Oscillators",
-              "description": "Quartz crystals, ceramic resonators, and oscillators"
             }
           }
         },
@@ -494,14 +352,6 @@
         "audio": {
           "name": "Audio",
           "description": "Buzzers, speakers, microphones and audio amplifier modules"
-        },
-        "protection": {
-          "name": "Circuit Protection",
-          "description": "ESD and TVS diodes, fuses, and resettable (PTC) fuses"
-        },
-        "relay": {
-          "name": "Relays",
-          "description": "Electromechanical and solid-state relays"
         }
       }
     },
@@ -531,7 +381,9 @@
           "agent_notes": "This is the Freenove kit to use when a user asks for 'the Freenove kit' / 'Freenove ESP32 kit'. Controller is the Freenove ESP32-S3-WROOM board (ESP32-S3-WROOM-1 N8R8, 3.3 V logic, no DAC; GPIO35-37 are taken by octal PSRAM; the camera connector and microSD slot share some GPIOs), mounted on the GPIO extension board over an 830-point breadboard. Audio output uses PWM or the I2S audio module, not a DAC. The 7-segment displays, LED matrix and RGB LED are common anode. No Wi-Fi/BLE parts are needed beyond the board itself.",
           "kit": {
             "sku": "FNK0082",
-            "vendor": "freenove"
+            "vendor": "freenove",
+            "controller_part_id": "freenove-esp32-s3-wroom-dev-board",
+            "manifest": "kits/freenove-fnk0082.json"
           }
         }
       }

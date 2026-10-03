@@ -9,6 +9,7 @@ import {
   type RegionNode,
 } from "./region-tree.js";
 import { checkPairParameters } from "./param-check.js";
+import { boltPatternsShareHoles, checkPairJoints } from "./joint-check.js";
 import type {
   ConnectionResult,
   ConnectionState,
@@ -59,7 +60,12 @@ export function validatePair(
       if (a.iface.domain !== b.iface.domain) continue;
       const match = matchProtocols(a.iface, b.iface);
       if (!match.compatible) continue;
-      const diagnostics = checkPairParameters(a.iface.parameters, b.iface.parameters);
+      // a cross and a circle or square with the same holes: hole_spacing means a different length on each side
+      const sameHoles = boltPatternsShareHoles(a.iface, b.iface);
+      const params = checkPairParameters(a.iface.parameters, b.iface.parameters).filter(
+        (d) => !(sameHoles && d.refs?.some((r) => r === "hole_spacing" || r === "hole_spacing_y")),
+      );
+      const diagnostics = [...params, ...checkPairJoints(a.iface, b.iface)];
       candidates.push({
         a,
         b,

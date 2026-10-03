@@ -34,7 +34,7 @@ component.passive.capacitor   Capacitors
 kit.freenove_fnk0082          Freenove Ultimate Starter Kit for ESP32-S3 (FNK0082)
 ```
 
-Version 1.0.0 has 103 nodes under 11 roots: `microcontroller`, `sensor`,
+Version 1.1.0 has 103 nodes under 11 roots: `microcontroller`, `sensor`,
 `actuator`, `power`, `connectivity`, `robotics`, `mechanical`, `connector`,
 `expansion`, `component`, `kit`.
 
@@ -50,13 +50,25 @@ export const SG90: ModuleDef = defineModule({
 });
 ```
 
-- `categories` holds taxonomy paths, at any depth, as many as apply. List the
+- `categories` holds taxonomy paths, at any depth. Give a part **every
+  category that fits**, not just the one that names what it is. List the
   most specific ones: `actuator.motor.servo` already places the servo under
   `actuator.motor` and `actuator`.
 - A path can describe what the part is (`sensor.distance`), the platform it
   belongs to (`robotics.frc`, `robotics.drone`) or a form it comes in
   (`expansion.breakout`, `microcontroller.module`). A time-of-flight
-  breakout is `["sensor.distance", "expansion.breakout"]`.
+  breakout is `["sensor.distance", "expansion.breakout"]`; an Arduino motor
+  shield is `["actuator.motor_controller", "expansion.arduino_shield"]`; an
+  FRC smart motor controller is `["actuator.motor_controller", "robotics.frc"]`;
+  a flight controller is `["microcontroller.flight_controller", "robotics.drone"]`.
+- Some forms are easy to miss. A bare packaged IC that is not a
+  microcontroller (a regulator, a charger, a driver, a sensor chip) is also
+  `component.ic`, so an LDO is `["power.regulator", "component.ic"]`; a
+  microcontroller or SoC chip is `microcontroller.chip` instead. A
+  microcontroller board programmed over USB with its pins on headers is also
+  `microcontroller.development_board`, next to its brand family.
+- A part filed under one category when others plainly fit is incomplete.
+  Part-authoring tools should warn about it.
 - Kit membership is a category: a part in a kit lists the kit's path.
 - `tags` stay free-form keywords (vendor, chip, package code, use case). They
   are not validated and are not a second taxonomy.
@@ -67,9 +79,37 @@ export const SG90: ModuleDef = defineModule({
 
 `validateCategories(categories, taxonomy?)` returns each path that is
 malformed (`syntax`) or not in the taxonomy (`unknown`), with suggestions
-when the path exists under another parent (`passive.capacitor` →
-`component.passive.capacitor`) or its last id is a known node (`motor` →
-`actuator.motor`).
+when the path is a legacy alias (see below), exists under another parent
+(`passive.capacitor` → `component.passive.capacitor`) or its last id is a
+known node (`motor` → `actuator.motor`).
+
+### Legacy aliases
+
+The taxonomy file publishes `aliases`: category paths that parts have used
+but that are not nodes, each mapped to the node paths that hold the same
+parts. Version 1.1.0 maps the paths that ProtoPart 2.1.0 parts used outside
+the ProtoPart taxonomy:
+
+| Legacy path | Node paths |
+| --- | --- |
+| `actuator.compressor` | `mechanical.pneumatic` |
+| `actuator.pneumatic_controller` | `mechanical.pneumatic` |
+| `computer.single_board` | `microcontroller.single_board_computer` |
+| `discrete.transistor.mosfet` | `component.discrete.transistor` |
+| `networking` | `connectivity.networking` |
+| `networking.wireless` | `connectivity.wireless` |
+| `sensor.imu` | `sensor.motion` |
+| `sensor.light` | `sensor.color` |
+
+ProtoPart parts also used `power.distribution`, which has been a UHD node
+since 1.0.0 and so needs no alias.
+
+For an alias, `validateCategories` reports an `unknown` issue with
+`alias: true` and the targets as `suggestions`. `resolveCategoryAlias(path)`
+returns an alias's targets, and `migrateCategories(paths)` rewrites a part's
+categories with every alias replaced by its targets. An alias never names a
+node, and every target must be a node; `validateTaxonomyDocument` checks
+both.
 
 `checkSystem` runs this on the root and every child definition as the
 `unknown_category` rule: one **warning** per definition and unknown path,
@@ -111,6 +151,7 @@ on every node, for an API or a drill-down filter.
 | `countCategories(items, paths?)` | Items per path |
 | `categoryParent(path)`, `isCategoryPath(path)` | Path arithmetic and syntax |
 | `validateCategories(paths, taxonomy?)` | Unknown and malformed paths, with suggestions |
+| `resolveCategoryAlias(path, taxonomy?)`, `migrateCategories(paths, taxonomy?)` | Legacy aliases and their node paths |
 | `validateTaxonomyDocument(doc)`, `validateTaxonomyExtension(ext, base?)` | Problems with a file |
 | `compareTaxonomyVersions(declared, available)` | `same`, `compatible`, `newer` or `incompatible` |
 | `taxonomyTree(taxonomy, counts?)` | JSON tree for display |
@@ -172,30 +213,48 @@ checkSystem(system, lookup, { taxonomy });
 The taxonomy's version is its own, separate from the package version.
 
 - **Patch:** names, descriptions, links and notes.
-- **Minor:** new nodes.
+- **Minor:** new nodes or aliases.
 - **Major:** a path renamed, moved or removed. The change is listed in the
   file's `provenance` so tools can migrate categories.
 
 ## Provenance
 
-Version 1.0.0 is derived from the ProtoPart category taxonomy 2.1.0 (Delta
-Robotics, 77 nodes, 11 roots), recorded in the file's `provenance`:
+The taxonomy is derived from the ProtoPart category taxonomy 2.1.0 (Delta
+Robotics, 77 nodes, 11 roots). The file's `provenance` records how:
 
-- Every 2.1.0 path is kept with the same id, so a part categorised against
-  2.1.0 is valid against UHD 1.0.0 unchanged.
-- Names and descriptions were reviewed for hardware in general rather than
-  one catalogue: `microcontroller` covers chips, modules, flight controllers
-  and single-board computers; `robotics` covers platforms including drones;
-  `component.display` covers OLED and TFT modules;
-  `actuator.motor_controller` names ESCs.
-- 26 nodes were added for hardware the source did not cover (listed in the
-  file and checked by `test/taxonomy.test.ts`): MCU chips and modules,
+- **The source's nodes are kept exactly.** Each of the 77 nodes has the same
+  id, the same position among its siblings, and the same name, description,
+  `docs_url`, `links` and `agent_notes`, byte for byte. A part categorised
+  against ProtoPart 2.1.0 is valid against UHD unchanged.
+  `test/taxonomy.test.ts` compares the nodes with an unchanged copy of the
+  ProtoPart file in `test/fixtures/protopart/`. Only the taxonomy is copied
+  there, not any ProtoPart parts.
+- **26 nodes are added** for hardware the source did not cover, after the
+  source's own children of each parent: MCU chips and modules,
   single-board computers, flight controllers, GNSS, magnetic and force
   sensors, haptics, solenoids, power monitors and distribution, wireless
   video, drones, seals, enclosures, motion components, hydraulics, screws,
   nuts, inserts, USB and RF connectors, ferrite beads, crystals, circuit
-  protection and relays.
-- The kit node keeps its SKU and vendor; the source's `controller_part_id`
-  and `manifest` pointed into ProtoPart's own library and are not carried.
-- Agent notes that named one application's tools were reworded to be
-  tool-neutral.
+  protection and relays. Their names and descriptions follow the source's
+  style: short lists of the parts in the category, with examples in
+  parentheses.
+- **Kit fields.** The kit node `kit.freenove_fnk0082` keeps the source's
+  `sku` and `vendor`. The source's kit block also names a
+  `controller_part_id` and a `manifest`; both point into ProtoPart's own
+  parts library and contribution folder, which are not part of UHD, so they
+  are not carried. A library that holds a kit's manifest states it in its own
+  extension. The kit agent notes are the source's text; where they mention a
+  library search parameter or the manifest, read them as "filter by the
+  kit's category path" and "the kit's contents list from the library that
+  publishes it".
+- **Aliases** map the paths ProtoPart parts used outside the ProtoPart
+  taxonomy, as listed above.
+
+### History
+
+- **1.1.0** restores the source's text for the 77 ProtoPart nodes (1.0.0
+  had reworded 45 names, descriptions and agent notes on 41 of them),
+  rewrites the 26 added
+  nodes in the source's style, and adds the legacy aliases. No path was
+  added, renamed or removed.
+- **1.0.0** was the first version: the 77 ProtoPart paths and 26 additions.

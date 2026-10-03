@@ -119,3 +119,50 @@ export function currentDrawA(value: number): Parameter {
 export function minSupplyPowerW(value: number): Parameter {
   return { id: "min_supply_power", unit: "W", value };
 }
+
+/** Servo command pulse width range in microseconds (e.g. [500, 2500]). */
+export function pulseWidthUs(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "pulse_width", unit: "us", range: value }
+    : { id: "pulse_width", unit: "us", value };
+}
+
+/** Servo command frame (refresh) rate in Hz: fixed, or [min, max] accepted. */
+export function frameRateHz(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "frame_rate", unit: "Hz", range: value }
+    : { id: "frame_rate", unit: "Hz", value };
+}
+
+/** Encoder counts (or pulses) per revolution, as the source states it. */
+export function countsPerRev(value: number): Parameter {
+  return { id: "counts_per_rev", unit: "dimensionless", value };
+}
+
+/** Bus bit rate in bit/s (CAN): fixed, or [min, max] supported. */
+export function bitRateBps(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "bit_rate", unit: "bit/s", range: value }
+    : { id: "bit_rate", unit: "bit/s", value };
+}
+
+/**
+ * Fluid pressure in bar. A source states the pressure it delivers (value or
+ * range); a port, fitting or consumer states the working range it is rated
+ * for. The pair check requires the two to overlap.
+ */
+export function pressureBar(value: number | [number, number]): Parameter {
+  return Array.isArray(value)
+    ? { id: "pressure", unit: "bar", range: value }
+    : { id: "pressure", unit: "bar", value };
+}
+
+/** Tube outside diameter in mm (push-to-connect fittings and the tube they take). */
+export function tubeOdMm(value: number): Parameter {
+  return { id: "tube_od", unit: "mm", value };
+}
+
+/** Tube inside diameter in mm (hose barbs and the hose they take). */
+export function tubeIdMm(value: number): Parameter {
+  return { id: "tube_id", unit: "mm", value };
+}

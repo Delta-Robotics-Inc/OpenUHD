@@ -15,7 +15,11 @@ import {
   validateCategories,
   validateTaxonomyDocument,
   validateTaxonomyExtension,
+  migrateCategories,
+  resolveCategoryAlias,
+  type TaxonomyDocument,
   type TaxonomyExtension,
+  type TaxonomyNodeData,
 } from "../src/taxonomy/index.js";
 import { checkSystem, unknownCategoryRule } from "../src/system/checks.js";
 import { Passive } from "../src/protocols/passive.js";
@@ -29,6 +33,24 @@ import { BatteryPack12V, DCMotor12V, SixAxisArm } from "./fixtures/six-axis-arm.
 import { ESP32D0WDQ6 } from "./fixtures/esp32-d0wdq6.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
 import { renderTaxonomyData } from "../scripts/build-taxonomy.js";
+
+/**
+ * ProtoPart category taxonomy 2.1.0, the source of the UHD taxonomy, vendored
+ * unchanged as a fixture (test/fixtures/protopart/README.md).
+ */
+const PROTOPART_DOC = JSON.parse(readFileSync(new URL("./fixtures/protopart/category-taxonomy-2.1.0.json", import.meta.url), "utf8")) as {
+  version: string;
+  categories: Record<string, TaxonomyNodeData>;
+};
+
+/** Every node of a category tree by path, depth first, in declaration order. */
+function nodesByPath(categories: Record<string, TaxonomyNodeData>, prefix = ""): [string, TaxonomyNodeData][] {
+  return Object.entries(categories).flatMap(([id, n]) => [[prefix + id, n] as [string, TaxonomyNodeData], ...nodesByPath(n.children ?? {}, `${prefix}${id}.`)]);
+}
+
+/** A node's own text, without its children, serialised in a fixed key order. */
+const NODE_TEXT_KEYS = ["name", "description", "docs_url", "links", "agent_notes"] as const;
+const nodeText = (n: TaxonomyNodeData): string => JSON.stringify(NODE_TEXT_KEYS.map((k) => [k, n[k] ?? null]));
 
 /** Every path of ProtoPart category taxonomy 2.1.0, the source of UHD 1.0.0 (77 nodes). */
 const PROTOPART_2_1_0 = [
@@ -51,7 +73,7 @@ const PROTOPART_2_1_0 = [
   "kit", "kit.freenove_fnk0082",
 ];
 
-/** Nodes UHD 1.0.0 adds to the source, as its provenance lists them. */
+/** Nodes UHD adds to the source (since 1.0.0), as its provenance lists them. */
 const ADDED_IN_1_0_0 = [
   "microcontroller.chip", "microcontroller.module", "microcontroller.single_board_computer", "microcontroller.flight_controller",
   "sensor.gnss", "sensor.magnetic", "sensor.force", "actuator.haptic", "actuator.solenoid", "power.monitor", "power.distribution",
@@ -75,10 +97,10 @@ const ACME: TaxonomyExtension = {
 };
 
 describe("the UHD taxonomy file", () => {
-  it("is a valid taxonomy document, version 1.0.0, with 103 nodes under 11 roots", () => {
+  it("is a valid taxonomy document, version 1.1.0, with 103 nodes under 11 roots", () => {
     expect(validateTaxonomyDocument(UHD_TAXONOMY_DOCUMENT)).toEqual([]);
     expect(UHD_TAXONOMY.id).toBe("uhd");
-    expect(UHD_TAXONOMY.version).toBe("1.0.0");
+    expect(UHD_TAXONOMY.version).toBe("1.1.0");
     expect(UHD_TAXONOMY.roots.map((r) => r.id)).toEqual([
       "microcontroller", "sensor", "actuator", "power", "connectivity", "robotics", "mechanical", "connector", "expansion", "component", "kit",
     ]);
@@ -94,10 +116,40 @@ describe("the UHD taxonomy file", () => {
     expect(provenance.derivedFrom).toMatchObject({ name: "ProtoPart category taxonomy", version: "2.1.0", nodes: 77 });
   });
 
-  it("names nothing from one application: no ProtoPart, ProtoBoard or library-internal references", () => {
-    const text = JSON.stringify(UHD_TAXONOMY_DOCUMENT.categories);
-    expect(text).not.toMatch(/protopart|protoboard|taxonomyPath|contribution\//i);
-    for (const n of UHD_TAXONOMY.nodes().filter((x) => x.kit)) expect(n.kit).toEqual({ sku: expect.any(String), vendor: expect.any(String) });
+  it("matches the 77 ProtoPart 2.1.0 nodes byte for byte: id, order, name, description, docs_url, links and agent_notes", () => {
+    expect(PROTOPART_DOC.version).toBe("2.1.0");
+    const source = nodesByPath(PROTOPART_DOC.categories);
+    expect(source.map(([p]) => p)).toEqual(PROTOPART_2_1_0);
+    const uhd = new Map(nodesByPath(UHD_TAXONOMY_DOCUMENT.categories));
+    for (const [path, node] of source) {
+      expect(uhd.has(path), path).toBe(true);
+      expect(nodeText(uhd.get(path)!), path).toBe(nodeText(node));
+      for (const k of Object.keys(node)) expect([...NODE_TEXT_KEYS, "children", "kit"], `${path}.${k}`).toContain(k);
+      // the source's children come first, in the source's order; UHD's additions follow
+      const kids = Object.keys(node.children ?? {});
+      expect(Object.keys(uhd.get(path)!.children ?? {}).slice(0, kids.length), path).toEqual(kids);
+    }
+  });
+
+  it("carries the source's kit sku and vendor; its library-internal kit fields stay out, as the provenance records", () => {
+    const source = new Map(nodesByPath(PROTOPART_DOC.categories));
+    const kits = nodesByPath(UHD_TAXONOMY_DOCUMENT.categories).filter(([, n]) => n.kit);
+    expect(kits.map(([p]) => p)).toEqual(["kit.freenove_fnk0082"]);
+    for (const [path, n] of kits) {
+      const src = source.get(path)!.kit!;
+      expect(n.kit).toEqual({ sku: src.sku, vendor: src.vendor });
+      expect(src).toHaveProperty("controller_part_id");
+      expect(src).toHaveProperty("manifest");
+    }
+    const notes = (UHD_TAXONOMY_DOCUMENT.provenance as { notes: string[] }).notes.join(" ");
+    expect(notes).toMatch(/controller_part_id/);
+    expect(notes).toMatch(/manifest/);
+  });
+
+  it("the added nodes name no application, part library or library-internal field", () => {
+    const added = nodesByPath(UHD_TAXONOMY_DOCUMENT.categories).filter(([p]) => ADDED_IN_1_0_0.includes(p));
+    expect(added).toHaveLength(ADDED_IN_1_0_0.length);
+    for (const [path, n] of added) expect(nodeText(n), path).not.toMatch(/protopart|protoboard|taxonomyPath|contribution\//i);
   });
 
   it("every node has a name and a description; agent notes stay short", () => {
@@ -116,7 +168,7 @@ describe("the UHD taxonomy file", () => {
 
   it("the JSON schemas allow exactly the fields the validator allows", () => {
     const schema = JSON.parse(readFileSync(new URL("../src/taxonomy/uhd-taxonomy.schema.json", import.meta.url), "utf8"));
-    expect(Object.keys(schema.properties).sort()).toEqual(["$schema", "categories", "delimiter", "description", "id", "provenance", "version"]);
+    expect(Object.keys(schema.properties).sort()).toEqual(["$schema", "aliases", "categories", "delimiter", "description", "id", "provenance", "version"]);
     expect(Object.keys(schema.definitions.node.properties).sort()).toEqual(["agent_notes", "children", "description", "docs_url", "kit", "links", "name"]);
     const ext = JSON.parse(readFileSync(new URL("../src/taxonomy/taxonomy-extension.schema.json", import.meta.url), "utf8"));
     expect(Object.keys(ext.properties).sort()).toEqual(["$schema", "categories", "description", "library", "taxonomy"]);
@@ -209,7 +261,32 @@ describe("validating a module's categories", () => {
       ["hardware", "unknown", []],
       ["flight-controller", "syntax", []],
     ]);
-    expect(issues[0].message).toMatch(/not in the uhd taxonomy 1\.0\.0; did you mean component\.passive\.capacitor\?/);
+    expect(issues[0].message).toMatch(/not in the uhd taxonomy 1\.1\.0; did you mean component\.passive\.capacitor\?/);
+  });
+
+  it("maps every off-taxonomy path ProtoPart 2.1.0 parts used, through the published legacy aliases", () => {
+    const legacy = ["actuator.compressor", "actuator.pneumatic_controller", "computer.single_board", "discrete.transistor.mosfet", "networking", "networking.wireless", "power.distribution", "sensor.imu", "sensor.light"];
+    for (const p of legacy) expect(UHD_TAXONOMY.has(p) || UHD_TAXONOMY.aliases.has(p), p).toBe(true);
+    expect(UHD_TAXONOMY.has("power.distribution")).toBe(true);
+    expect([...UHD_TAXONOMY.aliases.keys()].sort()).toEqual(legacy.filter((p) => p !== "power.distribution").sort());
+    for (const p of legacy) expect(validateCategories(migrateCategories([p])), p).toEqual([]);
+    expect(resolveCategoryAlias("sensor.imu")).toEqual(["sensor.motion"]);
+    expect(resolveCategoryAlias("sensor.motion")).toBeUndefined();
+    const [issue] = validateCategories(["computer.single_board"]);
+    expect(issue).toMatchObject({ code: "unknown", alias: true, suggestions: ["microcontroller.single_board_computer"] });
+    expect(issue.message).toMatch(/legacy category path.*use microcontroller\.single_board_computer/);
+    expect(migrateCategories(["microcontroller.arduino", "computer.single_board", "networking", "connectivity.networking", "bogus"])).toEqual([
+      "microcontroller.arduino", "microcontroller.single_board_computer", "connectivity.networking", "bogus",
+    ]);
+  });
+
+  it("refuses aliases that are nodes, malformed, or point at paths that are not nodes", () => {
+    const doc = (aliases: unknown): TaxonomyDocument => ({ ...UHD_TAXONOMY_DOCUMENT, aliases } as TaxonomyDocument);
+    expect(validateTaxonomyDocument(doc({ "sensor.motion": ["sensor.distance"] })).map((p) => p.message).join()).toMatch(/is a node/);
+    expect(validateTaxonomyDocument(doc({ "Bad Path": ["sensor.distance"] })).map((p) => p.code)).toEqual(["ALIAS_INVALID"]);
+    expect(validateTaxonomyDocument(doc({ "sensor.old": ["sensor.nope"] })).map((p) => p.message).join()).toMatch(/not a node/);
+    expect(validateTaxonomyDocument(doc({ "sensor.old": [] })).map((p) => p.code)).toEqual(["ALIAS_INVALID"]);
+    expect(validateTaxonomyDocument(doc([])).map((p) => p.at)).toEqual(["aliases"]);
   });
 
   it("an extension path is unknown until the extension is loaded", () => {
@@ -265,7 +342,7 @@ describe("library extensions", () => {
     expect(compareTaxonomyVersions("1.0.0", "1.3.0")).toBe("compatible");
     expect(compareTaxonomyVersions("1.4.0", "1.3.9")).toBe("newer");
     expect(compareTaxonomyVersions("2.0.0", "1.3.0")).toBe("incompatible");
-    const newer = { ...ACME, taxonomy: { id: "uhd", version: "1.1.0" } };
+    const newer = { ...ACME, taxonomy: { id: "uhd", version: "1.2.0" } };
     expect(validateTaxonomyExtension(newer, UHD_TAXONOMY).map((p) => p.code)).toEqual(["TAXONOMY_VERSION_NEWER"]);
     expect(() => buildTaxonomy(UHD_TAXONOMY_DOCUMENT, [newer])).not.toThrow();
     const major = { ...ACME, taxonomy: { id: "uhd", version: "2.0.0" } };

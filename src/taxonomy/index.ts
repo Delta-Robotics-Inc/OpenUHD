@@ -17,6 +17,11 @@
  * file (`taxonomy-extension.schema.json`) that also names the taxonomy
  * version the library is categorised against.
  *
+ * A taxonomy may also publish `aliases`: paths that are not nodes but that
+ * parts have used, each mapped to the node paths that hold the same parts.
+ * `validateCategories` suggests an alias's targets, and `migrateCategories`
+ * rewrites a part's categories to them.
+ *
  * Everything here is pure data and computation: no file or network access.
  * `uhd-taxonomy.data.ts` is generated from the JSON file
  * (`npm run build:taxonomy`); the test suite checks they agree.
@@ -61,6 +66,11 @@ export interface TaxonomyDocument {
   delimiter: ".";
   /** Where the taxonomy comes from and what changed on the way (free-form record). */
   provenance?: Record<string, unknown>;
+  /**
+   * Legacy paths that are not nodes, each mapped to the node paths that
+   * replace it (for example category paths an older library used).
+   */
+  aliases?: Record<string, string[]>;
   categories: Record<string, TaxonomyNodeData>;
 }
 
@@ -126,6 +136,8 @@ export interface Taxonomy {
   children(path?: string | null): TaxonomyNode[];
   /** Nodes from the root down to the path, skipping unknown segments. Empty for no path. */
   breadcrumbs(path: string | null | undefined): TaxonomyNode[];
+  /** Legacy alias paths and the node paths each maps to (from the document's `aliases`). */
+  aliases: ReadonlyMap<string, readonly string[]>;
 }
 
 export interface TaxonomyProblem {
@@ -141,8 +153,10 @@ export interface CategoryIssue {
   /** `syntax`: not a dotted path of ids. `unknown`: well-formed but not in the taxonomy. */
   code: "syntax" | "unknown";
   message: string;
-  /** Known paths the author probably meant (same last id, or the path under another root). */
+  /** Known paths the author probably meant: an alias's targets, the same last id, or the path under another root. */
   suggestions: string[];
+  /** Set when the path is one of the taxonomy's legacy aliases; `suggestions` are then its targets. */
+  alias?: true;
 }
 
 export class TaxonomyError extends Error {
@@ -281,7 +295,7 @@ function nodeProblems(node: unknown, at: string, out: TaxonomyProblem[]): void {
 export function validateTaxonomyDocument(doc: unknown): TaxonomyProblem[] {
   const out: TaxonomyProblem[] = [];
   if (!isObject(doc)) return [{ code: "DOCUMENT_INVALID", message: "a taxonomy is an object" }];
-  const allowed = new Set(["$schema", "id", "version", "description", "delimiter", "provenance", "categories"]);
+  const allowed = new Set(["$schema", "id", "version", "description", "delimiter", "provenance", "aliases", "categories"]);
   for (const k of Object.keys(doc)) if (!allowed.has(k)) out.push({ code: "DOCUMENT_INVALID", message: `unknown field "${k}"`, at: k });
   if (typeof doc.id !== "string" || !TAXONOMY_NODE_ID.test(doc.id)) out.push({ code: "DOCUMENT_INVALID", message: "id must be a lower-case identifier", at: "id" });
   if (typeof doc.version !== "string" || !SEMVER.test(doc.version)) out.push({ code: "DOCUMENT_INVALID", message: "version must be MAJOR.MINOR.PATCH", at: "version" });
@@ -293,6 +307,27 @@ export function validateTaxonomyDocument(doc: unknown): TaxonomyProblem[] {
       if (!TAXONOMY_NODE_ID.test(id)) out.push({ code: "NODE_INVALID", message: `root id "${id}" must match ${TAXONOMY_NODE_ID} (x- roots belong in an extension)`, at: "categories" });
       nodeProblems(node, `categories.${id}`, out);
     }
+  if (doc.aliases !== undefined) {
+    if (!isObject(doc.aliases)) out.push({ code: "ALIAS_INVALID", message: "aliases must be an object of target path lists by legacy path", at: "aliases" });
+    else {
+      const known = new Set<string>();
+      const walk = (nodes: unknown, prefix: string): void => {
+        if (!isObject(nodes)) return;
+        for (const [id, n] of Object.entries(nodes)) {
+          known.add(prefix + id);
+          if (isObject(n)) walk(n.children, `${prefix}${id}${TAXONOMY_DELIMITER}`);
+        }
+      };
+      walk(doc.categories, "");
+      for (const [from, to] of Object.entries(doc.aliases)) {
+        const at = `aliases.${from}`;
+        if (!isCategoryPath(from)) out.push({ code: "ALIAS_INVALID", message: `alias "${from}" is not a category path`, at });
+        else if (known.has(from)) out.push({ code: "ALIAS_INVALID", message: `alias "${from}" is a node of the taxonomy; an alias names a path that is not one`, at });
+        if (!Array.isArray(to) || to.length === 0) out.push({ code: "ALIAS_INVALID", message: `alias "${from}" must map to a non-empty list of node paths`, at });
+        else for (const t of to) if (typeof t !== "string" || !known.has(t)) out.push({ code: "ALIAS_INVALID", message: `alias "${from}" maps to "${String(t)}", which is not a node of the taxonomy`, at });
+      }
+    }
+  }
   return out;
 }
 
@@ -391,6 +426,7 @@ export function buildTaxonomy(doc: TaxonomyDocument, extensions: readonly Taxono
     n.children.forEach(walk);
   };
   roots.forEach(walk);
+  const aliases = new Map(Object.entries(doc.aliases ?? {}).map(([from, to]) => [from, Object.freeze([...to])] as const));
 
   return {
     id: doc.id,
@@ -407,6 +443,7 @@ export function buildTaxonomy(doc: TaxonomyDocument, extensions: readonly Taxono
       const ids = path.split(TAXONOMY_DELIMITER);
       return ids.map((_, i) => byPath.get(ids.slice(0, i + 1).join(TAXONOMY_DELIMITER))).filter((n): n is TaxonomyNode => !!n);
     },
+    aliases,
   };
 }
 
@@ -429,12 +466,31 @@ function suggestions(path: string, taxonomy: Taxonomy): string[] {
   return all.filter((n) => n.id === last).map((n) => n.path);
 }
 
+/** The node paths a legacy alias maps to, or undefined when the path is not an alias. */
+export function resolveCategoryAlias(path: string, taxonomy: Taxonomy = UHD_TAXONOMY): readonly string[] | undefined {
+  return taxonomy.has(path) ? undefined : taxonomy.aliases.get(path);
+}
+
+/**
+ * A part's categories with every legacy alias replaced by its targets, each
+ * path once, in first-seen order. Paths that are neither nodes nor aliases
+ * are kept, so `validateCategories` still reports them.
+ */
+export function migrateCategories(categories: readonly string[] | undefined, taxonomy: Taxonomy = UHD_TAXONOMY): string[] {
+  const out = new Set<string>();
+  for (const path of categories ?? []) for (const p of resolveCategoryAlias(path, taxonomy) ?? [path]) out.add(p);
+  return [...out];
+}
+
 /** Category paths that are malformed or not in the taxonomy (default: UHD's). */
 export function validateCategories(categories: readonly string[] | undefined, taxonomy: Taxonomy = UHD_TAXONOMY): CategoryIssue[] {
   const out: CategoryIssue[] = [];
   for (const path of new Set(categories ?? [])) {
     if (!isCategoryPath(path)) {
       out.push({ path, code: "syntax", message: `"${path}" is not a category path (dotted ids such as sensor.distance)`, suggestions: [] });
+    } else if (!taxonomy.has(path) && taxonomy.aliases.has(path)) {
+      const s = [...taxonomy.aliases.get(path)!];
+      out.push({ path, code: "unknown", message: `"${path}" is a legacy category path, not in the ${taxonomy.id} taxonomy ${taxonomy.version}; use ${s.join(" and ")}`, suggestions: s, alias: true });
     } else if (!taxonomy.has(path)) {
       const s = suggestions(path, taxonomy);
       const root = path.split(TAXONOMY_DELIMITER)[0];

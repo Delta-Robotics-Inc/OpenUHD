@@ -160,7 +160,13 @@ Each of these is recorded on the part as a `source_discrepancy` trait.
    - **Storage.** All of these STEP files stay in `.research/cad/`. Only the derived feature manifests are committed.
    - **Decision:** do we ask these vendors for permission?
    - **Raspberry Pi 5.** Its model is MIT but 77.6 MB. It could be committed through Git LFS.
-2. **Vocabulary gaps** have been logged but not added. They are:
+2. **Vocabulary gaps** were logged here and are now covered (PB-864):
+   `StepperPhases` and `StepDir`, `BrushedMotorTerminals`,
+   `QuadratureEncoder`, `ServoPort`, `ShieldHeader`, `CAN` and `CANLogic`
+   with their role families, the `cross` bolt pattern, and `FluidPort` for
+   pneumatic and hydraulic ports ([fluid ports](fluid-ports.md)). The parts
+   below still use their older interfaces until they are re-authored with
+   the new builders. The gaps were:
    - stepper and step/dir types;
    - brushed motor outputs;
    - encoder vocabulary: the Through Bore Encoder does not mate with SPARK MAX;

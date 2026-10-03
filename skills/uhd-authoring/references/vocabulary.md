@@ -22,7 +22,16 @@ peer.
 | `FcEscPort` | `fc_esc_connector: host/device` | FC ↔ 4-in-1 ESC harness connector |
 | `CRSF` | `uart` + `crsf: device` | ExpressLRS / Crossfire receiver serial link |
 | `SBUS` | `sbus: output/input` | SBUS receivers |
-| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure) |
+| `BrushedMotorTerminals` | `dc_motor_terminal` leaves + `dc_motor: output/input` | H-bridge and motor controller channels (output), brushed motor terminals (input) |
+| `StepperPhases` | `stepper_phase` leaves + `bipolar_stepper_phases` / `unipolar_stepper_phases: output/input` | Stepper driver outputs (output), stepper windings (input); `bipolarCapable` on six- and eight-wire unipolar motors |
+| `StepDir` | `digital` leaves + `step_dir: output/input` | Step/direction command: controller pins (output), driver inputs with optional opto returns (input) |
+| `QuadratureEncoder` | `digital` (A, B, index) and `pwm` (absolute) leaves + `quadrature_encoder: output/input` | Encoders (output), encoder inputs on motor controllers and MCUs (input) |
+| `ServoPort` | `pwm` signal leaf + `rc_servo: output/input` | Hobby servos (input), servo controller, shield and receiver channels (output) |
+| `CAN` | `can_signal` leaves + `can: node` | CAN bus side (CANH, CANL, optional ground), with bit rate, FD and termination |
+| `CANLogic` | `digital` leaves + `can_logic: controller/transceiver` | An MCU's CAN TX/RX (controller) and a transceiver's TXD/RXD (transceiver) |
+| `ShieldHeader` | `connector: mate` (a `Connector` with a standard layout) | Arduino UNO R3 shield headers, the Arduino ICSP header, the Raspberry Pi 40-pin header; role `host` or `accessory` |
+| `FluidPort` | `pneumatic` / `hydraulic: source/sink/bidirectional/sensing` | Cylinder, valve, compressor, regulator and sensor ports, fittings and tube ends, with a `fluid_joint` (thread, push-to-connect, tube, barb, quick coupler) |
+| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle` or `cross` (two diagonals, e.g. a 16 × 19 motor base) |
 | `Shaft` | `shaft: output/input` | Motor shafts (output), propeller hubs and pulleys (input) |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions (PB-805); binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
@@ -36,14 +45,27 @@ peer.
 `cell_count`, `capacity` (mAh), `baud_rate` (Hz), `clock_freq` (Hz),
 `i2c_address`, `esc_signal_rate` (kbit/s), `motor_index`, `hole_spacing` /
 `hole_spacing_y` (mm), `hole_count`, `fastener_diameter` (mm),
-`shaft_diameter` (mm), `resolution`, `max_frequency` (Hz).
+`shaft_diameter` (mm), `resolution`, `max_frequency` (Hz, also a step
+rate), `pulse_width` (us), `frame_rate` (Hz), `counts_per_rev`, `bit_rate`
+(bit/s), `pressure` (bar), `tube_od` and `tube_id` (mm).
+
+## Role families with their own table
+
+`src/matching/roles.ts` overrides the generic pairs for:
+
+- `bipolar_stepper_phases`: output ↔ input, and the older driver ↔ motor.
+- `can`: node, transceiver and peer all pair with each other (one bus).
+- `can_logic`: controller ↔ transceiver only.
+- `pneumatic` and `hydraulic`: source ↔ sink, bidirectional with everything
+  but another sensor, sensing ↔ source or bidirectional. Generic pairs such
+  as input ↔ output do not apply.
 
 ## Existing types in use
 
 `power`, `digital`, `i2c`, `spi`, `uart`, `usb`, `analog`, `pwm`,
 `interrupt`, `can`, `bluetooth`, `wifi`, `rf`, `i2s`, `jtag`, `swd`,
 `mechanical_connection`, `mechanical_drive`, `mechanical_mount`,
-`threaded_connection`, `thermal_connection`, `pneumatic`, `custom`, and a
+`threaded_connection`, `thermal_connection`, `custom`, and a
 few part-specific types. The older mechanical types
 (`mechanical_connection`, `mechanical_mount`, `threaded_connection`) predate
 `bolt_pattern` and `shaft`. Use the new builders for new parts; converging
