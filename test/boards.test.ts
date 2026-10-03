@@ -9,7 +9,7 @@ import { checkSystem } from "../src/system/checks.js";
 import { systemLinks } from "../src/system/derive.js";
 import { validateLinks } from "../src/system/index.js";
 import { moduleNets } from "../src/system/nets.js";
-import { Ground, Net, PowerOut, defineModule, netLinks } from "../src/protocols/index.js";
+import { Ground, Net, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
 import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
 
@@ -79,6 +79,20 @@ describe("the fixture board", () => {
     const paths = result.links.filter((r) => r.derived).flatMap((r) => [r.a.path, r.b.path]);
     expect(paths.some((p) => /^(r\d|l1):/.test(p))).toBe(false);
     expect(paths).not.toContain("u2:pin_12"); // CSB strapped to 3V3
+    expect(paths).not.toContain("u2:pin_1"); // SDO strapped to GND
+    expect(paths).not.toContain("u1:pin_19"); // TESTEN strapped to GND
+  });
+
+  it("derives only power links over a rail, and none between ground pins", () => {
+    const onRails = result.links.filter((r) => r.derived?.nets?.some((n) => ["gnd", "v3v3", "v1v1", "vin"].includes(n)));
+    expect(onRails.length).toBeGreaterThan(0);
+    expect(onRails.filter((r) => r.protocol !== "power")).toEqual([]);
+    expect(result.links.filter((r) => r.derived?.nets?.includes("gnd"))).toEqual([]);
+  });
+
+  it("a GND net declared at 0 V passes; its straps are driven low, not over-driven", () => {
+    const board = variant({ nets: [Net({ id: "gnd", name: "GND", voltageV: 0 })] });
+    expect(check(board).filter((d) => d.severity !== "info")).toEqual([]);
   });
 
   it("reports no errors or warnings", () => {
@@ -114,6 +128,26 @@ describe("seeded board faults", () => {
     expect(flagged).toContain("u2:pin_8");
     expect(flagged).toContain("u1:pin_1");
     expect(flagged).not.toContain("u3:pin_4"); // VOUT is 1.2–5.5 V
+    // CSB is a logic input: flagged because 5 V is above its maximum
+    const csb = check(board).find((x) => x.id === "net:v3v3:voltage:u2:pin_12")!;
+    expect(csb.message).toMatch(/rated to 3\.6 V but net v3v3 \(3V3\) reaches 5 V/);
+  });
+
+  it("a 5 V logic input strapped to GND is neither a link nor a fault", () => {
+    // fixture part, not a real one: an enable input rated for 5 V logic
+    const driver = defineModule({
+      id: "fixture-5v-enable",
+      name: "Fixture 5 V-logic driver",
+      interfaces: pinTable([[1, "EN", "input", "Enable, 5 V logic"], [2, "GND", "ground"]], { source: "fixture", logicV: [4.5, 5.5] }),
+    });
+    const board = variant({
+      nets: [Net({ id: "gnd", name: "GND", voltageV: 0 })],
+      children: [{ id: "u6", moduleDefId: driver.id }],
+      add: netLinks("gnd", ["u6:pin_1", "u6:pin_2"]),
+    });
+    const r = checkSystem(board, (id) => (id === driver.id ? driver : lookupBoardModule(id)));
+    expect(r.links.filter((x) => x.derived && (x.a.path.startsWith("u6:") || x.b.path.startsWith("u6:")))).toEqual([]);
+    expect(r.diagnostics.filter((d) => d.severity !== "info")).toEqual([]);
   });
 
   it("a second BMI270 on the same bus with SDO low is an address conflict", () => {
@@ -151,6 +185,19 @@ describe("seeded board faults", () => {
     const i2c = checkSystem(board, lookupBoardModule).links.find((r) => r.protocol === "i2c")!;
     expect(i2c.state).toBe("incompatible");
     expect(i2c.diagnostics.map((d) => d.code)).toContain("harness_wiring");
+  });
+
+  it("SDx and INT1 swapped at the IMU leave the I2C bus incomplete", () => {
+    const board = variant({
+      drop: ["sda.u2.pin_14", "imu_int1.u2.pin_4"],
+      add: [...netLinks("sda", ["u2:pin_4"]), ...netLinks("imu_int1", ["u2:pin_14"])],
+    });
+    const r = checkSystem(board, lookupBoardModule);
+    const i2c = r.links.find((x) => x.protocol === "i2c")!;
+    expect(i2c.state).toBe("incompatible");
+    expect(i2c.children.map((c) => `${c.a.leafId}>${c.b.leafId}`)).toEqual(["pin_3>pin_13"]);
+    expect(i2c.diagnostics.find((d) => d.code === "bus_incomplete")!.message).toMatch(/sda: u1:i2c_0 pin_2 and u2:i2c pin_14 are not wired/);
+    expect(r.diagnostics.some((d) => d.rule === "link_state" && d.severity === "error")).toBe(true);
   });
 
   it("ground joined to 3V3 is a short", () => {

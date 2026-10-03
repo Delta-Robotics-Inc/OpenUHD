@@ -147,20 +147,36 @@ Layout itself is never UHD.
 conductors (see [connectors and harnesses](connectors-and-harnesses.md)):
 every pin on a net reaches every other pin on it. Each pair of pads is then
 lifted to the functional interfaces they belong to, and becomes a derived
-link only when those interfaces pair by protocol:
+link only when those interfaces pair by protocol.
+
+A net is a **rail** when it has a supply or ground pin on it (a `power`
+protocol), or states a design voltage. A rail carries power only: two pins
+on it are paired only when both are power pins. A logic or analog pin on a
+rail is a strap. It is held at the rail's level and pairs with nothing,
+whatever other logic pins share the rail.
 
 | Pads on one net | Result |
 | --- | --- |
 | Regulator VOUT and a load's VDD | power link, output ↔ input |
 | MCU SDA/SCL and an IMU's SDx/SCx on the SDA and SCL nets | one I2C link, MCU `i2c_0` ↔ IMU `i2c` (lifted, conductors as children) |
 | Two loads' VDD pins | no link: they share the rail |
+| Two ground pins | no link: they share the ground net, which already records it |
 | Two I2C targets | no link: they share the bus |
-| A strap (CSB tied to 3V3, SDO tied to GND) | no link: a tie to a rail |
+| A strap (CSB tied to 3V3, SDO and TESTEN tied to GND) | no link, even between two straps on one rail |
 | A passive terminal and anything | no link |
 | A part's own regulator output and its own core supply (RP2040 VREG_VOUT → DVDD) | power link within the part |
 
+Ground pins are not paired because a ground net with *n* pins would give
+*n*(*n*−1)/2 links that say nothing the net does not. As conductors of two
+composites (a port with a GND position) they still pair.
+
 Lifting pairs composites with composites and pads with pads, choosing the
-largest pair that matches. A derived link over nets is tagged
+largest pair that matches. A composite lifts when every pad it binds reaches
+the other module. Each pairing its protocol expects must then run inside
+it: a pad landed on the wrong counterpart is `harness_wiring` (SDA wired to
+SCL), and a required pad that reaches the other module only outside the
+counterpart composite, or not at all, is `bus_incomplete` (the IMU's SDx on
+the interrupt net). Either makes the link incompatible. A derived link over nets is tagged
 `derived: { via, harnesses, nets }`; `via` names the membership links, so a
 diagnostic on it points at the pins.
 
@@ -177,7 +193,8 @@ boards unchanged:
 - `unpowered` reports power inputs that no supply reaches. Inputs fed through
   the board edge (an exported pin, or any pin on a net with one) are not
   reported when the board is checked alone;
-- `harness_wiring` catches SDA wired to SCL.
+- `harness_wiring` catches SDA wired to SCL, and `bus_incomplete` a bus with
+  a line landed elsewhere.
 
 ## Board rules
 
@@ -187,13 +204,18 @@ boards unchanged:
 | `net` | error | a pin is on two nets (it joins them) |
 | `net` | error | power outputs of more than one module drive the net |
 | `net` | error | the net joins ground pins to supply pins |
-| `net` | error | a pin's `voltage` range does not include the net's design voltage |
+| `net` | error | a supply pin's `voltage` range does not include the net's design voltage |
+| `net` | error | a logic or analog pin's `voltage` maximum is below the net's design voltage (never on a ground net) |
 | `bus_pullup` | warning | an I2C link over nets with no resistor from the net to a supply net |
 | `design_envelope` | error | the stated size exceeds the envelope |
 
 The net voltage check is what catches a wrong rail: an adjustable regulator
 (1.2–5.5 V) set to 3.3 V says nothing by itself, but `Net({ voltageV: 3.3 })`
-does, and every pin on the net is checked against it.
+does, and every pin on the net is checked against it. A supply pin's range
+is what it accepts or produces, so it must overlap the net's. A logic pin's
+range is its signal level: tied to a lower rail it is driven low, which is
+what a strap is for, so only a net above its maximum is reported. A 0 V or
+ground net is never reported against a logic pin.
 
 ## Package facts and pin designators
 

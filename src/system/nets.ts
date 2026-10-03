@@ -9,8 +9,9 @@
  *
  *   net               a net with fewer than two pins; a pin on two nets;
  *                     several modules driving one supply net; ground joined
- *                     to a supply; a pin whose voltage the net's design
- *                     voltage does not meet
+ *                     to a supply; a supply pin whose voltage range
+ *                     excludes the net's design voltage, or a logic pin
+ *                     rated below it
  *   bus_pullup        an I2C link over nets with no pull-up resistor to a supply
  *   design_envelope   a stated body larger than the module's design envelope
  *
@@ -203,18 +204,25 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
       });
     }
 
-    // every pin with a stated voltage accepts the net's design voltage
+    // each pin with a stated voltage takes the net's design voltage. A supply
+    // pin's range is what it accepts or produces, so it must overlap. A logic
+    // or analog pin's range is its signal level: tied to a lower rail (a strap
+    // to GND) it is driven low, so only a net above its maximum is reported.
     const design = netVoltageRange(net.iface);
     if (design) {
       for (const m of net.members) {
         const p = param(m.end.iface, "voltage");
         const range = p && getEffectiveRange(p);
-        if (!range || rangesOverlap(range, design)) continue;
+        if (!range) continue;
+        const supply = m.end.iface.protocols.some((x) => x.type === "power");
+        if (supply ? rangesOverlap(range, design) : design[1] <= range[1] || grounds.length > 0) continue;
         out.push({
           id: `net:${id}:voltage:${m.path}`,
           rule: "net",
           severity: "error",
-          message: `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated ${fmtRange(range)} but net ${label} is ${fmtRange(design)}.`,
+          message: supply
+            ? `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated ${fmtRange(range)} but net ${label} is ${fmtRange(design)}.`
+            : `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated to ${range[1]} V but net ${label} reaches ${design[1]} V.`,
           refs: [net.path, m.path, `link:${m.link}`],
           details: { pin: range, net: design },
         });

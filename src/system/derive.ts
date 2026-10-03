@@ -19,9 +19,16 @@
  * member pins' membership links reach, so every pin on a net reaches every
  * other. On a net, a pair of pads is a link only when the interfaces they
  * lift to pair by protocol (a supply output with an input, an I2C master
- * with a target); pads that do not pair (two loads, two targets, a strap to a
- * rail) share the net without a link between them. The net rule checks what
- * pairs cannot (nets.ts).
+ * with a target); pads that do not pair (two loads, two targets) share the
+ * net without a link between them. A rail (a net with a supply or ground pin
+ * on it, or a design voltage) carries power only: a logic or analog pin tied
+ * to it is a strap and pairs with nothing, and ground pins on one net share
+ * it without a link per pair. The net rule checks what pairs cannot (nets.ts).
+ *
+ * A composite lifts when every pad it binds reaches the other module. Each
+ * pairing its protocol expects must then be wired inside it: a pad wired to
+ * the wrong counterpart is `harness_wiring`, a required one wired elsewhere
+ * or not at all is `bus_incomplete`.
  *
  * Scope: harnesses that are children of the linking module, and connector
  * links and nets stored on it. Parts may be nested (a pad on stack/fc).
@@ -114,7 +121,8 @@ const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
  * by protocol, composite with composite or pad with pad (a composite port is
  * not validated against a lone pad). With none, a conductor still links the
  * largest candidates (and the link reports the mismatch); on a net the pads
- * only share the net.
+ * only share the net. Two ground pads on a net share it without a link; as
+ * conductors of two composites they still pair.
  */
 function lift(a: Candidate[], b: Candidate[], onNet: boolean): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
   let best: { fa: InterfaceDef; fb: InterfaceDef } | undefined;
@@ -122,6 +130,7 @@ function lift(a: Candidate[], b: Candidate[], onNet: boolean): { fa: InterfaceDe
   for (const x of a) {
     for (const y of b) {
       if (x.size + y.size <= bestSize || isComposite(x.iface) !== isComposite(y.iface)) continue;
+      if (onNet && !isComposite(x.iface) && isGround(x.iface) && isGround(y.iface)) continue;
       if (!matchProtocols(x.iface, y.iface).compatible) continue;
       best = { fa: x.iface, fb: y.iface };
       bestSize = x.size + y.size;
@@ -186,9 +195,11 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
   }
 
   // 1b. net memberships (PB-824): each pin is joined to its net's node
+  const rails = new Set<string>();
   for (const r of stored) {
     if (r.protocol !== NET_PROTOCOL || r.state === "incompatible") continue;
     const [net, member] = isNet(r.a.iface) ? [r.a, r.b] : [r.b, r.a];
+    if (isPower(member.iface) || net.iface.parameters?.some((p) => p.id === "voltage")) rails.add(net.iface.id);
     const key = `${pathKey(member.ownerPath)}#${member.iface.id}`;
     if (!terminals.has(key)) {
       terminals.set(key, { key, owner: member.owner, ownerPath: member.ownerPath, leaf: member.iface });
@@ -240,6 +251,8 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
             if (!nextNets.size || !selfSupply(a.leaf, b.leaf)) continue;
             if (!isPowerOutput(a.leaf)) [a, b] = [b, a];
           }
+          // over a rail only power pins pair; a logic pin tied to it is a strap
+          if ([...nextNets].some((n) => rails.has(n)) && !(isPower(a.leaf) && isPower(b.leaf))) continue;
           const key = [start, e.to].sort().join("|");
           if (!pairs.has(key)) pairs.set(key, { a, b, links: nextLinks, harnesses: nextHarnesses, nets: nextNets });
           continue;
@@ -296,7 +309,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
           method: "wired",
           locked: false,
         }));
-      const problems = wiringProblems(result, wired);
+      const problems = [...wiringProblems(result, wired), ...(isComposite(fa) ? missingConductors(result, fa, fb, wired) : [])];
       out.push({
         ...result,
         state: problems.length ? "incompatible" : result.state,
@@ -309,6 +322,8 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
   return out;
 }
 
+const isPower = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power");
+const isGround = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("ground"));
 const isPowerOutput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("output"));
 const isPowerInput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("input"));
 const selfSupply = (x: InterfaceDef, y: InterfaceDef) => (isPowerOutput(x) && isPowerInput(y)) || (isPowerOutput(y) && isPowerInput(x));
@@ -334,6 +349,32 @@ function wiringProblems(result: LinkResult, wired: LinkChildResult[]): Diagnosti
         refs: [result.a.path, result.b.path],
       });
     }
+  }
+  return out;
+}
+
+/**
+ * A composite lifted over conductors needs one for each required pairing its
+ * protocol expects. A required pad that reaches the other module only outside
+ * the counterpart composite (SDA landed on an interrupt pin) leaves the bus
+ * incomplete.
+ */
+function missingConductors(result: LinkResult, fa: InterfaceDef, fb: InterfaceDef, wired: LinkChildResult[]): Diagnostic[] {
+  if (result.state === "incompatible") return [];
+  const wiredA = new Set(wired.map((w) => w.a.leafId));
+  const wiredB = new Set(wired.map((w) => w.b.leafId));
+  const required = (iface: InterfaceDef, slot?: string) => iface.slots?.find((s) => s.id === slot)?.required ?? false;
+  const out: Diagnostic[] = [];
+  for (const c of result.children) {
+    if (c.method !== "protocol" || (wiredA.has(c.a.leafId) && wiredB.has(c.b.leafId))) continue;
+    if (!required(fa, c.a.slotId) && !required(fb, c.b.slotId)) continue;
+    const slot = c.a.slotId ?? c.b.slotId ?? c.a.leafId;
+    out.push({
+      severity: "error",
+      code: "bus_incomplete",
+      message: `${result.protocol} ${slot}: ${result.a.path} ${c.a.leafId} and ${result.b.path} ${c.b.leafId} are not wired to each other`,
+      refs: [result.a.path, result.b.path],
+    });
   }
   return out;
 }
