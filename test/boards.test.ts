@@ -4,12 +4,12 @@
  * fixtures/imu-board.ts (RP2040 + BMI270 + TPS63020, real library parts).
  */
 import { describe, it, expect } from "vitest";
-import type { InterfaceLink, ModuleDef } from "../src/types/index.js";
+import type { InterfaceDef, InterfaceLink, ModuleDef } from "../src/types/index.js";
 import { checkSystem } from "../src/system/checks.js";
 import { systemLinks } from "../src/system/derive.js";
 import { validateLinks } from "../src/system/index.js";
 import { moduleNets } from "../src/system/nets.js";
-import { Ground, Net, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
+import { Ground, Net, PowerIn, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
 import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
 import { areRolesCompatible } from "../src/matching/roles.js";
@@ -355,5 +355,48 @@ describe("board rules from a real board", () => {
 
   it("passive terminals pair with each other (a lead soldered to a pad)", () => {
     expect(areRolesCompatible("passive", "terminal", "terminal")).toBe(true);
+  });
+});
+
+describe("drive levels on a board's nets", () => {
+  // a charger whose STAT output is push-pull to its VDD (as the MCP73831's is), and a 3 V microcontroller input
+  const pin = (id: string, roles: string[], range: [number, number], capabilities: string[] = ["digital_io"]): InterfaceDef => ({
+    id,
+    name: id.toUpperCase(),
+    domain: "electrical",
+    exposed: true,
+    default_active: true,
+    protocols: [{ type: "digital", roles }],
+    capabilities,
+    parameters: [{ id: "voltage", unit: "V", range }],
+  });
+  const charger = (statCaps: string[] = ["digital_io", "tri_state"]): ModuleDef =>
+    defineModule({ id: "fixture-charger", name: "Fixture charger", interfaces: [{ ...PowerIn({ id: "vdd", pin: 4, voltageV: [3.75, 6] }) }, pin("stat", ["output"], [0, 6], statCaps), Ground({ id: "vss", pin: 2 })] });
+  const mcu = defineModule({ id: "fixture-mcu", name: "Fixture MCU", interfaces: [pin("gpio", ["input", "output", "bidirectional"], [1.7, 3.6])] });
+  const board = (statCaps?: string[]): { board: ModuleDef; lookup: (id: string) => ModuleDef | undefined } => {
+    const parts = [charger(statCaps), mcu];
+    return {
+      board: defineModule({
+        id: "fixture-stat-board",
+        name: "STAT board",
+        interfaces: [Net({ id: "vbus", name: "VBUS", voltageV: 5 }), Net({ id: "gnd", name: "GND" }), Net({ id: "chg", name: "CHG" })],
+        children: [{ id: "u1", moduleDefId: "fixture-mcu" }, { id: "u2", moduleDefId: "fixture-charger" }],
+        links: [...netLinks("vbus", ["u2:vdd"]), ...netLinks("gnd", ["u2:vss"]), ...netLinks("chg", ["u2:stat", "u1:gpio"])],
+      }),
+      lookup: (id) => parts.find((p) => p.id === id),
+    };
+  };
+
+  it("a push-pull output drives its net to its supply: a 3 V input on it is overdriven", () => {
+    const { board: b, lookup } = board();
+    const d = checkSystem(b, lookup).diagnostics.find((x) => x.id === "net:chg:drive:u1:gpio")!;
+    expect(d.severity).toBe("error");
+    expect(d.message).toMatch(/u2:stat \(STAT\) drives net chg \(CHG\) up to its supply VBUS \(5 V\), but u1:gpio \(GPIO\) is rated to 3\.6 V/);
+    expect(d.details).toMatchObject({ driver: "u2:stat", level: 5 });
+  });
+
+  it("an open-drain output does not drive its net high", () => {
+    const { board: b, lookup } = board(["digital_io", "open_drain"]);
+    expect(checkSystem(b, lookup).diagnostics.filter((x) => x.id.includes(":drive:"))).toEqual([]);
   });
 });

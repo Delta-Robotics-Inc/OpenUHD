@@ -242,6 +242,49 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
     }
   }
 
+  // a push-pull logic output drives its net up to its own supply. When the
+  // driving part has one supply net (a charger's STAT on its VDD), the net
+  // reaches that supply's voltage, and a logic or analog input rated below it
+  // is overdriven (an MCP73831's STAT at VBUS on a 3 V MCU pin). Open-drain
+  // outputs, pins that are also inputs, and parts with several supplies are
+  // left alone: their high level is not known from the model.
+  const supplyNetsOf = (ownerPath: string): string[] => {
+    const ids = new Set<string>();
+    for (const net of nets) {
+      if (net.members.some((m) => m.end.ownerPath.join("/") === ownerPath && hasRole(m.end.iface, "power", "input") && !hasRole(m.end.iface, "power", "ground"))) ids.add(net.iface.id);
+    }
+    return [...ids];
+  };
+  for (const net of nets) {
+    const label = net.iface.name && net.iface.name !== net.iface.id ? `${net.iface.id} (${net.iface.name})` : net.iface.id;
+    for (const d of net.members) {
+      const di = d.end.iface;
+      if (!di.protocols.some((p) => p.type === "digital" && p.roles.includes("output") && !p.roles.includes("input") && !p.roles.includes("bidirectional"))) continue;
+      if ((di.capabilities ?? []).includes("open_drain")) continue;
+      const owner = d.end.ownerPath.join("/");
+      const supplies = supplyNetsOf(owner);
+      if (supplies.length !== 1) continue;
+      const supply = nets.find((n) => n.iface.id === supplies[0])!;
+      const level = netVoltageRange(supply.iface)?.[1];
+      if (level === undefined) continue;
+      for (const m of net.members) {
+        if (m === d || m.end.ownerPath.join("/") === owner) continue;
+        if (m.end.iface.protocols.some((x) => x.type === "power")) continue;
+        const p = param(m.end.iface, "voltage");
+        const range = p && getEffectiveRange(p);
+        if (!range || range[1] >= level - 1e-9) continue;
+        out.push({
+          id: `net:${net.iface.id}:drive:${m.path}`,
+          rule: "net",
+          severity: "error",
+          message: `${d.path} (${di.name ?? di.id}) drives net ${label} up to its supply ${supply.iface.name ?? supply.iface.id} (${level} V), but ${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated to ${range[1]} V: divide, clamp or use an open-drain output.`,
+          refs: [net.path, d.path, m.path, supply.path],
+          details: { driver: d.path, supply: supply.path, level, pin: range },
+        });
+      }
+    }
+  }
+
   for (const [path, ids] of netsOf) {
     if (ids.length < 2) continue;
     out.push({
