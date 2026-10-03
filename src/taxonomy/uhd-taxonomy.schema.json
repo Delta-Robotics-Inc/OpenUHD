@@ -17,6 +17,12 @@
     "description": { "type": "string" },
     "delimiter": { "type": "string", "const": "." },
     "provenance": { "type": "object", "description": "Where the taxonomy comes from and what changed on the way (free-form record)." },
+    "aliases": {
+      "type": "object",
+      "description": "Legacy category paths that are not nodes, each mapped to the node paths that replace it. Validation suggests the targets for a part that still uses an alias.",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
+      "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+    },
     "categories": { "$ref": "#/definitions/nodeMap" }
   },
   "definitions": {
