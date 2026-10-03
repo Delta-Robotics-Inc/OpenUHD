@@ -24,9 +24,9 @@
  */
 import type { ModuleDef } from "../../src/types/index.js";
 import { Net, Passive, defineModule, netLinks } from "../../src/protocols/index.js";
-import { BOSCH_BMI270 } from "../../library/parts/bosch-bmi270.js";
-import { RP2040 } from "../../library/parts/rp2040.js";
-import { TI_TPS63020DSJR } from "../../library/parts/ti-tps63020dsjr.js";
+import { BOSCH_BMI270 } from "./parts/bosch-bmi270.js";
+import { RP2040 } from "./parts/rp2040.js";
+import { TI_TPS63020DSJR } from "./parts/ti-tps63020dsjr.js";
 
 const TPS = "https://www.ti.com/lit/ds/symlink/tps63020.pdf";
 

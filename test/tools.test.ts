@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ISO_4762_SOCKET_MM, systemTools, toolFor, toolLabel } from "../src/system/tools.js";
-import { SYSTEM, lookup } from "../library/systems/quadcopter-5in/index.js";
+import { DRONE, GPS_SCREW, GPS_SPACER, M2_NUT, M3_NUT, MOTOR_SCREW, STACK_SPACER, STANDOFF, lookup } from "./fixtures/drone.js";
 
 describe("tool sizes from the fasteners (PB-797)", () => {
   it("ISO 4762 socket sizes: M2 takes 1.5 mm, M3 takes 2.5 mm", () => {
@@ -9,21 +9,20 @@ describe("tool sizes from the fasteners (PB-797)", () => {
   });
 
   it("uses a screw's own stated socket before the standard's table", () => {
-    const m3x30 = toolFor(lookup("iso-4762-m3x30-socket-head-cap-screw")!)!;
-    expect(m3x30).toMatchObject({ kind: "hex_key", sizeMm: 2.5, basis: "part" });
-    const m2x12 = toolFor(lookup("iso-4762-m2x12")!)!;
-    expect(m2x12).toMatchObject({ kind: "hex_key", sizeMm: 1.5, basis: "standard" });
+    expect(toolFor(MOTOR_SCREW)).toMatchObject({ kind: "hex_key", sizeMm: 2.5, basis: "part" });
+    expect(toolFor(GPS_SCREW)).toMatchObject({ kind: "hex_key", sizeMm: 1.5, basis: "standard" });
   });
 
   it("sizes nut drivers and standoff spanners by across-flats; spacers need none", () => {
-    expect(toolFor(lookup("iso-10511-m3-nyloc-nut")!)).toMatchObject({ kind: "nut_driver", sizeMm: 5.5 });
-    expect(toolFor(lookup("iso-10511-m2-nyloc-nut")!)).toMatchObject({ kind: "nut_driver", sizeMm: 4 });
-    expect(toolFor(lookup("m3-aluminium-standoff-30mm")!)).toMatchObject({ kind: "spanner", sizeMm: 5.5, use: "hold" });
-    expect(toolFor(lookup("m2-nylon-spacer-5mm")!)).toBeUndefined();
+    expect(toolFor(M3_NUT)).toMatchObject({ kind: "nut_driver", sizeMm: 5.5 });
+    expect(toolFor(M2_NUT)).toMatchObject({ kind: "nut_driver", sizeMm: 4 });
+    expect(toolFor(STANDOFF)).toMatchObject({ kind: "spanner", sizeMm: 5.5, use: "hold" });
+    expect(toolFor(STACK_SPACER)).toBeUndefined();
+    expect(toolFor(GPS_SPACER)).toBeUndefined();
   });
 
-  it("lists the quadcopter's tools once each", () => {
-    expect(systemTools(SYSTEM, lookup).map(toolLabel)).toEqual([
+  it("lists a system's tools once each, smallest first by kind", () => {
+    expect(systemTools(DRONE, lookup).map(toolLabel)).toEqual([
       "1.5 mm hex key",
       "2.5 mm hex key",
       "4 mm nut driver",

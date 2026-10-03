@@ -2,7 +2,7 @@
  * UHD bundle: the neutral, self-contained form of a system for tools that
  * only read UHD (the UHD viewer first). A root, every definition it
  * references, optional named variants, and per-definition artifact bases.
- * Producers (a ProtoBoard build, a library script, a hand-written file)
+ * Producers (a build tool, a library script, a hand-written file)
  * resolve origins before writing it; consumers need nothing else.
  */
 import type { ModuleDef } from "./module.js";
@@ -26,7 +26,7 @@ export interface UhdBundleDiagnostic {
   /** What it is about: an instance path, link id, definition id… */
   entity?: { kind: string; id: string };
   source?: { file: string; line?: number };
-  /** Who produced it (e.g. "protoboard/registry", "uhd/checkSystem"). */
+  /** Who produced it (e.g. "my-tool/fit-check", "uhd/checkSystem"). */
   validator?: string;
 }
 

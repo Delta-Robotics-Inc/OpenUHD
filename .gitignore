@@ -20,9 +20,5 @@ npm-debug.log*
 .env
 .env.local
 
-# Part research working memory (library/MOVED.md)
-library/parts/*/.research/
-
 .venv-cad/
-library/parts/*/artifacts/cad/vendor/
 __pycache__/

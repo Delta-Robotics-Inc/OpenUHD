@@ -1,7 +1,8 @@
 /**
  * Boards and nets (PB-824): a custom PCB as a module whose nets are `Net`
  * interfaces joined by membership links. Uses the fixture board in
- * fixtures/imu-board.ts (RP2040 + BMI270 + TPS63020, real library parts).
+ * fixtures/imu-board.ts (RP2040 + BMI270 + TPS63020, frozen copies of
+ * datasheet parts in fixtures/parts).
  */
 import { describe, it, expect } from "vitest";
 import type { InterfaceDef, InterfaceLink, ModuleDef } from "../src/types/index.js";
@@ -11,7 +12,7 @@ import { validateLinks } from "../src/system/index.js";
 import { moduleNets } from "../src/system/nets.js";
 import { Ground, Net, Passive, PowerIn, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
-import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
+import { BOSCH_BMI270 } from "./fixtures/parts/bosch-bmi270.js";
 import { areRolesCompatible } from "../src/matching/roles.js";
 
 const check = (board: ModuleDef, lookup = lookupBoardModule) => checkSystem(board, lookup).diagnostics;
@@ -290,8 +291,7 @@ describe("the board inside a system", () => {
 });
 
 /**
- * Rules as a real board needs them (found on the wearable watch's main board,
- * protoboard-cli examples/wearable-watch): a supply input takes the whole
+ * Rules as a real board needs them (found on a wearable's main board): a supply input takes the whole
  * rail, a connector or a storage terminal is not a second driver, and an
  * I2C target's lines need pull-ups even when no I2C link is derived.
  */

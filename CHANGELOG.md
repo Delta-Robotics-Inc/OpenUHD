@@ -64,12 +64,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Deprecated
 
 - `ChildModuleRef.exposedInterfaces` (never read); use `ModuleDef.exports`.
-- The part library (`library/`) has moved out of UHD to the ProtoBoard Cloud parts service and is no longer maintained here (`library/MOVED.md`). The remaining copy is read only and will be removed; UHD keeps the schema, pure helpers and test fixtures.
 
 ### Removed
 
+- The part library (PB-811). `library/` (parts, their evidence and CAD, the CAD scripts for parts, vendor files and the quadcopter system), `scripts/build-library.ts` and `scripts/bom.ts` are gone, and the package no longer ships `library/`. The library lives in ProtoBoard's parts service, which any tool reads over the open library protocol (`docs/library-protocol.md`); `npm run build:library` now only says so. UHD keeps the schema, pure helpers and the test fixtures its own tests use: an invented quadcopter (`test/fixtures/drone.ts`) for the system, geometry, mass, torque, tool and spin tests, and frozen copies of three datasheet parts (BMI270, RP2040, TPS63020) in `test/fixtures/parts/` for the board fixture. Tests that checked library content rather than UHD (every library part's CAD and pin designators, the reference system's numbers) went with the library. The plan docs for the parts library (`docs/showcase-plan.md`, `docs/protopart-port-pb796.md`) are removed.
 - `cadArtifacts` and `CadOptions` (`src/authoring/cad.ts`): which files a CAD generator writes is the generator's knowledge, so the helper lives with the generators. `feature`, `own`, `procedural` and `withGeometry` stay. Migration: declare the artifacts your generator writes (or use your generator's own helper); the shape was `cad_source`, `cad_step`, `cad_glb`, `cad_manifest` and `cad_if_<interface>`.
-- Tool code, moved out of UHD: the technical-documents generator (`scripts/docs`) and its skills (`uhd-tech-docs`, `uhd-tech-docs-verify`); the part research, authoring and verification skills (`uhd-part-research`, `uhd-part-author`, `uhd-part-verify`) with `scripts/verify-part.ts` and `scripts/record-verification.ts`; the quadcopter frame and mounting-hardware CAD generators (`library/cad/py/frame.py`, `hardware.py`) and the quadcopter's doc spec. Their committed outputs stay with the library copy.
+- Tool code, moved out of UHD: the technical-documents generator (`scripts/docs`) and its skills (`uhd-tech-docs`, `uhd-tech-docs-verify`); the part research, authoring and verification skills (`uhd-part-research`, `uhd-part-author`, `uhd-part-verify`) with `scripts/verify-part.ts` and `scripts/record-verification.ts`; the quadcopter frame and mounting-hardware CAD generators (`library/cad/py/frame.py`, `hardware.py`) and the quadcopter's doc spec. Their committed outputs went with the library.
 
 ## [0.2.0] — 2026-09-26
 

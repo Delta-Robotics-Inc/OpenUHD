@@ -1,7 +1,7 @@
 /**
  * PB-805: connector composites, link-scoped composition, physical harnesses
- * and the functional links derived through them. Uses the real FC, O4 and
- * M9N parts; the cables are defined here.
+ * and the functional links derived through them. Uses the fixture flight
+ * controller, video unit and GNSS (fixtures/drone.ts); the cables are defined here.
  */
 import { describe, expect, it } from "vitest";
 import type { InterfaceLink, ModuleDef } from "../src/types/index.js";
@@ -9,13 +9,11 @@ import { Connector } from "../src/protocols/index.js";
 import { checkSystem } from "../src/system/checks.js";
 import { deriveLinks } from "../src/system/derive.js";
 import { validateLinks } from "../src/system/index.js";
-import { DOLPHINRC_F405_V3_FLIGHT_CONTROLLER as FC } from "../library/parts/dolphinrc-f405-v3-flight-controller.js";
-import { DJI_O4_AIR_UNIT as O4 } from "../library/parts/dji-o4-air-unit.js";
-import { MATEK_M9N_5883 as GNSS } from "../library/parts/matek-m9n-5883.js";
+import { FC, GNSS, VIDEO as O4 } from "./fixtures/drone.js";
 
 const DJI_CABLE: ModuleDef = {
   id: "test-dji-3in1-cable",
-  name: "DJI 3-in-1 cable",
+  name: "Video unit 3-in-1 cable",
   kind: "harness",
   topology: "wire",
   interfaces: [
@@ -41,7 +39,7 @@ const link = (id: string, a: InterfaceLink["a"], b: InterfaceLink["b"]): Interfa
 
 const SYSTEM: ModuleDef = {
   id: "test-physical-harness",
-  name: "FC + O4 + GNSS through cables",
+  name: "FC + video unit + GNSS through cables",
   interfaces: [],
   children: [
     { id: "fc", moduleDefId: FC.id },
@@ -162,7 +160,7 @@ describe("derived links", () => {
     expect(osd.diagnostics[0].code).toBe("harness_wiring");
   });
 
-  it("feed the system checks: the O4 is budgeted on the 10 V BEC and nothing it needs is unpowered", () => {
+  it("feed the system checks: the video unit is budgeted on the 10 V BEC and nothing it needs is unpowered", () => {
     const { diagnostics } = checkSystem(SYSTEM, lookup);
     expect(diagnostics.filter((d) => d.severity === "error")).toEqual([]);
     const bec = diagnostics.find((d) => d.id === "supply_budget:fc:bec_10v")!;

@@ -885,6 +885,11 @@ proto-core/                    # New standalone TypeScript package
 └── vitest.config.ts
 ```
 
+> This was the original layout. UHD keeps no part library: `src/protocols` holds
+> the interface builders, and parts live in a library served over the open
+> library protocol ([library-protocol.md](library-protocol.md)); ProtoBoard's
+> lives in its parts service.
+
 TypeScript-first authoring enables:
 - **Inheritance/composition** — `mcu-base.ts` exports base interfaces, specific MCUs spread + extend
 - **Constraint functions** — future scripted validation per module (TypeScript functions, not JSON)
