@@ -30,6 +30,22 @@ const GENERIC_ROLE_PAIRS: Record<string, string[]> = {
  * Protocol-specific role pair overrides.
  * Only needed when the generic pairs are wrong or insufficient.
  */
+/** MIPI CSI-2 / DSI sub-roles: transmitter → receiver, clock and data lanes. */
+function MIPI_ROLES(): Record<string, string[]> {
+  return {
+    transmitter: ["receiver"],
+    receiver: ["transmitter"],
+    clock_tx_p: ["clock_rx_p"],
+    clock_tx_n: ["clock_rx_n"],
+    clock_rx_p: ["clock_tx_p"],
+    clock_rx_n: ["clock_tx_n"],
+    data_tx_p: ["data_rx_p"],
+    data_tx_n: ["data_rx_n"],
+    data_rx_p: ["data_tx_p"],
+    data_rx_n: ["data_tx_n"],
+  };
+}
+
 const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
   i2c: {
     master: ["slave"],
@@ -109,6 +125,142 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
     sink: ["source", "bidirectional"],
     bidirectional: ["source", "sink", "bidirectional", "sensing"],
     sensing: ["source", "bidirectional"],
+  },  // ---- Links (PB-866). Each composite's slots carry a sub-role per conductor,
+  // so ports pair conductor by conductor and nothing else.
+  // PCIe: a root (root port, switch downstream port, host side of a slot) with
+  // an endpoint (card, SSD, switch upstream port). Lanes TX→RX, clock, sideband.
+  pcie: {
+    root: ["endpoint"],
+    endpoint: ["root"],
+    tx_p: ["rx_p"],
+    tx_n: ["rx_n"],
+    rx_p: ["tx_p"],
+    rx_n: ["tx_n"],
+    refclk_out_p: ["refclk_in_p"],
+    refclk_out_n: ["refclk_in_n"],
+    refclk_in_p: ["refclk_out_p"],
+    refclk_in_n: ["refclk_out_n"],
+    perst_out: ["perst_in"],
+    perst_in: ["perst_out"],
+    clkreq_out: ["clkreq_in"],
+    clkreq_in: ["clkreq_out"],
+    wake_out: ["wake_in"],
+    wake_in: ["wake_out"],
+  },
+  pcie_lane: {
+    transmitter: ["receiver"],
+    receiver: ["transmitter"],
+  },
+  // M.2: a socket takes a card.
+  m2: {
+    socket: ["card"],
+    card: ["socket"],
+  },
+  // MIPI CSI-2 and DSI: transmitter → receiver, clock to clock, data lane to data lane.
+  mipi_csi2: MIPI_ROLES(),
+  mipi_dsi: MIPI_ROLES(),
+  mipi_dphy: {
+    transmitter: ["receiver"],
+    receiver: ["transmitter"],
+  },
+  // Ethernet: any two ports link (auto MDI-X or the cable crosses the pairs).
+  ethernet: {
+    port: ["port"],
+    mdi_p: ["mdi_p"],
+    mdi_n: ["mdi_n"],
+  },
+  ethernet_mdi: {
+    bidirectional: ["bidirectional"],
+  },
+  sfp: {
+    cage: ["module"],
+    module: ["cage"],
+  },
+  // I2S / PCM: the clock controller with a clock target (older parts said
+  // master / slave); BCLK and WS out to in (or a port that can be either);
+  // data out to data in; MCLK out to in.
+  i2s: {
+    controller: ["target", "slave"],
+    target: ["controller", "master"],
+    master: ["slave", "target"],
+    slave: ["master", "controller"],
+    bclk_out: ["bclk_in", "bclk_io"],
+    bclk_in: ["bclk_out", "bclk_io"],
+    bclk_io: ["bclk_out", "bclk_in", "bclk_io"],
+    ws_out: ["ws_in", "ws_io"],
+    ws_in: ["ws_out", "ws_io"],
+    ws_io: ["ws_out", "ws_in", "ws_io"],
+    dout_out: ["din_in"],
+    din_in: ["dout_out"],
+    mclk_out: ["mclk_in"],
+    mclk_in: ["mclk_out"],
+  },
+  // DVP parallel camera bus: the camera drives data, PCLK, VSYNC and HREF; the host may drive XCLK.
+  dvp: {
+    camera: ["host"],
+    host: ["camera"],
+    data_out: ["data_in"],
+    data_in: ["data_out"],
+    pclk_out: ["pclk_in"],
+    pclk_in: ["pclk_out"],
+    vsync_out: ["vsync_in"],
+    vsync_in: ["vsync_out"],
+    href_out: ["href_in"],
+    href_in: ["href_out"],
+    xclk_out: ["xclk_in"],
+    xclk_in: ["xclk_out"],
+  },
+  // SD: the host (slot, SDMMC peripheral) clocks the card.
+  sd_card: {
+    host: ["card"],
+    card: ["host"],
+    clk_out: ["clk_in"],
+    clk_in: ["clk_out"],
+    cmd: ["cmd"],
+    dat: ["dat"],
+  },
+  // LED drive: a sinking driver channel to an LED's cathode, a sourcing one to its anode.
+  led_drive: {
+    sink: ["cathode"],
+    cathode: ["sink"],
+    source: ["anode"],
+    anode: ["source"],
+  },
+  // USB: host with device; a dual-role port with either. Older parts used
+  // "bidirectional" for a port that can be either.
+  usb: {
+    host: ["device", "dual_role", "bidirectional"],
+    device: ["host", "dual_role", "bidirectional"],
+    dual_role: ["host", "device", "dual_role", "bidirectional"],
+    bidirectional: ["host", "device", "dual_role", "bidirectional"],
+    d_p: ["d_p"],
+    d_n: ["d_n"],
+    sstx_p: ["ssrx_p"],
+    sstx_n: ["ssrx_n"],
+    ssrx_p: ["sstx_p"],
+    ssrx_n: ["sstx_n"],
+    cc: ["cc"],
+  },
+  usb_signal: {
+    transmitter: ["receiver"],
+    receiver: ["transmitter"],
+    bidirectional: ["bidirectional"],
+  },
+  // Wireless (network domain).
+  wifi: {
+    client: ["access_point"],
+    access_point: ["client"],
+    peer: ["peer"],
+  },
+  bluetooth: {
+    central: ["peripheral", "peer"],
+    peripheral: ["central", "peer"],
+    peer: ["peer", "central", "peripheral"],
+    broadcaster: ["observer"],
+    observer: ["broadcaster"],
+  },
+  ieee802154: {
+    node: ["node"],
   },
 };
 
@@ -117,7 +269,27 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
  * (Without this, two CAN transceivers' logic sides would pair through the
  * generic transceiver ↔ transceiver entry.)
  */
-const NO_GENERIC_FALLBACK = new Set(["can_logic", "pneumatic", "hydraulic"]);
+const NO_GENERIC_FALLBACK = new Set([
+  "can_logic",
+  "pneumatic",
+  "hydraulic",
+  "pcie",
+  "pcie_lane",
+  "m2",
+  "mipi_csi2",
+  "mipi_dsi",
+  "mipi_dphy",
+  "ethernet",
+  "ethernet_mdi",
+  "sfp",
+  "i2s",
+  "dvp",
+  "sd_card",
+  "led_drive",
+  "wifi",
+  "bluetooth",
+  "ieee802154",
+]);
 
 /**
  * Check whether two roles are compatible for a given protocol type.
