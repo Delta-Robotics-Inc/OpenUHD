@@ -1,7 +1,7 @@
 export * from "./types.js";
 export { validatePair } from "./validate-pair.js";
 export { checkPairParameters, CAPACITY_PARAM_IDS } from "./param-check.js";
-export { boltPatternsShareHoles, checkPairJoints } from "./joint-check.js";
+export { boltPatternsShareHoles, checkPairJoints, pairCheckedParams } from "./joint-check.js";
 export {
   buildRegionTree,
   flattenTree,

@@ -1,6 +1,6 @@
 import type { InterfaceDef } from "../types/interface.js";
 import type { Parameter } from "../types/parameter.js";
-import { voltageV, voltageRangeV, maxCurrentA } from "./params.js";
+import { voltageV, voltageRangeV, maxCurrentA, minSupplyCurrentA } from "./params.js";
 
 /**
  * Power interface builders: supply inputs, regulated outputs, and ground.
@@ -17,6 +17,13 @@ export interface PowerConfig {
   nominalV?: number;
   /** Max continuous current in amps. */
   maxCurrentA?: number;
+  /**
+   * Inputs only: the least continuous current the source feeding this input
+   * must be rated for, in amps, when the source states one (a motor
+   * controller that needs a 40 A distribution channel). The pair check
+   * compares it with the source's `max_current`.
+   */
+  minSupplyCurrentA?: number;
   /** Extra typed parameters (e.g. cellCount for battery packs and battery inputs). */
   parameters?: Parameter[];
   exposed?: boolean;
@@ -30,6 +37,10 @@ function power(config: PowerConfig, role: "input" | "output"): InterfaceDef {
       : voltageV(config.voltageV),
   ];
   if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
+  if (config.minSupplyCurrentA !== undefined) {
+    if (role !== "input") throw new Error(`PowerOut ${config.id}: minSupplyCurrentA is what an input needs from its source; a source states maxCurrentA`);
+    parameters.push(minSupplyCurrentA(config.minSupplyCurrentA));
+  }
   if (config.parameters) parameters.push(...config.parameters);
 
   return {

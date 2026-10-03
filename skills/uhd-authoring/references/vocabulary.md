@@ -31,8 +31,9 @@ peer.
 | `CANLogic` | `digital` leaves + `can_logic: controller/transceiver` | An MCU's CAN TX/RX (controller) and a transceiver's TXD/RXD (transceiver) |
 | `ShieldHeader` | `connector: mate` (a `Connector` with a standard layout) | Arduino UNO R3 shield headers, the Arduino ICSP header, the Raspberry Pi 40-pin header; role `host` or `accessory` |
 | `FluidPort` | `pneumatic` / `hydraulic: source/sink/bidirectional/sensing` | Cylinder, valve, compressor, regulator and sensor ports, fittings and tube ends, with a `fluid_joint` (thread, push-to-connect, tube, barb, quick coupler) |
-| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle` or `cross` (two diagonals, e.g. a 16 × 19 motor base) |
-| `Shaft` | `shaft: output/input` | Motor shafts (output), propeller hubs and pulleys (input) |
+| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle`, `cross` (two diagonals, e.g. a 16 × 19 motor base), `row` (holes in a line on a pitch: bracket legs, a line of a hole grid) or `slot` (a T-slot or a through slot that takes fasteners anywhere along its length) |
+| `Shaft` | `shaft: output/input/bidirectional` | Motor shafts and hollow outputs (output), hubs, pulleys, wheels and gearbox inputs (input), loose shafts, spacers and couplers (bidirectional); `gender` shaft or bore, `profile` round, hex, rounded_hex, d_cut, double_d, keyed, spline or square |
+| `LinearMotion` | `linear_motion: output/input` | The moving member of a linear actuator, lead screw or slide (output) and the load it drives (input), with stroke, lead, thread pitch, force and speed |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions (PB-805); binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
 | `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
@@ -47,7 +48,16 @@ peer.
 `hole_spacing_y` (mm), `hole_count`, `fastener_diameter` (mm),
 `shaft_diameter` (mm), `resolution`, `max_frequency` (Hz, also a step
 rate), `pulse_width` (us), `frame_rate` (Hz), `counts_per_rev`, `bit_rate`
-(bit/s), `pressure` (bar), `tube_od` and `tube_id` (mm).
+(bit/s), `pressure` (bar), `tube_od` and `tube_id` (mm), `hole_pitch` and
+`slot_length` (mm), `key_width` (mm), `stroke`, `lead` and `thread_pitch`
+(mm), `force` (N), `linear_speed` (mm/s), `min_supply_current` (A, on an
+input: the least current its source must be rated for).
+
+Capacity parameters are not compared by range overlap: `max_current`,
+`burst_current`, `drive_current`, `current_draw`, `min_supply_power`,
+`min_supply_current`, `stroke`, `force`, `linear_speed`. Pair checks
+compare `min_supply_current` with the source's `max_current`, and a load's
+`stroke` and `force` with the output's.
 
 ## Role families with their own table
 
@@ -70,6 +80,15 @@ few part-specific types. The older mechanical types
 (`mechanical_connection`, `mechanical_mount`, `threaded_connection`) predate
 `bolt_pattern` and `shaft`. Use the new builders for new parts; converging
 the older ones is tracked as a vocabulary gap.
+
+## Pair checks beyond parameters
+
+`checkPairJoints` (`src/drc/joint-check.ts`) reports `fluid_joint_mismatch`,
+`bolt_pattern_shape` (a cross against another shape), `bolt_pattern_line`
+(rows and slots), `shaft_fit` (shaft and bore genders and profiles),
+`linear_motion_capacity` and `supply_current_rating`. See
+[mechanical interfaces](../../../docs/mechanical-interfaces.md) and
+[fluid ports](../../../docs/fluid-ports.md).
 
 ## Not yet covered
 

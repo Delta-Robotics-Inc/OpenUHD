@@ -15,7 +15,12 @@
 | A regulated output ("5 V 2 A BEC") | `PowerOut` with `voltage` and `max_current`. |
 | Continuous vs burst current | `max_current` = continuous and `burst_current` = burst, with the burst duration in a trait. |
 | Mounting holes | `BoltPattern`: role `component` on parts and `structure` on frames; `spacingMm`, `holeCount`, `fastener`, `fastenerDiameterMm`; grommets or soft mounts in `note`. |
+| Holes in a line on a pitch (a bracket leg, one line of a hole grid) | `BoltPattern` shape `row` with `pitchMm` and `holeCount`, one per line a mating part uses; not a rectangle with `spacingYmm: 0`. |
+| An extrusion's T-slot, a slotted bracket | `BoltPattern` shape `slot` with `slotLengthMm` and `slotKind` (`t_slot` or `through`); not a spacing range. Holes slotted to vary their spacing keep their shape with a `spacingMm` range. |
 | A motor shaft / prop hub | `Shaft`: `output` on the motor, `input` on the propeller; the thread goes in `thread`. |
+| Shaft or bore cross-section (5 mm hex bore, 1/2 in hex shaft, D-cut, keyed, 25T spline) | `Shaft` with `gender` (`shaft` or `bore`) and `profile`; `diameterMm` is across flats for hex. A hollow motor output is `output` + `bore`; a loose shaft or spacer is `bidirectional`. Key width in `keyWidthMm`, spline standard in `spline`. |
+| A linear actuator's moving end, a lead screw nut | `LinearMotion({ role: "output", strokeMm, leadMm, threadPitchMm, starts, forceN, mechanism })`; the rotary input is a `Shaft` input. Say in `note` whether the force is dynamic, static or peak. |
+| "Use a 40 A breaker / channel", a stall current the controller channel must carry | `minSupplyCurrentA` on the `PowerIn` (or motor `input`); never on an output. |
 | Motor wires | `BrushlessPhases({ role: "input", termination: "bare_wire_lead" })`; lead gauge and length go in a trait. |
 | ESC outputs | `BrushlessPhases({ id: "motor_1", role: "output", ... })`, one per channel, with per-channel current ratings. |
 | FC motor pads M1–M8 | `EscSignal` leaves with `motorIndex`; the functional FC↔ESC port is `FcEscPort` with the leaves passed in (no connector/pinout on it), and the physical socket is a separate connector composite. |

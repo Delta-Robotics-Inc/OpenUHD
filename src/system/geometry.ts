@@ -545,13 +545,20 @@ const paramValue = (iface: InterfaceDef, id: string) => {
  * Hole centres of a bolt-pattern interface in its frame's x/y (mm). Circles
  * start at the frame's xAxis (the frame's xAxis points at hole 1); squares
  * and rectangles are centred, sides along x and y; a cross has one diagonal
- * pair on x and the other on y.
+ * pair on x and the other on y; a row is centred on x, first hole at -x. A
+ * slot has no fixed holes (none are returned): a fastener stack on a slot
+ * gives its `positions`.
  */
 export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
+  const shape = iface.traits?.find((t) => t.type === "bolt_pattern")?.params?.shape;
+  if (shape === "slot") return [];
   const spacing = paramValue(iface, "hole_spacing");
   if (spacing === undefined) return [];
   const count = paramValue(iface, "hole_count") ?? 4;
-  const shape = iface.traits?.find((t) => t.type === "bolt_pattern")?.params?.shape;
+  if (shape === "row") {
+    const pitch = paramValue(iface, "hole_pitch") ?? (count > 1 ? spacing / (count - 1) : 0);
+    return Array.from({ length: count }, (_, k) => [-spacing / 2 + k * pitch, 0] as [number, number]);
+  }
   if (shape === "circle") {
     return Array.from({ length: count }, (_, k) => {
       const a = (2 * Math.PI * k) / count;

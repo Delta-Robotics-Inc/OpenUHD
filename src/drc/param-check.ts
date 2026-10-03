@@ -6,7 +6,9 @@ import type { Diagnostic } from "./types.js";
  * Parameters whose semantics are aggregation (sum of draws vs. a limit), not
  * range overlap — comparing a supply's max_current to a sink's draw as ranges
  * produces false errors. These are evaluated by the capacity engine (Phase 6,
- * scoped rule packs), so the pairwise overlap check skips them.
+ * scoped rule packs) or by a directional pair check in joint-check.ts
+ * (`supply_current_rating`, `linear_motion_capacity`), so the pairwise
+ * overlap check skips them.
  */
 export const CAPACITY_PARAM_IDS = new Set([
   "max_current",
@@ -14,6 +16,10 @@ export const CAPACITY_PARAM_IDS = new Set([
   "drive_current",
   "current_draw",
   "min_supply_power",
+  "min_supply_current",
+  "stroke",
+  "force",
+  "linear_speed",
   "max_flow",
   "flow_rate",
 ]);
