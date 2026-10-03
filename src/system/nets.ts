@@ -171,10 +171,13 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
       });
     }
 
-    // more than one module driving a supply net
+    // more than one module driving a supply net. A connector or land carries power, it does not make
+    // it, and a terminal that both gives and takes it (a cell's +, beside its charger) is storage
     const drivers = new Map<string, string[]>();
     for (const m of net.members) {
       if (!hasRole(m.end.iface, "power", "output")) continue;
+      if (hasRole(m.end.iface, "power", "input")) continue;
+      if ((m.end.owner.categories ?? []).some((c) => c === "connector" || c.startsWith("connector."))) continue;
       const owner = m.end.ownerPath.join("/");
       drivers.set(owner, [...(drivers.get(owner) ?? []), m.path]);
     }
@@ -205,7 +208,9 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
     }
 
     // each pin with a stated voltage takes the net's design voltage. A supply
-    // pin's range is what it accepts or produces, so it must overlap. A logic
+    // output's range is what it produces, so it must overlap; a supply input's
+    // is what it accepts, so the whole rail must lie within it (a 4.2 V cell
+    // rail on a 3.3 V input is a fault even though 3.0-3.3 V overlaps). A logic
     // or analog pin's range is its signal level: tied to a lower rail (a strap
     // to GND) it is driven low, so only a net above its maximum is reported.
     const design = netVoltageRange(net.iface);
@@ -215,13 +220,20 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
         const range = p && getEffectiveRange(p);
         if (!range) continue;
         const supply = m.end.iface.protocols.some((x) => x.type === "power");
-        if (supply ? rangesOverlap(range, design) : design[1] <= range[1] || grounds.length > 0) continue;
+        const inputOnly = supply && hasRole(m.end.iface, "power", "input") && !hasRole(m.end.iface, "power", "output");
+        const eps = 1e-9;
+        const ok = inputOnly
+          ? range[0] - eps <= design[0] && design[1] <= range[1] + eps
+          : supply
+            ? rangesOverlap(range, design)
+            : design[1] <= range[1] || grounds.length > 0;
+        if (ok) continue;
         out.push({
           id: `net:${id}:voltage:${m.path}`,
           rule: "net",
           severity: "error",
           message: supply
-            ? `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated ${fmtRange(range)} but net ${label} is ${fmtRange(design)}.`
+            ? `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated ${fmtRange(range)} but net ${label} is ${fmtRange(design)}${inputOnly && rangesOverlap(range, design) ? ", outside its rating at one end" : ""}.`
             : `${m.path} (${m.end.iface.name ?? m.end.iface.id}) is rated to ${range[1]} V but net ${label} reaches ${design[1]} V.`,
           refs: [net.path, m.path, `link:${m.link}`],
           details: { pin: range, net: design },
@@ -274,6 +286,29 @@ export function busPullupRule(def: ModuleDef, links: LinkResult[], lookup: Modul
 
   const out: SystemDiagnostic[] = [];
   const reported = new Set<string>();
+  // a net that carries a device's I2C line (a pad its I2C composite binds) and reaches another part is
+  // an I2C bus even when no I2C link is derived (a controller whose bus pins are assigned in firmware)
+  for (const n of nets) {
+    if (reported.has(n.iface.id) || n.members.length < 2 || pulledUp(n)) continue;
+    const owners = new Set(n.members.map((m) => m.end.ownerPath.join("/")));
+    if (owners.size < 2) continue;
+    const device = n.members.find((m) => {
+      if (m.end.ownerPath.length !== 1) return false;
+      const ref = def.children?.find((c) => c.id === m.end.ownerPath[0]);
+      const child = ref ? lookup(ref.moduleDefId) : undefined;
+      // a target's (slave's) I2C composite: a controller's composites are pin options, not a bus in use
+      return !!child?.interfaces.some((i) => i.protocols.some((p) => p.type === "i2c" && p.roles.length > 0 && p.roles.every((r) => r === "slave" || r === "target")) && i.slots?.length && Object.values(slotBindings(i)).includes(m.end.iface.id));
+    });
+    if (!device) continue;
+    reported.add(n.iface.id);
+    out.push({
+      id: `bus_pullup:${n.iface.id}`,
+      rule: "bus_pullup",
+      severity: "warning",
+      message: `net ${n.iface.id} carries I2C (${device.path}) but no resistor pulls it up to a supply.`,
+      refs: [n.path, device.path],
+    });
+  }
   for (const r of links) {
     if (r.protocol !== "i2c" || r.state === "incompatible" || !r.derived?.nets?.length) continue;
     for (const id of r.derived.nets) {
