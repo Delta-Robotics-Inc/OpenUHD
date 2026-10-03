@@ -12,6 +12,7 @@ import { moduleNets } from "../src/system/nets.js";
 import { Ground, Net, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
 import { BOSCH_BMI270 } from "../library/parts/bosch-bmi270.js";
+import { areRolesCompatible } from "../src/matching/roles.js";
 
 const check = (board: ModuleDef, lookup = lookupBoardModule) => checkSystem(board, lookup).diagnostics;
 
@@ -285,5 +286,74 @@ describe("the board inside a system", () => {
     expect(battery.b.owner.id).toBe("ti-tps63020dsjr");
     expect(battery.b.iface.id).toBe("pin_10");
     expect(r.diagnostics.filter((d) => d.severity !== "info")).toEqual([]);
+  });
+});
+
+/**
+ * Rules as a real board needs them (found on the wearable watch's main board,
+ * protoboard-cli examples/wearable-watch): a supply input takes the whole
+ * rail, a connector or a storage terminal is not a second driver, and an
+ * I2C target's lines need pull-ups even when no I2C link is derived.
+ */
+describe("board rules from a real board", () => {
+  // fixture parts, not real ones
+  const pads = defineModule({
+    id: "fixture-power-pads",
+    name: "Fixture power pads",
+    categories: ["connector.power_connector"],
+    interfaces: [
+      { id: "pin_1", name: "+", pin: 1, domain: "electrical", exposed: true, default_active: true, protocols: [{ type: "power", roles: ["output"] }], parameters: [{ id: "voltage", unit: "V", value: 3.3 }] },
+      { ...Ground({ id: "pin_2", name: "-", pin: 2 }) },
+    ],
+  });
+  const cell = defineModule({
+    id: "fixture-cell-terminal",
+    name: "Fixture cell terminal (charged and discharged on one pin)",
+    interfaces: [{ id: "pin_1", name: "+", pin: 1, domain: "electrical", exposed: true, default_active: true, protocols: [{ type: "power", roles: ["input", "output"] }], parameters: [{ id: "voltage", unit: "V", range: [3.0, 4.2] }] }],
+  });
+  const ldo = defineModule({
+    id: "fixture-ldo-out",
+    name: "Fixture regulator output",
+    interfaces: [{ id: "pin_1", name: "OUT", pin: 1, domain: "electrical", exposed: true, default_active: true, protocols: [{ type: "power", roles: ["output"] }], parameters: [{ id: "voltage", unit: "V", value: 3.3 }] }],
+  });
+  const extra = new Map([pads, cell, ldo].map((d) => [d.id, d]));
+  const lookup = (id: string) => extra.get(id) ?? lookupBoardModule(id);
+  const drivers = (board: ModuleDef) => checkSystem(board, lookup).diagnostics.filter((d) => d.rule === "net" && /driven by/.test(d.message));
+
+  it("a supply input must take the whole rail, not just overlap it", () => {
+    // the IMU's VDD (1.71-3.6 V) on a 3.0-4.2 V cell rail: it overlaps, but 4.2 V is above its rating
+    const board = variant({
+      nets: [Net({ id: "vbat", name: "VBAT", voltageV: [3.0, 4.2] })],
+      drop: ["v3v3.u2.pin_8"],
+      add: netLinks("vbat", ["u2:pin_8"]),
+    });
+    const d = check(board).find((x) => x.id === "net:vbat:voltage:u2:pin_8")!;
+    expect(d.severity).toBe("error");
+    expect(d.message).toMatch(/outside its rating at one end/);
+  });
+
+  it("a connector's pad and a storage terminal on a rail are not second drivers; a second regulator is", () => {
+    const withPads = variant({ children: [{ id: "j9", moduleDefId: pads.id }], add: netLinks("v3v3", ["j9:pin_1"]) });
+    expect(drivers(withPads)).toEqual([]);
+    const withCell = variant({
+      nets: [Net({ id: "vin", name: "VIN", voltageV: [3.0, 4.2] })],
+      children: [{ id: "bt1", moduleDefId: cell.id }],
+      add: netLinks("vin", ["bt1:pin_1"]),
+    });
+    expect(drivers(withCell)).toEqual([]);
+    const withLdo = variant({ children: [{ id: "u9", moduleDefId: ldo.id }], add: netLinks("v3v3", ["u9:pin_1"]) });
+    expect(drivers(withLdo).map((d) => d.message)).toEqual([expect.stringMatching(/net v3v3 \(3V3\) is driven by 2 supplies/)]);
+  });
+
+  it("an I2C target's line without a pull-up is reported when no I2C link is derived", () => {
+    // the controller's SDA pin taken off the net (as when its bus pins are assigned in firmware), and the pull-up's top left open
+    const board = variant({ drop: ["sda.u1.pin_2", "v3v3.r3.pin_1"] });
+    const r = checkSystem(board, lookupBoardModule);
+    expect(r.links.filter((x) => x.protocol === "i2c" && x.state !== "incompatible")).toEqual([]);
+    expect(r.diagnostics.map((d) => d.id)).toContain("bus_pullup:sda");
+  });
+
+  it("passive terminals pair with each other (a lead soldered to a pad)", () => {
+    expect(areRolesCompatible("passive", "terminal", "terminal")).toBe(true);
   });
 });

@@ -29,6 +29,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Board rules as a real board needs them (found on the ProtoBoard wearable watch's main board):
+  - `passive` terminals pair with each other (a lead soldered to a pad), but still pair with nothing over a board net.
+  - A supply input's stated range must contain the whole rail, not just overlap it. A 3.0-4.2 V cell rail on a 1.7-3.6 V input is an error, reported as "outside its rating at one end".
+  - "Driven by N supplies" skips connector pads (a land carries power, it does not make it) and terminals that are both power input and output (a cell's +).
+  - `bus_pullup` also reports a net that carries an I2C target's line with no pull-up when no I2C link is derived (a controller whose bus pins are chosen in firmware).
+  - Lifting over nets does not pair passive terminals. A composite is lifted only when a non-ground conductor joins its pads, and wired slots that pair with nothing are configured.
+  - `unpowered`: a sub-module's export counts as linked when the interface it exports is linked.
+  - Pair DRC no longer sees an endpoint's own pins as rivals of the port they belong to.
+
 - `Passive()` sets `categories` to the taxonomy path `component.passive.<kind>` (was `passive.<kind>`). The test fixtures use taxonomy paths.
 - Derived links (PB-824): a pad pair lifts to the largest pair of interfaces that pair by protocol, composite with composite or pad with pad; with no such pair a cable still links the largest candidates as before. The quadcopter's links are unchanged.
 - `supply_budget` totals the pins of one power-output port together (a regulator's doubled VOUT pins), counts each load once, groups supplies by instance path rather than definition id (two identical regulators no longer share a budget), and uses a board net's design voltage when the net states one.
