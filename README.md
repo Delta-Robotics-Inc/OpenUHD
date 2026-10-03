@@ -79,6 +79,7 @@ For the full design, read [docs/architecture.md](docs/architecture.md).
 - **Bind leaf interfaces to slots** automatically via capability matching, or manually with explicit overrides.
 - **Express typed parameters** with units, ranges, and tolerances on every interface and module.
 - **Run Design Rule Checks** with tiered validation (protocol → compositional → inferred → manual) — see [docs/drc-spec.md](docs/drc-spec.md).
+- **Categorise modules** with a standard, versioned taxonomy of hardware categories that libraries can extend under their own namespace: see [docs/taxonomy.md](docs/taxonomy.md).
 - **Render visualizations** — built-in ASCII rendering and support for web-based applications.
 - **Interchange between tools** — the same UHD definition feeds visualizers, validators, simulators, and downstream EDA / CAD tooling.
 

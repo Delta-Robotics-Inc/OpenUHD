@@ -161,7 +161,16 @@ export interface ModuleDef {
 
   manufacturer?: string;
   part_number?: string;
+  /** Free-form keywords (vendor names, package codes, use cases). Not validated. */
   tags?: string[];
+  /**
+   * Category paths from the UHD taxonomy (docs/taxonomy.md): dotted node ids
+   * such as `sensor.distance` or `actuator.motor.servo`, at any depth, as many
+   * as apply. List the most specific paths; ancestors are implied
+   * (`categoryAncestors`). A library's own nodes sit under `x-<library>`.
+   * Unknown paths are reported as warnings (`validateCategories`, the
+   * `unknown_category` system rule).
+   */
   categories?: string[];
 
   interfaces: InterfaceDef[];

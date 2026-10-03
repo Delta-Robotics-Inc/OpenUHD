@@ -344,8 +344,8 @@ interface ModuleDef {
   // Metadata
   manufacturer?: string;
   part_number?: string;
-  tags?: string[];
-  categories?: string[];
+  tags?: string[];           // free-form keywords
+  categories?: string[];     // taxonomy paths, e.g. "sensor.distance" (docs/taxonomy.md)
 
   // === The module's own interfaces ===
   // These are the module's "ports" — what it exposes to its parent module

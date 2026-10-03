@@ -5,7 +5,7 @@ export const L298N: ModuleDef = {
   name: "L298N Dual H-Bridge Motor Driver",
   version: "1.0.0",
   tags: ["motor-driver", "h-bridge", "l298n"],
-  categories: ["motor_driver"],
+  categories: ["actuator.motor_controller"],
 
   interfaces: [
     // --- Power ---

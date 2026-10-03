@@ -41,6 +41,10 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
   purchased part); the export name is the id in SCREAMING_SNAKE_CASE.
 - Set `name`, `version` (`"1.0.0"` for a new definition), `manufacturer`,
   `part_number`, `description`, `tags`, `categories`.
+- `categories` are paths in the UHD taxonomy (`docs/taxonomy.md`,
+  `src/taxonomy/uhd-taxonomy.json`), the most specific that apply, e.g.
+  `["sensor.distance", "expansion.breakout"]`; check them with
+  `validateCategories`. `tags` are free-form keywords.
 - `artifacts[]` references the primary sources (`id`, `name`, `type`, `url`)
   and any files that describe the hardware (format, role, units,
   provenance). An artifact is a reference, not proof that the file agrees
