@@ -17,7 +17,7 @@ export interface PowerDomainDef {
 }
 
 /**
- * What a part is made of, for mass from geometry (PB-797). Declared on the
+ * What a part is made of, for mass from geometry. Declared on the
  * mechanical domain of custom parts and of standard parts with no stated
  * mass; `systemMass` multiplies it by the CAD body volume. A stated
  * `weight_g` always wins over a computed one.
@@ -38,7 +38,7 @@ export interface MaterialSpec {
 }
 
 /**
- * The package of a component as its manufacturer states it (PB-824). Declared
+ * The package of a component as its manufacturer states it. Declared
  * on the mechanical domain of chips and other board-mounted components, next
  * to `dimensions_mm`, which holds the package's overall length × width ×
  * height (leads included where they extend past the body, as on an SOIC).
@@ -60,7 +60,7 @@ export interface PackageSpec {
   exposed_pad: boolean;
   /**
    * Designator of the exposed pad's leaf interface: the manufacturer's number
-   * when it gives one (57 on the RP2040), else the label the part uses ("EP").
+   * when it gives one (33 on a 32-pin QFN that numbers its pad), else the label the part uses ("EP").
    */
   exposed_pad_pin?: number | string;
   /** Exposed pad size, length × width. */

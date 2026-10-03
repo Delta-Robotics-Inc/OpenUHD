@@ -1,5 +1,5 @@
 /**
- * Boards and nets (PB-824): a custom PCB is an ordinary module whose
+ * Boards and nets: a custom PCB is an ordinary module whose
  * children are its components and whose nets are `Net` interfaces on the
  * board itself, each pin joined to its net by a stored membership link
  * (docs/boards-and-nets.md).
@@ -303,7 +303,7 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
 }
 
 /**
- * Faults of one part's own pins on the board's nets (PB-869). Each is stated
+ * Faults of one part's own pins on the board's nets. Each is stated
  * from the model, not from a part's name:
  *
  * - **A shorted passive.** A two-terminal passive (resistor, capacitor,
@@ -316,16 +316,16 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
  *   which output is the part's `bridgesTo` (a leaf or the composite binding
  *   it); a part that states no bridge for its supply pins is taken as a
  *   converter whose every power input feeds every power output. A part that
- *   states its bridges may supply its own other inputs (the RP2040's
- *   VREG_VOUT on its DVDD pins). Connectors and lands carry power, they do
+ *   states its bridges may supply its own other inputs (an MCU's
+ *   core-regulator output on its own core supply pins). Connectors and lands carry power, they do
  *   not convert it, and are skipped.
  * - **A strap on a signal.** A leaf with a `strap` trait, while its part runs
  *   an interface in the strap's `when` (or always, without `when`), must sit
  *   at a fixed level: on a supply or ground net, or on a net of its own with
  *   a resistor to one (a pull-up or pull-down). On a net that carries
  *   another pin's logic signal (a bus line) and no supply or ground pin, its
- *   level follows the signal, whatever pull-up the line has: the BMI270's
- *   address strap SDO moved onto SDA.
+ *   level follows the signal, whatever pull-up the line has: an IMU's
+ *   address strap moved onto SDA.
  */
 export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[] {
   const nets = moduleNets(def, links);

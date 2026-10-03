@@ -1,12 +1,12 @@
 # Boards, nets and package facts
 
-Status: implemented (PB-824). Code: `src/protocols/net.ts` (`Net`,
+Status: implemented. Code: `src/protocols/net.ts` (`Net`,
 `netLinks`, `isNet`), `src/protocols/passive.ts` (`Passive`),
 `src/protocols/package.ts` (`pinTable`, `partPackage`,
 `pinDesignatorIssues`), `src/system/nets.ts` (membership links and the net
 rules), `src/system/derive.ts` (functional links over nets). Tests:
 `test/boards.test.ts`, `test/packages.test.ts`; example board:
-`test/fixtures/imu-board.ts`.
+`test/fixtures/imu-board.ts` (synthetic parts in `test/fixtures/parts/`).
 
 ## Why
 
@@ -51,9 +51,9 @@ file and its artifact files use this, without running any tool?*
 
 ```
  fixture-imu-board (module)
- ├─ children   u1 RP2040 · u2 BMI270 · u3 TPS63020 · l1 · r1 r2 (FB divider) · r3 r4 (I2C pull-ups)
- ├─ nets       VIN · 3V3 · 1V1 · GND · FB · SW1 · SW2 · SDA · SCL · IMU_INT1   (Net interfaces, not exposed)
- ├─ links      one membership link per pin on a net:  u2:pin_8 ──▶ :v3v3
+ ├─ children   u1 MCU · u2 IMU · u3 buck-boost · l1 · r1 r2 (FB divider) · r3 r4 (I2C pull-ups)
+ ├─ nets       VIN · 3V3 · VCORE · GND · FB · SW1 · SW2 · SDA · SCL · IMU_INT1   (Net interfaces, not exposed)
+ ├─ links      one membership link per pin on a net:  u2:pin_7 ──▶ :v3v3
  └─ exports    power_in (u3 VIN pad) · power_gnd (u3 GND) · swd (u1 SWD)       (the board edge)
 ```
 
@@ -77,23 +77,23 @@ export const IMU_BOARD = defineModule({
     // …
   ],
   children: [
-    { id: "u1", moduleDefId: "rp2040" },
-    { id: "u2", moduleDefId: "bosch-bmi270" },
-    { id: "u3", moduleDefId: "ti-tps63020dsjr" },
-    { id: "r3", moduleDefId: "r-4k7-0402" },
+    { id: "u1", moduleDefId: "fixture-mcu-qfn32" },
+    { id: "u2", moduleDefId: "fixture-imu-lga12" },
+    { id: "u3", moduleDefId: "fixture-buck-boost-son12" },
+    { id: "r3", moduleDefId: "fixture-r-4k7-0402" },
     // …
   ],
   links: [
-    ...netLinks("v3v3", ["u3:pin_4", "u3:pin_5", "u1:pin_1", "u2:pin_8", "u2:pin_5", "u2:pin_12", "r3:pin_1"]),
-    ...netLinks("gnd", ["u3:pin_2", "u3:pgnd", "u1:pad_gnd", "u2:pin_6", "u2:pin_7", "u2:pin_1"]),
-    ...netLinks("sda", ["u1:pin_2", "u2:pin_14", "r3:pin_2"]),
-    ...netLinks("scl", ["u1:pin_3", "u2:pin_13", "r4:pin_2"]),
+    ...netLinks("v3v3", ["u3:pin_8", "u3:pin_9", "u1:pin_1", "u2:pin_7", "u2:pin_8", "u2:pin_3", "r3:pin_1"]),
+    ...netLinks("gnd", ["u3:pin_11", "u3:pgnd", "u1:pad_gnd", "u2:pin_9", "u2:pin_10", "u2:pin_4"]),
+    ...netLinks("sda", ["u1:pin_2", "u2:pin_1", "r3:pin_2"]),
+    ...netLinks("scl", ["u1:pin_3", "u2:pin_2", "r4:pin_2"]),
   ],
-  exports: [{ id: "power_in", from: { child: "u3", interfaceId: "pin_10" } }],
+  exports: [{ id: "power_in", from: { child: "u3", interfaceId: "pin_1" } }],
 });
 ```
 
-Membership link ids are `<net>.<child>.<interface>` (`v3v3.u2.pin_8`).
+Membership link ids are `<net>.<child>.<interface>` (`v3v3.u2.pin_7`).
 Members are leaf pins: a membership link to a composite (`u2:i2c`) is
 invalid (`net_member_composite`), and so are a net joined to another net
 (`net_to_net`) and a link to a child's own net (`net_not_own`).
@@ -195,13 +195,13 @@ whatever other logic pins share the rail.
 | Pads on one net | Result |
 | --- | --- |
 | Regulator VOUT and a load's VDD | power link, output ↔ input |
-| MCU SDA/SCL and an IMU's SDx/SCx on the SDA and SCL nets | one I2C link, MCU `i2c_0` ↔ IMU `i2c` (lifted, conductors as children) |
+| MCU SDA/SCL and an IMU's SDA/SCL on the SDA and SCL nets | one I2C link, MCU `i2c_0` ↔ IMU `i2c` (lifted, conductors as children) |
 | Two loads' VDD pins | no link: they share the rail |
 | Two ground pins | no link: they share the ground net, which already records it |
 | Two I2C targets | no link: they share the bus |
-| A strap (CSB tied to 3V3, SDO and TESTEN tied to GND) | no link, even between two straps on one rail |
+| A strap (CS tied to 3V3, ADDR and TEST tied to GND) | no link, even between two straps on one rail |
 | A passive terminal and anything | no link |
-| A part's own regulator output and its own core supply (RP2040 VREG_VOUT → DVDD) | power link within the part |
+| A part's own regulator output and its own core supply (an MCU's VREG_OUT → VCORE) | power link within the part |
 
 Ground pins are not paired because a ground net with *n* pins would give
 *n*(*n*−1)/2 links that say nothing the net does not. As conductors of two
@@ -212,7 +212,7 @@ largest pair that matches. A composite lifts when every pad it binds reaches
 the other module. Each pairing its protocol expects must then run inside
 it: a pad landed on the wrong counterpart is `harness_wiring` (SDA wired to
 SCL), and a required pad that reaches the other module only outside the
-counterpart composite, or not at all, is `bus_incomplete` (the IMU's SDx on
+counterpart composite, or not at all, is `bus_incomplete` (the IMU's SDA on
 the interrupt net). Either makes the link incompatible. A derived link over nets is tagged
 `derived: { via, harnesses, nets }`; `via` names the membership links, so a
 diagnostic on it points at the pins.
@@ -250,7 +250,7 @@ boards unchanged:
 | `design_envelope` | error | the stated size exceeds the envelope |
 
 The net voltage check is what catches a wrong rail: an adjustable regulator
-(1.2–5.5 V) set to 3.3 V says nothing by itself, but `Net({ voltageV: 3.3 })`
+(1.0–5.5 V) set to 3.3 V says nothing by itself, but `Net({ voltageV: 3.3 })`
 does, and every pin on the net is checked against it. A supply pin's range
 is what it accepts or produces, so it must overlap the net's. A logic pin's
 range is its signal level: tied to a lower rail it is driven low, which is
@@ -258,11 +258,11 @@ what a strap is for, so only a net above its maximum is reported. A 0 V or
 ground net is never reported against a logic pin.
 
 Which input feeds which output is the part's `bridgesTo`, on a leaf or on
-the composite that binds it (the RP2040's VREG_VIN bridges to VREG_VOUT). A
+the composite that binds it (the fixture MCU's VREG_IN bridges to VREG_OUT). A
 part that states no bridge between its supply pins is taken as a converter
 whose every power input feeds every power output. A part that states its
-bridges may supply its own other inputs: the RP2040's VREG_VOUT on its DVDD
-pins is the design, VREG_VIN on that net is the fault. Connectors and lands
+bridges may supply its own other inputs: the fixture MCU's VREG_OUT on its
+VCORE pins is the design, VREG_IN on that net is the fault. Connectors and lands
 carry power and are not checked.
 
 A strap is a configuration input the part samples as a fixed level, marked
@@ -271,11 +271,11 @@ with a `strap` trait on the leaf (`StrapTrait`: `function`, optional `when`,
 
 ```ts
 { type: "strap", params: { function: "I2C address bit 0", when: ["i2c"],
-  levels: { low: "address 0x68 (SDO to GND)", high: "address 0x69 (SDO to VDDIO)" } } }
+  levels: { low: "address 0x6A (ADDR to GND)", high: "address 0x6B (ADDR to VDDIO)" } } }
 ```
 
 A pin shared by several functions is a strap only while its part runs an
-interface named in `when`: the BMI270's SDO is its SPI MISO, and a strap
+interface named in `when`: the fixture IMU's ADDR is its SPI MISO, and a strap
 only when a link to its `i2c` composite is derived. A strap is at a fixed
 level on a supply or ground net, or on a net of its own with a resistor to
 one; on a bus line it follows the signal, whatever pull-up the line has.
@@ -287,23 +287,23 @@ A component's package goes on its mechanical domain, next to its size:
 ```ts
 domains: [{
   domain: "mechanical",
-  dimensions_mm: { length: 4.0, width: 3.0, height: 0.9 },   // overall, leads included
+  dimensions_mm: { length: 3.0, width: 3.0, height: 0.9 },   // overall, leads included
   package: {
-    name: "VSON-14",
-    code: "DSJ (R-PVSON-N14)",
-    pin_count: 14,
+    name: "SON-12",
+    code: "DQX",                                              // the manufacturer's package code, when it has one
+    pin_count: 12,
     pitch_mm: 0.5,
     exposed_pad: true,
     exposed_pad_pin: "EP",
-    exposed_pad_mm: [2.85, 1.58],
-    source: "https://www.ti.com/lit/ds/symlink/tps63020.pdf (§5; p.32)",
+    exposed_pad_mm: [2.4, 1.7],
+    source: "https://example.com/datasheet.pdf (package outline)",
   },
 }]
 ```
 
 `partPackage(def)` reads it with the size. `pin_count` counts numbered
 terminals; an exposed pad is stated separately, with the designator of its
-leaf (the manufacturer's number, such as `57` on the RP2040, else a label
+leaf (the manufacturer's number, such as `33` on a 32-pin QFN that numbers it, else a label
 such as `"EP"`).
 
 Every leaf pin of a component with a package carries `pin`. `pinTable`
@@ -312,12 +312,12 @@ repeated designator:
 
 ```ts
 const pins = pinTable([
-  [1, "SDO", "io", "Serial data output in SPI 4W; I2C address bit 0 select"],
-  { pin: 5, name: "VDDIO", type: "power_in", voltageV: [1.2, 3.6], nominalV: 1.8 },
-  [6, "GNDIO", "ground"],
-  { pin: 13, name: "SCx", type: "input", capabilities: ["i2c_scl", "spi_sck"] },
-  { pin: 14, name: "SDx", type: "io", capabilities: ["i2c_sda", "spi_mosi"] },
-], { source: `${SRC.datasheet} (Table 22)`, logicV: [1.2, 3.6] });
+  { pin: 1, name: "SDA", type: "io", capabilities: ["i2c_sda", "spi_mosi"] },
+  { pin: 2, name: "SCL", type: "input", capabilities: ["i2c_scl", "spi_sck"] },
+  [4, "ADDR", "io", "SPI SDO; I2C address bit 0"],
+  { pin: 8, name: "VDDIO", type: "power_in", voltageV: [1.2, 3.6], nominalV: 1.8 },
+  [10, "GNDIO", "ground"],
+], { source: `${SRC.datasheet} (pin table)`, logicV: [1.2, 3.6] });
 ```
 
 Pin types are `power_in`, `power_out`, `ground`, `io`, `input`, `output`,
