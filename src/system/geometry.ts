@@ -544,7 +544,8 @@ const paramValue = (iface: InterfaceDef, id: string) => {
 /**
  * Hole centres of a bolt-pattern interface in its frame's x/y (mm). Circles
  * start at the frame's xAxis (the frame's xAxis points at hole 1); squares
- * and rectangles are centred, sides along x and y.
+ * and rectangles are centred, sides along x and y; a cross has one diagonal
+ * pair on x and the other on y.
  */
 export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
   const spacing = paramValue(iface, "hole_spacing");
@@ -558,6 +559,14 @@ export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
     });
   }
   const sy = paramValue(iface, "hole_spacing_y") ?? spacing;
+  if (shape === "cross") {
+    return [
+      [-spacing / 2, 0],
+      [spacing / 2, 0],
+      [0, -sy / 2],
+      [0, sy / 2],
+    ];
+  }
   return [
     [-spacing / 2, -sy / 2],
     [spacing / 2, -sy / 2],

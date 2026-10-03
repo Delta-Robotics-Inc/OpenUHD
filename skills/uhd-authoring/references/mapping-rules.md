@@ -19,6 +19,14 @@
 | Motor wires | `BrushlessPhases({ role: "input", termination: "bare_wire_lead" })`; lead gauge and length go in a trait. |
 | ESC outputs | `BrushlessPhases({ id: "motor_1", role: "output", ... })`, one per channel, with per-channel current ratings. |
 | FC motor pads M1–M8 | `EscSignal` leaves with `motorIndex`; the functional FC↔ESC port is `FcEscPort` with the leaves passed in (no connector/pinout on it), and the physical socket is a separate connector composite. |
+| Brushed motor terminals, H-bridge outputs | `BrushedMotorTerminals({ role: "input" })` on the motor, `role: "output"` per driver channel with its current rating. |
+| Stepper motor leads | `StepperPhases({ role: "input", winding, leads })` with the lead colours as leaf names; `bipolarCapable` when a unipolar motor has a tap per winding. |
+| Stepper driver | `StepperPhases({ role: "output", winding })` for the motor terminals and `StepDir({ role: "input", step, dir, enable, stepReturn, … })` for the command inputs, with the step rate and timing. |
+| Encoder outputs or an encoder input | `QuadratureEncoder` (`output` on the encoder, `input` on the reader), with counts per revolution, the absolute PWM output and the supply where present. |
+| Servo lead or servo channel | `ServoPort` with the pulse range, frame rate and connector pinout; the supply goes through `power` and `ground`. |
+| CAN bus pins or connectors | `CAN({ canH, canL, ground, bitRateBps, fd, termination })`; an MCU's CAN peripheral and a transceiver's logic pins are `CANLogic`. |
+| Shield or HAT pins | `ShieldHeader({ form, role: "accessory", pins: { label: leafId } })` on the shield; the host board declares the same form with `role: "host"`. |
+| Pneumatic or hydraulic port | `FluidPort({ medium, role, joint, pressureBar })`; one per physical port, with the thread or tube size as the source prints it. |
 | Dimensions, mass | `domains[].dimensions_mm` (overall, leads included), `domains[].weight_g` (mechanical). |
 | Operating temperature | A `thermal` domain entry, plus an `operating_conditions` trait. |
 | KV, thrust, C rating, prop pitch | A `performance` trait with `kind` (`motor`, `battery`, `propeller`, `radio`, `video`). |

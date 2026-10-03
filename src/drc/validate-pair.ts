@@ -9,6 +9,7 @@ import {
   type RegionNode,
 } from "./region-tree.js";
 import { checkPairParameters } from "./param-check.js";
+import { checkPairJoints } from "./joint-check.js";
 import type {
   ConnectionResult,
   ConnectionState,
@@ -59,7 +60,7 @@ export function validatePair(
       if (a.iface.domain !== b.iface.domain) continue;
       const match = matchProtocols(a.iface, b.iface);
       if (!match.compatible) continue;
-      const diagnostics = checkPairParameters(a.iface.parameters, b.iface.parameters);
+      const diagnostics = [...checkPairParameters(a.iface.parameters, b.iface.parameters), ...checkPairJoints(a.iface, b.iface)];
       candidates.push({
         a,
         b,

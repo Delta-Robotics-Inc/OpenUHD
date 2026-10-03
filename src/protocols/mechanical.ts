@@ -22,13 +22,19 @@ export interface BoltPatternConfig {
   id: string;
   name?: string;
   role: BoltPatternRole;
-  shape: "square" | "rectangle" | "circle";
   /**
-   * Square side, rectangle X spacing, or bolt-circle diameter, in mm.
+   * "cross": four holes on two perpendicular diagonals of different
+   * lengths, as on motor bases ("16 × 19"): one pair `spacingMm` apart on x,
+   * the other `spacingYmm` apart on y. A cross mates only another cross.
+   */
+  shape: "square" | "rectangle" | "circle" | "cross";
+  /**
+   * Square side, rectangle X spacing, bolt-circle diameter, or the cross's
+   * x diagonal, in mm.
    * A [min, max] range models slotted holes accepting any spacing within it.
    */
   spacingMm: number | [number, number];
-  /** Rectangle Y spacing in mm. */
+  /** Rectangle Y spacing, or the cross's y diagonal, in mm. */
   spacingYmm?: number | [number, number];
   holeCount: number;
   /** Fastener designation, e.g. "M3". */
@@ -45,6 +51,9 @@ export interface BoltPatternConfig {
 }
 
 export function BoltPattern(config: BoltPatternConfig): InterfaceDef {
+  if (config.shape === "cross" && (config.spacingYmm === undefined || config.holeCount !== 4)) {
+    throw new Error(`BoltPattern ${config.id}: a cross pattern has four holes and needs spacingYmm (the second diagonal)`);
+  }
   const parameters: Parameter[] = [
     holeSpacingMm(config.spacingMm),
     holeCount(config.holeCount),

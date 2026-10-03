@@ -322,3 +322,91 @@ export function FcEscPort(config: FcEscPortConfig): InterfaceDef {
       : {}),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Brushed DC motor terminals
+// ---------------------------------------------------------------------------
+
+export interface BrushedMotorTerminalsConfig {
+  /** Interface id. Defaults to "motor_out" (output) or "motor" (input). */
+  id?: string;
+  name?: string;
+  /** "output" = H-bridge or motor controller channel; "input" = motor terminals. */
+  role: "output" | "input";
+  /**
+   * The two terminals (M+ then M-, or OUT1 then OUT2): inline specs or ids
+   * of declared leaves. Defaults to generated leaves "M+" and "M-".
+   */
+  terminals?: [SignalRef, SignalRef];
+  /** Continuous current (driver: per channel; motor: rated or stall, say which in a trait). */
+  maxCurrentA?: number;
+  /** Burst or peak current in amps (note the duration in a trait). */
+  burstCurrentA?: number;
+  /** Motor or driver voltage: nominal or [min, max]. */
+  voltageV?: number | [number, number];
+  /** Termination of each terminal, e.g. "screw_terminal", "spade_terminal", "bare_wire_lead". */
+  termination?: string;
+  exposed?: boolean;
+  defaultActive?: boolean;
+}
+
+/**
+ * A brushed DC motor connection: two `dc_motor_terminal` leaves and a
+ * composed `dc_motor` interface whose slots terminal_1 and terminal_2 pair in
+ * order across a connection. A brushed motor has no fixed polarity: swapping
+ * the terminals reverses rotation, which the `motor_polarity` trait states.
+ * A driver channel and a motor pair as output and input.
+ */
+export function BrushedMotorTerminals(config: BrushedMotorTerminalsConfig): InterfaceDef[] {
+  const role = config.role;
+  const id = config.id ?? (role === "output" ? "motor_out" : "motor");
+  const generated: InterfaceDef[] = [];
+  const refs = config.terminals ?? [{ pin: "M+" }, { pin: "M-" }];
+  const ids = refs.map((ref, index) =>
+    resolveSignal(
+      ref,
+      {
+        id: `${id}_${index + 1}`,
+        defaultName: index === 0 ? "M+" : "M-",
+        capability: "dc_motor_terminal",
+        protocols: [{ type: "dc_motor_terminal", roles: [role] }],
+      },
+      generated,
+    ),
+  );
+  if (config.termination !== undefined) {
+    for (const leaf of generated) leaf.traits = [...(leaf.traits ?? []), connectorTrait(config.termination)];
+  }
+
+  const parameters: Parameter[] = [];
+  if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
+  if (config.burstCurrentA !== undefined) parameters.push(burstCurrentA(config.burstCurrentA));
+  if (config.voltageV !== undefined) {
+    parameters.push(Array.isArray(config.voltageV) ? voltageRangeV(config.voltageV[0], config.voltageV[1]) : voltageV(config.voltageV));
+  }
+
+  const port: InterfaceDef = {
+    id,
+    name: config.name ?? (role === "output" ? "DC motor out" : "DC motor terminals"),
+    domain: "electrical",
+    exposed: config.exposed ?? true,
+    default_active: config.defaultActive ?? true,
+    protocols: [{ type: "dc_motor", roles: [role] }],
+    ...(parameters.length > 0 ? { parameters } : {}),
+    slots: [1, 2].map((n, index) => ({
+      id: `terminal_${n}`,
+      label: index === 0 ? "M+" : "M-",
+      required: true,
+      match: { protocol: "dc_motor_terminal", role, ...(typeof refs[index] === "string" ? {} : { capability: "dc_motor_terminal" }) },
+    })),
+    profiles: [{ id: `${id}_default`, label: "Motor terminals", default_active: true, bindings: { terminal_1: ids[0], terminal_2: ids[1] } }],
+    max_instances: 1,
+    traits: [
+      {
+        type: "motor_polarity",
+        params: { note: "A brushed DC motor has no fixed polarity: swapping the two terminals reverses rotation." },
+      },
+    ],
+  };
+  return [...generated, port];
+}
