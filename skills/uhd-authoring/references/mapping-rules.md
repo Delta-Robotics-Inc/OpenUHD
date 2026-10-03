@@ -32,6 +32,18 @@
 | Servo lead or servo channel | `ServoPort` with the pulse range, frame rate and connector pinout; the supply goes through `power` and `ground`. |
 | CAN bus pins or connectors | `CAN({ canH, canL, ground, bitRateBps, fd, termination })`; an MCU's CAN peripheral and a transceiver's logic pins are `CANLogic`. |
 | Shield or HAT pins | `ShieldHeader({ form, role: "accessory", pins: { label: leafId } })` on the shield; the host board declares the same form with `role: "host"`. |
+| PCIe lanes, an FFC or slot carrying PCIe | `PCIe({ role, lanes, generation, laneSignals, refclk, perst, clkreq, wake })`: `root` on the host side, `endpoint` on the card; lane pins named from this side (`tx` = PETp/PETn). |
+| An M.2 socket or card | `M2({ role, key, sizes, carries, pcie })`; the card's length in `sizes`, a socket's standoff lengths; the hold-down screw is a `BoltPattern`. |
+| A camera or display FFC (MIPI) | `CSI2` (camera = transmitter, host = receiver) or `DSI` (host = transmitter, display = receiver) with `lanes`, `laneModes` and the D-PHY pairs; the control bus is an `I2C`. |
+| An RJ45, PHY MDI pins, a fibre port, PoE | `Ethernet({ speedsMbps, pairs, poe, medium, fiber })`; the jack is a `connectorTrait`; SFP cages and modules are `SFP`. |
+| I2S, TDM or PCM audio pins | `I2S` / `PCM` with `clockRole`, `direction` and `formats` as the datasheet states them. |
+| A parallel (DVP) camera | `DVP` with the data pins MSB first; PWDN and RESET are `Pin`s, SCCB is `I2C`. |
+| A microSD slot or SDIO pins | `SDCard({ role: "host", form, modes, capacityClasses, clk, cmd, dat, cd })`. |
+| USB data pins or a USB port | `USB({ role, speeds, dp, dm, superSpeed, cc })`; VBUS as `PowerIn`/`PowerOut`; the receptacle as `connectorTrait`. |
+| Wi-Fi, Bluetooth, Zigbee / Thread radio | `WiFi`, `Bluetooth`, `IEEE802154` (network domain) with bands and stacks; the antenna is an `rf` interface named in `radio`. |
+| An LED | `Led()` for a two-terminal LED; `ledTrait` for RGB, addressable LEDs and displays, with `LedDrive({ role: "led" })` per terminal a driver reaches; an LED driver channel is `LedDrive({ role: "driver", mode, output })`. |
+| A relay | `relayTrait({ kind, form, coil, contacts })` with every contact rating row, and `RelayCoil` / `RelayContacts` for the pins. |
+| A memory chip, card or SSD | `storageTrait({ medium, capacity_bytes, interfaces })`, with the bus as its own builder (`SPI`, `I2C`, `SDCard`, `M2`). |
 | Pneumatic or hydraulic port | `FluidPort({ medium, role, joint, pressureBar })`; one per physical port, with the thread or tube size as the source prints it. |
 | Dimensions, mass | `domains[].dimensions_mm` (overall, leads included), `domains[].weight_g` (mechanical). |
 | Operating temperature | A `thermal` domain entry, plus an `operating_conditions` trait. |
