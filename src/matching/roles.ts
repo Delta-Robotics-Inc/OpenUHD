@@ -62,6 +62,11 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
     structure: ["component"],
     component: ["structure"],
   },
+  // a passive terminal joined to another by a conductor (an LED's anode soldered to a
+  // board pad): on a board net, terminals still pair with nothing (system/derive.ts)
+  passive: {
+    terminal: ["terminal"],
+  },
   motor_control: {
     controller: ["target"],
     target: ["controller"],

@@ -100,6 +100,8 @@ interface Candidate {
   iface: InterfaceDef;
   /** Pads it binds (1 for the pad itself). */
   size: number;
+  /** The pads that are not ground (the pad's own id for a pad). */
+  live: string[];
 }
 
 /**
@@ -110,8 +112,8 @@ function liftCandidates(owner: ModuleDef, leaf: InterfaceDef, carried: Set<strin
   const eligible = compositesBinding(owner, leaf.id)
     .filter((c) => c.leaves.every((l) => carried.has(l)))
     .sort((x, y) => y.leaves.length - x.leaves.length)
-    .map((c) => ({ iface: c.iface, size: c.leaves.length }));
-  return [...eligible, { iface: leaf, size: 1 }];
+    .map((c) => ({ iface: c.iface, size: c.leaves.length, live: c.leaves.filter((l) => !isGround(owner.interfaces.find((i) => i.id === l) ?? leaf)) }));
+  return [...eligible, { iface: leaf, size: 1, live: [leaf.id] }];
 }
 
 const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
@@ -124,13 +126,18 @@ const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
  * only share the net. Two ground pads on a net share it without a link; as
  * conductors of two composites they still pair.
  */
-function lift(a: Candidate[], b: Candidate[], onNet: boolean): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
+function lift(a: Candidate[], b: Candidate[], onNet: boolean, joined: (la: string, lb: string) => boolean = () => true): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
   let best: { fa: InterfaceDef; fb: InterfaceDef } | undefined;
   let bestSize = 0;
   for (const x of a) {
     for (const y of b) {
       if (x.size + y.size <= bestSize || isComposite(x.iface) !== isComposite(y.iface)) continue;
+      // two composites pair only when a conductor other than ground joins them: on a board, a part's
+      // LED supply and a regulator's output may both reach the other part, but only their grounds meet
+      if (isComposite(x.iface) && !x.live.some((la) => y.live.some((lb) => joined(la, lb)))) continue;
       if (onNet && !isComposite(x.iface) && isGround(x.iface) && isGround(y.iface)) continue;
+      // passive terminals (a resistor's, a capacitor's) on a net only share it: they pair only through an explicit conductor
+      if (onNet && isPassive(x.iface) && isPassive(y.iface)) continue;
       if (!matchProtocols(x.iface, y.iface).compatible) continue;
       best = { fa: x.iface, fb: y.iface };
       bestSize = x.size + y.size;
@@ -277,8 +284,10 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     const carriedA = new Set(group.map((p) => p.a.leaf.id));
     const carriedB = new Set(group.map((p) => p.b.leaf.id));
     const functional = new Map<string, { fa: InterfaceDef; fb: InterfaceDef; pairs: Pair[] }>();
+    const wires = new Set(group.map((p) => `${p.a.leaf.id}|${p.b.leaf.id}`));
+    const joined = (la: string, lb: string) => wires.has(`${la}|${lb}`);
     for (const p of group) {
-      const lifted = lift(liftCandidates(p.a.owner, p.a.leaf, carriedA), liftCandidates(p.b.owner, p.b.leaf, carriedB), p.nets.size > 0);
+      const lifted = lift(liftCandidates(p.a.owner, p.a.leaf, carriedA), liftCandidates(p.b.owner, p.b.leaf, carriedB), p.nets.size > 0, joined);
       if (!lifted) continue;
       const { fa, fb } = lifted;
       const k = `${fa.id}|${fb.id}`;
@@ -310,9 +319,22 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
           locked: false,
         }));
       const problems = [...wiringProblems(result, wired), ...(isComposite(fa) ? missingConductors(result, fa, fb, wired) : [])];
+      // slots the protocol left unpaired (a second VLED pin, an exposed pad beside GND) are complete
+      // when a conductor joins their pads to the other side (doubled supply pins on one rail)
+      const wiredLeaves = new Set(wires.flatMap((w) => [`a:${w.a.leaf.id}`, `b:${w.b.leaf.id}`]));
+      const bindA = slotBindings(fa);
+      const bindB = slotBindings(fb);
+      const unpairedWired =
+        result.state === "partial" &&
+        result.unresolvedSlots.length > 0 &&
+        result.unresolvedSlots.every((u) => {
+          const slot = u.slice(u.lastIndexOf(":") + 1);
+          return (bindA[slot] && wiredLeaves.has(`a:${bindA[slot]}`)) || (bindB[slot] && wiredLeaves.has(`b:${bindB[slot]}`));
+        });
       out.push({
         ...result,
-        state: problems.length ? "incompatible" : result.state,
+        ...(unpairedWired ? { unresolvedSlots: [] } : {}),
+        state: problems.length ? "incompatible" : unpairedWired ? "configured" : result.state,
         children: wired.length ? wired : result.children,
         diagnostics: [...problems, ...result.diagnostics],
         derived: { via, harnesses, ...(nets.length ? { nets } : {}) },
@@ -323,6 +345,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
 }
 
 const isPower = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power");
+const isPassive = (i: InterfaceDef) => i.protocols.length > 0 && i.protocols.every((p) => p.type === "passive");
 const isGround = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("ground"));
 const isPowerOutput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("output"));
 const isPowerInput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("input"));

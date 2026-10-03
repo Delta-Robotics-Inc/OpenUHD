@@ -193,7 +193,11 @@ function ancestorConsumed(node: RegionNode, consumed: Set<RegionNode>): boolean 
  */
 function isUnambiguous(c: Candidate, aliveCandidates: Candidate[]): boolean {
   for (const side of ["a", "b"] as const) {
-    const forEndpoint = aliveCandidates.filter((x) => x[side] === c[side]);
+    const other = side === "a" ? "b" : "a";
+    const below = new Set(descendants(c[other]));
+    // a pairing with a region inside c's other end (a power port's own pin, when the ports
+    // match) is the same connection at a lower altitude, not a rival to it
+    const forEndpoint = aliveCandidates.filter((x) => x[side] === c[side] && !below.has(x[other]));
     const clean = forEndpoint.filter((x) => x.clean);
     const pool = clean.length > 0 ? clean : forEndpoint;
     if (pool.length !== 1 || pool[0] !== c) return false;
