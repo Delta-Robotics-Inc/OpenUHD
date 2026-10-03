@@ -15,8 +15,16 @@
  * The walk also checks the wiring: conductor pairs inside a composite must
  * match the pairing the protocol expects (TX to RX).
  *
+ * Board nets (PB-824) join the same walk: each net is a node that its
+ * member pins' membership links reach, so every pin on a net reaches every
+ * other. On a net, a pair of pads is a link only when the interfaces they
+ * lift to pair by protocol (a supply output with an input, an I2C master
+ * with a target); pads that do not pair (two loads, two targets, a strap to a
+ * rail) share the net without a link between them. The net rule checks what
+ * pairs cannot (nets.ts).
+ *
  * Scope: harnesses that are children of the linking module, and connector
- * links stored on it. Parts may be nested (a pad on stack/fc).
+ * links and nets stored on it. Parts may be nested (a pad on stack/fc).
  */
 import type { InterfaceDef } from "../types/interface.js";
 import type { InterfaceLink, ModuleDef } from "../types/module.js";
@@ -34,6 +42,8 @@ import {
 } from "./index.js";
 import { positionPairs, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
+import { isNet, NET_PROTOCOL } from "../protocols/net.js";
+import { matchProtocols } from "../matching/protocol-match.js";
 
 interface Terminal {
   key: string;
@@ -46,6 +56,7 @@ interface Edge {
   to: string;
   link?: string;
   harness?: string;
+  net?: string;
 }
 
 const pathKey = (p: string[]) => p.join("/");
@@ -78,12 +89,46 @@ function compositesBinding(owner: ModuleDef, leafId: string): { iface: Interface
   return out;
 }
 
-/** The functional interface a pad belongs to, given every pad carried to the same module. */
-function lift(owner: ModuleDef, leaf: InterfaceDef, carried: Set<string>): InterfaceDef {
+interface Candidate {
+  iface: InterfaceDef;
+  /** Pads it binds (1 for the pad itself). */
+  size: number;
+}
+
+/**
+ * What a pad can lift to, largest first: each composite binding it whose
+ * bound pads all travel to the same module, then the pad itself.
+ */
+function liftCandidates(owner: ModuleDef, leaf: InterfaceDef, carried: Set<string>): Candidate[] {
   const eligible = compositesBinding(owner, leaf.id)
     .filter((c) => c.leaves.every((l) => carried.has(l)))
-    .sort((x, y) => y.leaves.length - x.leaves.length);
-  return eligible[0]?.iface ?? leaf;
+    .sort((x, y) => y.leaves.length - x.leaves.length)
+    .map((c) => ({ iface: c.iface, size: c.leaves.length }));
+  return [...eligible, { iface: leaf, size: 1 }];
+}
+
+const isComposite = (iface: InterfaceDef) => Boolean(iface.slots?.length);
+
+/**
+ * The functional interfaces a pad pair lifts to: the largest pair that pairs
+ * by protocol, composite with composite or pad with pad (a composite port is
+ * not validated against a lone pad). With none, a conductor still links the
+ * largest candidates (and the link reports the mismatch); on a net the pads
+ * only share the net.
+ */
+function lift(a: Candidate[], b: Candidate[], onNet: boolean): { fa: InterfaceDef; fb: InterfaceDef } | undefined {
+  let best: { fa: InterfaceDef; fb: InterfaceDef } | undefined;
+  let bestSize = 0;
+  for (const x of a) {
+    for (const y of b) {
+      if (x.size + y.size <= bestSize || isComposite(x.iface) !== isComposite(y.iface)) continue;
+      if (!matchProtocols(x.iface, y.iface).compatible) continue;
+      best = { fa: x.iface, fb: y.iface };
+      bestSize = x.size + y.size;
+    }
+  }
+  if (best || onNet) return best;
+  return { fa: a[0].iface, fb: b[0].iface };
 }
 
 /** Root-relative endpoint for an interface owned at `ownerPath`: through an export when one exists. */
@@ -140,6 +185,18 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     }
   }
 
+  // 1b. net memberships (PB-824): each pin is joined to its net's node
+  for (const r of stored) {
+    if (r.protocol !== NET_PROTOCOL || r.state === "incompatible") continue;
+    const [net, member] = isNet(r.a.iface) ? [r.a, r.b] : [r.b, r.a];
+    const key = `${pathKey(member.ownerPath)}#${member.iface.id}`;
+    if (!terminals.has(key)) {
+      terminals.set(key, { key, owner: member.owner, ownerPath: member.ownerPath, leaf: member.iface });
+      order.push(key);
+    }
+    addEdge(key, `net#${net.iface.id}`, { link: r.link.id, net: net.iface.id });
+  }
+
   // 2. conductors inside harness children
   for (const ref of def.children ?? []) {
     const h = lookup(ref.moduleDefId);
@@ -163,26 +220,34 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     b: Terminal;
     links: Set<string>;
     harnesses: Set<string>;
+    nets: Set<string>;
   }
   const pairs = new Map<string, Pair>();
   for (const start of order) {
-    const walk = (node: string, seen: Set<string>, links: Set<string>, harnesses: Set<string>) => {
+    const walk = (node: string, seen: Set<string>, links: Set<string>, harnesses: Set<string>, nets: Set<string>) => {
       for (const e of edges.get(node) ?? []) {
         if (seen.has(e.to)) continue;
         const nextLinks = e.link ? new Set([...links, e.link]) : links;
         const nextHarnesses = e.harness ? new Set([...harnesses, e.harness]) : harnesses;
+        const nextNets = e.net ? new Set([...nets, e.net]) : nets;
         const t = terminals.get(e.to);
         if (t) {
-          const a = terminals.get(start)!;
-          if (pathKey(a.ownerPath) === pathKey(t.ownerPath)) continue;
+          let a = terminals.get(start)!;
+          let b = t;
+          if (pathKey(a.ownerPath) === pathKey(b.ownerPath)) {
+            // the walk never pairs a part with itself, except a part supplying
+            // itself through a board net (an on-chip regulator's output to its core)
+            if (!nextNets.size || !selfSupply(a.leaf, b.leaf)) continue;
+            if (!isPowerOutput(a.leaf)) [a, b] = [b, a];
+          }
           const key = [start, e.to].sort().join("|");
-          if (!pairs.has(key)) pairs.set(key, { a, b: t, links: nextLinks, harnesses: nextHarnesses });
+          if (!pairs.has(key)) pairs.set(key, { a, b, links: nextLinks, harnesses: nextHarnesses, nets: nextNets });
           continue;
         }
-        walk(e.to, new Set([...seen, e.to]), nextLinks, nextHarnesses);
+        walk(e.to, new Set([...seen, e.to]), nextLinks, nextHarnesses, nextNets);
       }
     };
-    walk(start, new Set([start]), new Set(), new Set());
+    walk(start, new Set([start]), new Set(), new Set(), new Set());
   }
 
   // 4. group by module pair, lift pads to functional interfaces, validate
@@ -190,7 +255,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
   for (const p of pairs.values()) {
     const fwd = `${pathKey(p.a.ownerPath)}|${pathKey(p.b.ownerPath)}`;
     const rev = `${pathKey(p.b.ownerPath)}|${pathKey(p.a.ownerPath)}`;
-    if (byModules.has(rev)) byModules.get(rev)!.push({ ...p, a: p.b, b: p.a });
+    if (fwd !== rev && byModules.has(rev)) byModules.get(rev)!.push({ ...p, a: p.b, b: p.a });
     else byModules.set(fwd, [...(byModules.get(fwd) ?? []), p]);
   }
 
@@ -200,8 +265,9 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     const carriedB = new Set(group.map((p) => p.b.leaf.id));
     const functional = new Map<string, { fa: InterfaceDef; fb: InterfaceDef; pairs: Pair[] }>();
     for (const p of group) {
-      const fa = lift(p.a.owner, p.a.leaf, carriedA);
-      const fb = lift(p.b.owner, p.b.leaf, carriedB);
+      const lifted = lift(liftCandidates(p.a.owner, p.a.leaf, carriedA), liftCandidates(p.b.owner, p.b.leaf, carriedB), p.nets.size > 0);
+      if (!lifted) continue;
+      const { fa, fb } = lifted;
       const k = `${fa.id}|${fb.id}`;
       const entry = functional.get(k) ?? { fa, fb, pairs: [] };
       entry.pairs.push(p);
@@ -213,6 +279,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
       const b = endpointFor(def, tb.ownerPath, tb.owner, fb, lookup);
       const via = [...new Set(wires.flatMap((w) => [...w.links]))].sort();
       const harnesses = [...new Set(wires.flatMap((w) => [...w.harnesses]))].sort();
+      const nets = [...new Set(wires.flatMap((w) => [...w.nets]))].sort();
       const link: InterfaceLink = {
         id: `${via.join("+")}~${fa.id}~${fb.id}`,
         name: `${fa.name ?? fa.id} ↔ ${fb.name ?? fb.id}`,
@@ -235,12 +302,16 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
         state: problems.length ? "incompatible" : result.state,
         children: wired.length ? wired : result.children,
         diagnostics: [...problems, ...result.diagnostics],
-        derived: { via, harnesses },
+        derived: { via, harnesses, ...(nets.length ? { nets } : {}) },
       });
     }
   }
   return out;
 }
+
+const isPowerOutput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("output"));
+const isPowerInput = (i: InterfaceDef) => i.protocols.some((p) => p.type === "power" && p.roles.includes("input"));
+const selfSupply = (x: InterfaceDef, y: InterfaceDef) => (isPowerOutput(x) && isPowerInput(y)) || (isPowerOutput(y) && isPowerInput(x));
 
 const pinOf = (leaf: InterfaceDef) => (leaf.pin === undefined ? undefined : String(leaf.pin));
 
