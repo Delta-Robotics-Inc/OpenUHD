@@ -137,12 +137,50 @@ export type ArtifactRole = (typeof ARTIFACT_ROLES)[number];
 export const EVIDENCE_KINDS = ["sources", "verification", "datasheet", "document", "other"] as const;
 export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
 
+/**
+ * Who may receive a file (docs/library-protocol.md § 4.5):
+ * `redistributable`, its terms allow passing it on (with any attribution
+ * they require); `internal`, terms were found and they restrict use or
+ * redistribution, so it stays with whoever obtained it; `unknown`, no terms
+ * could be established (unverified). Only `redistributable` files may leave
+ * the library's own organisation.
+ */
+export const DISTRIBUTION_CLASSES = ["redistributable", "internal", "unknown"] as const;
+export type Distribution = (typeof DISTRIBUTION_CLASSES)[number];
+
+/**
+ * The terms a file comes under: what the library knows about its licence
+ * and where it came from. Optional on every file of an envelope; a file
+ * without terms is treated as `unknown`.
+ */
+export interface FileTerms {
+  distribution: Distribution;
+  /** SPDX licence id (`MIT`, `CC-BY-SA-4.0`) or, for anything else, a `LicenseRef-…` id or a plain name. */
+  license?: string;
+  /** Where the licence or terms of use are published. */
+  licenseUrl?: string;
+  /** A file of this revision holding the licence text (its `path` in `artifacts`). */
+  licensePath?: string;
+  /** The notice redistribution must carry, e.g. "Copyright (c) 2016 Adafruit Industries". */
+  attribution?: string;
+  /** The terms in a sentence or two, or what was found when they could not be established. */
+  summary?: string;
+  /** Where the file (or the archive it was taken from) was downloaded. */
+  sourceUrl?: string;
+  /** SHA-256 of the bytes as downloaded, when they differ from the file's (an archive it was extracted from, a file it was converted from). */
+  sourceSha256?: string;
+  /** When the file and its terms were retrieved (ISO 8601 date or date-time). */
+  retrieved?: string;
+}
+
 export interface EnvelopeArtifact extends BlobRef {
   /** The definition's `filePath`, relative to the revision's artifact base. */
   path: string;
   role: ArtifactRole;
   /** The `ArtifactDef.id` this file backs. */
   artifactId?: string;
+  /** Licence and distribution of the file (§ 4.5). */
+  terms?: FileTerms;
 }
 
 export interface MissingArtifact {
@@ -160,6 +198,8 @@ export interface EvidenceRef {
   size?: number;
   mediaType?: string;
   url?: string;
+  /** For a carried file: its licence and distribution (§ 4.5). */
+  terms?: FileTerms;
 }
 
 export interface RevisionSource {
@@ -220,6 +260,7 @@ export const ERROR_CODES = [
   "REVISION_NOT_FOUND",
   "BLOB_NOT_FOUND",
   "NOT_FOUND",
+  "NOT_DISTRIBUTABLE",
   "RATE_LIMITED",
   "INTERNAL",
 ] as const;
