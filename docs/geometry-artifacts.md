@@ -148,9 +148,11 @@ lists them (`cadArtifacts`) lives with the generators, not in UHD.
 
 ### Vendor CAD (Matek M9N-5883 STEP)
 
-- `library/cad/py/gnss_vendor.py` reads the manufacturer STEP (not committed:
-  terms not stated), converts it to GLB (gitignored) and writes a committed
-  manifest of the vendor's **own component names**. Interfaces bind to them
+- `library/cad/py/gnss_vendor.py` reads the manufacturer STEP (not committed
+  here: terms not stated), converts it to GLB (gitignored) and writes a
+  committed manifest of the vendor's **own component names**. A library that
+  keeps such a file can instead serve it with its terms, which say who may
+  receive it ([library protocol](library-protocol.md) § 4.5). Interfaces bind to them
   directly: `uart_gnss`, `i2c_compass`, `vin_5v`, `gnd` → `GH6P-1` **or**
   `GH6P-2` (both sockets carry the same six signals: two physical
   alternatives for one interface).
