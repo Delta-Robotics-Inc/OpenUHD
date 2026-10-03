@@ -3,6 +3,9 @@
 | Evidence | UHD |
 | --- | --- |
 | A physical pad, pin, lead, or terminal | A leaf `InterfaceDef` with `pin` set to the silkscreen or pad label and a `pin_functions` trait holding the verbatim description. |
+| A chip's pin table | `pinTable([...rows], { source, logicV })`: one leaf per row, ids `pin_<n>`, every pin including NC/reserved (`nc`) and the exposed pad. |
+| Package name, pin count, pitch, exposed pad (datasheet package section) | `domains[].package` on the mechanical domain (`PackageSpec`), with `source`; the overall size in `dimensions_mm`. Never a footprint or land-pattern name. |
+| A resistor, capacitor, inductor or ferrite bead | `Passive({ kind, value, unit, tolerance, package })`: two `passive` terminals and a `passive` trait. |
 | A bus or port made of several pads | A composed interface (builder) whose default profile binds the leaves. |
 | A pad with several selectable functions | One leaf with every capability the source states, plus an `interfaceGroups` entry when functions exclude each other. |
 | A connector with several positions (JST-SH 8, XT60, a DJI socket, a GH-6P) | A connector composite: `Connector({ id, connector, gender, pins: [[label, leafId], …], note })`, positions in pin-1-first (or printed) order, each bound to the pad it shares; unused positions have no leaf. The pads keep only their own `solder_pad` trait. See `docs/connectors-and-harnesses.md`. |
@@ -16,7 +19,7 @@
 | Motor wires | `BrushlessPhases({ role: "input", termination: "bare_wire_lead" })`; lead gauge and length go in a trait. |
 | ESC outputs | `BrushlessPhases({ id: "motor_1", role: "output", ... })`, one per channel, with per-channel current ratings. |
 | FC motor pads M1–M8 | `EscSignal` leaves with `motorIndex`; the functional FC↔ESC port is `FcEscPort` with the leaves passed in (no connector/pinout on it), and the physical socket is a separate connector composite. |
-| Dimensions, mass | `domains[].dimensions_mm`, `domains[].weight_g` (mechanical). |
+| Dimensions, mass | `domains[].dimensions_mm` (overall, leads included), `domains[].weight_g` (mechanical). |
 | Operating temperature | A `thermal` domain entry, plus an `operating_conditions` trait. |
 | KV, thrust, C rating, prop pitch | A `performance` trait with `kind` (`motor`, `battery`, `propeller`, `radio`, `video`). |
 | A value the source doesn't give but DRC needs | An `assumption` trait `{ field, value, reason }`. Leave the parameter out unless the assumption is conservative and explicit. |

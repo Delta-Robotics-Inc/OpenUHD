@@ -26,6 +26,9 @@ peer.
 | `Shaft` | `shaft: output/input` | Motor shafts (output), propeller hubs and pulleys (input) |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions (PB-805); binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
+| `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
+| `Passive` | module with `passive: terminal` leaves | Resistors, capacitors, inductors, ferrite beads |
+| `Net` / `netLinks` | `net: node` on a board | Board nets (boards only, never on a part; see docs/boards-and-nets.md) |
 
 ## Canonical parameter ids
 
