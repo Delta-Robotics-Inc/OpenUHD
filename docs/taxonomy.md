@@ -247,7 +247,8 @@ Robotics, 77 nodes, 11 roots). The file's `provenance` records how:
 ### History
 
 - **1.1.0** restores the source's text for the 77 ProtoPart nodes (1.0.0
-  had reworded 44 names, descriptions and notes), rewrites the 26 added
+  had reworded 45 names, descriptions and agent notes on 41 of them),
+  rewrites the 26 added
   nodes in the source's style, and adds the legacy aliases. No path was
   added, renamed or removed.
 - **1.0.0** was the first version: the 77 ProtoPart paths and 26 additions.

@@ -18,7 +18,7 @@ export const UHD_TAXONOMY_DATA: unknown = {
       "The kit node kit.freenove_fnk0082 keeps the source's sku and vendor. The source's kit block also has controller_part_id (freenove-esp32-s3-wroom-dev-board) and manifest (kits/freenove-fnk0082.json). Both point into ProtoPart's own parts library and contribution folder, which are not part of UHD, so they are not carried. A library that holds the kit's manifest states it in its own taxonomy extension (docs/taxonomy.md).",
       "The kit and kit.freenove_fnk0082 agent notes are the source's text unchanged. Where they mention a library search parameter (taxonomyPath) or a manifest, read them as: filter by the kit's category path, and use the kit's contents list from the library that publishes it.",
       "aliases maps category paths that ProtoPart 2.1.0 parts used but the ProtoPart taxonomy did not define to the UHD paths that hold the same parts. validateCategories suggests the alias targets for them. One such path, power.distribution, became a UHD node in 1.0.0 and so needs no alias.",
-      "1.0.0 had reworded 44 of the source's names, descriptions and notes. 1.1.0 restores the source's text, and rewrites the added nodes in the source's style; no path was added, renamed or removed."
+      "1.0.0 had reworded 45 names, descriptions and agent notes on 41 of the source's nodes. 1.1.0 restores the source's text, and rewrites the added nodes in the source's style; no path was added, renamed or removed."
     ]
   },
   "aliases": {
