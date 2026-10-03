@@ -6,7 +6,7 @@
  *   const report = await runConformance("http://localhost:8787");
  *   if (!report.ok) console.log(report.checks.filter((c) => c.status === "fail"));
  */
-import { canonicalJson, closureProblems, envelopeProblems, sha256Hex, taxonomyAncestors, underTaxonomyPath } from "./envelope.js";
+import { canonicalJson, closureProblems, envelopeProblems, isRedistributable, sha256Hex, taxonomyAncestors, underTaxonomyPath } from "./envelope.js";
 import { validateShape } from "./json-schema.js";
 import type { LibrarySchemaDef } from "./schema.js";
 import {
@@ -502,13 +502,19 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
     "blobs",
     "Files: bytes by SHA-256, with ETag and HEAD",
     async (p) => {
-      const files = [...envelope!.artifacts, ...envelope!.evidence.filter((e) => e.path && e.sha256)].map((f) => ({ sha256: f.sha256!, size: f.size! }));
+      const files: { sha256: string; size: number; redistributable: boolean }[] = [...envelope!.artifacts, ...envelope!.evidence.filter((e) => e.path && e.sha256)].map((f) => ({ sha256: f.sha256!, size: f.size!, redistributable: isRedistributable(f) }));
       const thumb = all.find((x) => x.thumbnail)?.thumbnail;
-      if (thumb) files.push({ sha256: thumb.sha256, size: thumb.size });
+      if (thumb) files.push({ sha256: thumb.sha256, size: thumb.size, redistributable: true });
       if (!files.length) p.skip("the examined revision carries no files");
       const picked = [...new Map(files.map((f) => [f.sha256, f])).values()].sort((a, b) => a.size - b.size).slice(0, maxFiles);
+      let withheld = 0;
       for (const f of picked) {
         const r = await get(`/blobs/${f.sha256}`);
+        // § 4.5: a library may decline a file whose terms are not redistributable
+        if (r.status === 403 && !f.redistributable && (r.json as { error?: { code?: string } } | undefined)?.error?.code === "NOT_DISTRIBUTABLE") {
+          withheld++;
+          continue;
+        }
         if (!ok(p, r, `blob ${f.sha256}`)) continue;
         p.expect((await sha256Hex(r.bytes)) === f.sha256, `blob ${f.sha256} does not hash to its address`);
         p.expect(r.bytes.length === f.size, `blob ${f.sha256} is ${r.bytes.length} bytes, the envelope says ${f.size}`);
@@ -518,7 +524,7 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
         p.expect(head.status === 200, `HEAD blob ${f.sha256}: status ${head.status}`);
         p.expect(head.bytes.length === 0, "HEAD returned a body");
       }
-      p.note = `${picked.length} file(s) verified`;
+      p.note = `${picked.length - withheld} file(s) verified${withheld ? `, ${withheld} withheld as not redistributable` : ""}`;
     },
     noSample ?? (envelope ? undefined : "no envelope"),
   );

@@ -486,6 +486,52 @@
         }
       }
     },
+    "fileTerms": {
+      "type": "object",
+      "required": [
+        "distribution"
+      ],
+      "properties": {
+        "distribution": {
+          "enum": [
+            "redistributable",
+            "internal",
+            "unknown"
+          ]
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licenseUrl": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "licensePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "retrieved": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "envelopeArtifact": {
       "type": "object",
       "required": [
@@ -525,6 +571,9 @@
         },
         "artifactId": {
           "type": "string"
+        },
+        "terms": {
+          "$ref": "#/$defs/fileTerms"
         }
       },
       "additionalProperties": false
@@ -588,6 +637,9 @@
         "url": {
           "type": "string",
           "pattern": "^https?://"
+        },
+        "terms": {
+          "$ref": "#/$defs/fileTerms"
         }
       },
       "additionalProperties": false
@@ -793,6 +845,7 @@
     "REVISION_NOT_FOUND",
     "BLOB_NOT_FOUND",
     "NOT_FOUND",
+    "NOT_DISTRIBUTABLE",
     "RATE_LIMITED",
     "INTERNAL"
   ]

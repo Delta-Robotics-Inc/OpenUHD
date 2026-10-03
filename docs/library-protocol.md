@@ -1,7 +1,7 @@
 # UHD library protocol: `uhd-library/v1`
 
-Status: draft 1, 2026-10-03. Types, the JSON Schema and a conformance kit:
-`src/library/` (`@deltarobotics/uhd/library`), `schemas/uhd-library-v1.schema.json`.
+Status: draft 2, 2026-10-03 (draft 2 adds file terms, section 4.5). Types,
+the JSON Schema and a conformance kit: `src/library/` (`@deltarobotics/uhd/library`), `schemas/uhd-library-v1.schema.json`.
 Tests: `test/library-protocol.test.ts`.
 
 A **UHD library** serves module definitions (parts) over HTTP as immutable,
@@ -226,8 +226,10 @@ something to resolve, not pick a revision silently. Clients recompute
 lower-case hex digits), as `application/octet-stream`, with
 `ETag: "sha256:<sha256>"`. `HEAD` returns the same headers without a body.
 A malformed address is `400 SHA256_INVALID`; an unknown one
-`404 BLOB_NOT_FOUND`. A client MUST check the SHA-256 (and the size the
-envelope states) of every file it downloads.
+`404 BLOB_NOT_FOUND`. A library MAY decline to serve a file whose terms are
+not `redistributable` (section 4.5) with `403 NOT_DISTRIBUTABLE`. A client
+MUST check the SHA-256 (and the size the envelope states) of every file it
+downloads.
 
 ## 4. The revision envelope: `uhd.part-revision/v1`
 
@@ -244,7 +246,10 @@ The JSON Schema is `#/$defs/envelope` in `schemas/uhd-library-v1.schema.json`.
   "dependencies": [{ "partId": "acme-m2-screw", "revision": 1 }],   // exactly the definition's children, once each
   "artifacts": [
     { "path": "parts/acme-gimbal/body.glb", "sha256": "…", "size": 287084,
-      "mediaType": "model/gltf-binary", "role": "body", "artifactId": "cad_glb" }
+      "mediaType": "model/gltf-binary", "role": "body", "artifactId": "cad_glb",
+      "terms": { "distribution": "redistributable", "license": "MIT", "licensePath": "parts/acme-gimbal/LICENSE.txt",
+                 "attribution": "Copyright (c) 2026 Acme", "sourceUrl": "https://acme.example/cad/gimbal.step",
+                 "retrieved": "2026-10-03" } }       // terms optional (4.5)
   ],
   "missingArtifacts": [{ "path": "…", "artifactId": "…", "reason": "…" }],
   "evidence": [
@@ -272,6 +277,8 @@ The JSON Schema is `#/$defs/envelope` in `schemas/uhd-library-v1.schema.json`.
   `body`, `interface`, `source`, `drawing` (as `ArtifactDef.role`),
   `thumbnail`, `license`, `attachment` (anything else). `artifactId` names the
   `ArtifactDef` the file backs, when one does.
+- **`terms`** (optional, on an `artifacts` entry or a carried `evidence`
+  file): the licence and distribution class of that file (section 4.5).
 - **`missingArtifacts`**: every file the definition references (an
   `ArtifactDef.filePath` on the module or one of its harnesses) is either
   carried in `artifacts` or listed here with the reason, never silently
@@ -326,6 +333,47 @@ library lists its identifier in `envelopeSchemas`. Clients accept an
 envelope whose `schema` is `uhd.part-revision/v1` or one of the identifiers
 the library's discovery document lists.
 
+### 4.5 File terms and distribution
+
+Files come from many places: a library's own generated geometry, a
+manufacturer's STEP download, a product photo. Each may come with its own
+licence, and a library often holds files it may use but not pass on. A file
+entry (in `artifacts`, or a carried file in `evidence`) MAY say so in
+`terms`:
+
+| Member | Meaning |
+| --- | --- |
+| `distribution` | Required. `redistributable`: the terms allow passing the file on (with whatever attribution they ask for). `internal`: terms were found and they restrict use or redistribution, so the file stays with the organisation that obtained it. `unknown`: no terms could be established (unverified). |
+| `license` | SPDX licence identifier (`MIT`, `CC-BY-SA-4.0`), or for anything else a `LicenseRef-…` identifier or a plain name. |
+| `licenseUrl` | `http(s)` URL where the licence or terms of use are published. |
+| `licensePath` | The `path` of a file of the same revision holding the licence text. |
+| `attribution` | The notice that must travel with the file, such as a copyright line. |
+| `summary` | The terms in a sentence or two, or what was found when they could not be established. |
+| `sourceUrl` | `http(s)` URL the file, or the archive it was taken from, was downloaded from. |
+| `sourceSha256` | SHA-256 of the bytes as downloaded, when they differ from the file's own (an archive it was extracted from, a model it was converted from). |
+| `retrieved` | When the file and its terms were retrieved: an ISO 8601 date or date-time. |
+
+`terms` is content: it is inside the envelope digest, so correcting the terms
+of a file is a new revision. A file without `terms` is treated as `unknown`.
+Rules:
+
+- A client MUST NOT pass on a file whose distribution is not
+  `redistributable` outside the organisation that fetched it, and SHOULD keep
+  `attribution` and the `licensePath` file with any copy it does pass on.
+- A revision is **redistributable** when every file backing one of the
+  definition's artifacts (an `artifacts` entry with an `artifactId`) is
+  `redistributable`. Its other files (thumbnail, licence texts, attachments,
+  evidence) are optional: a redistributable copy of the revision leaves out
+  the ones that are not, and the envelope still says they exist and under
+  which terms. A closure is redistributable when each of its revisions is.
+- A library that serves a public or redistributable view of a larger
+  collection MAY decline to serve the files that are not `redistributable`
+  (`403 NOT_DISTRIBUTABLE` from section 3.7) and MAY leave revisions that are
+  not redistributable out of that view. It never edits an envelope to do so.
+
+`isRedistributable(file)` and `revisionDistribution(envelope)` in
+`@deltarobotics/uhd/library` apply these rules.
+
 ## 5. Errors
 
 Every error response has a JSON body:
@@ -345,6 +393,7 @@ members carry details. Codes defined here:
 | 400 | `SHA256_INVALID` | A malformed blob address |
 | 401 | `AUTH_REQUIRED` | Credentials missing or not accepted (with `WWW-Authenticate: Bearer`) |
 | 403 | `FORBIDDEN` | Credentials accepted, access refused |
+| 403 | `NOT_DISTRIBUTABLE` | A file (or revision) the library does not give out because its terms are not `redistributable` (4.5) |
 | 404 | `PART_NOT_FOUND` | No such part |
 | 404 | `REVISION_NOT_FOUND` | The part exists, the revision does not |
 | 404 | `BLOB_NOT_FOUND` | No such file |
@@ -397,7 +446,8 @@ records and configuration files never contain credentials.
 protocol's checks against a running library: discovery, the shapes of every
 response against the JSON Schema, search filters, pagination with cursors,
 facets, part detail and revision lists, envelope digests and `ETag`,
-closures, blob addresses and HEAD, error shapes and codes, and bearer
+closures, blob addresses and HEAD (a file refused with `403
+NOT_DISTRIBUTABLE` is accepted when its terms are not `redistributable`), error shapes and codes, and bearer
 authentication when the library asks for it. It reads only; it never
 publishes. It reports each check as pass, fail, warn (a SHOULD not met) or
 skip (an optional capability the library does not declare), and `ok` when

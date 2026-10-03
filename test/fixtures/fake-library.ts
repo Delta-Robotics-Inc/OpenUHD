@@ -5,7 +5,7 @@
  * tests can see the kit catch it.
  */
 import { definitionFile, sealEnvelope, sha256Hex, taxonomyAncestors, underTaxonomyPath } from "../../src/library/envelope.js";
-import type { DiscoveryDocument, EnvelopeArtifact, PartRef, PartRevisionEnvelope, PartSummary, RevisionRow } from "../../src/library/types.js";
+import type { DiscoveryDocument, EnvelopeArtifact, FileTerms, PartRef, PartRevisionEnvelope, PartSummary, RevisionRow } from "../../src/library/types.js";
 import type { FetchLike } from "../../src/library/conformance.js";
 
 export type Fault =
@@ -17,12 +17,15 @@ export type Fault =
   | "plain-errors"
   | "taxonomy-string-prefix"
   | "closure-order"
-  | "mutable-envelope";
+  | "mutable-envelope"
+  | "withholds-redistributable";
 
 export interface FakeLibraryOptions {
   faults?: Fault[];
   /** Reads need `Authorization: Bearer <token>`. */
   token?: string;
+  /** Refuse files whose terms are not redistributable (`403 NOT_DISTRIBUTABLE`, § 4.5), as a public view would. */
+  withhold?: boolean;
 }
 
 interface Revision {
@@ -46,11 +49,13 @@ const def = (id: string, extra: Partial<Def> = {}): Def => ({
 export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ url: string; fetch: FetchLike; envelopes: PartRevisionEnvelope[] }> {
   const faults = new Set(options.faults ?? []);
   const blobs = new Map<string, Uint8Array>();
-  const file = async (path: string, content: string, role: EnvelopeArtifact["role"], artifactId?: string): Promise<EnvelopeArtifact> => {
+  const redistributable = new Set<string>();
+  const file = async (path: string, content: string, role: EnvelopeArtifact["role"], artifactId?: string, terms?: FileTerms): Promise<EnvelopeArtifact> => {
     const bytes = text(content);
     const sha256 = await sha256Hex(bytes);
     blobs.set(sha256, bytes);
-    return { path, sha256, size: bytes.length, mediaType: path.endsWith(".png") ? "image/png" : "model/gltf-binary", role, ...(artifactId ? { artifactId } : {}) };
+    if (terms?.distribution === "redistributable") redistributable.add(sha256);
+    return { path, sha256, size: bytes.length, mediaType: path.endsWith(".png") ? "image/png" : path.endsWith(".txt") ? "text/plain" : "model/gltf-binary", role, ...(artifactId ? { artifactId } : {}), ...(terms ? { terms } : {}) };
   };
   const seal = (d: Def, revision: number, rest: { dependencies?: PartRef[]; artifacts?: EnvelopeArtifact[]; derivedFrom?: PartRef | null } = {}) =>
     sealEnvelope({
@@ -82,7 +87,16 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
 
   const parts = new Map<string, Revision[]>();
   const add = (r: Revision) => parts.set(r.env.partId, [...(parts.get(r.env.partId) ?? []), r]);
-  add({ env: await seal(screwDef, 1, { artifacts: [await file("parts/acme-m2-screw/body.glb", "screw body", "body", "body"), await file("parts/acme-m2-screw/thumbnail.png", "png", "thumbnail")] }) });
+  const mit: FileTerms = { distribution: "redistributable", license: "MIT", licensePath: "parts/acme-m2-screw/LICENSE.txt", attribution: "Copyright (c) 2026 Acme", sourceUrl: "https://acme.example/cad/m2.step", retrieved: "2026-10-03" };
+  add({
+    env: await seal(screwDef, 1, {
+      artifacts: [
+        await file("parts/acme-m2-screw/body.glb", "screw body", "body", "body", mit),
+        await file("parts/acme-m2-screw/LICENSE.txt", "MIT licence text", "license", undefined, { distribution: "redistributable", license: "MIT" }),
+        await file("parts/acme-m2-screw/thumbnail.png", "png", "thumbnail", undefined, { distribution: "unknown", summary: "product photo; terms not found" }),
+      ],
+    }),
+  });
   add({ env: await seal(imuDef, 1) });
   const gimbalBody = await file("parts/acme-gimbal/body.glb", "gimbal body", "body", "body");
   add({ env: await seal(gimbal("first"), 1, { dependencies: [{ partId: "acme-m2-screw", revision: 1 }], artifacts: [gimbalBody] }) });
@@ -121,7 +135,7 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
     const current = [...revs].reverse().find((r) => !r.deprecated);
     const shown = (current ?? revs[revs.length - 1]).env;
     const d = shown.definition as Def;
-    const thumb = shown.artifacts.find((a) => a.role === "thumbnail");
+    const thumb = shown.artifacts.find((a) => a.role === "thumbnail" && (!options.withhold || redistributable.has(a.sha256)));
     return {
       partId: id,
       name: d.name,
@@ -216,6 +230,7 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
       if (!/^[0-9a-f]{64}$/.test(m[1])) return error(400, "SHA256_INVALID", "malformed address");
       let bytes = blobs.get(m[1]);
       if (!bytes) return error(404, "BLOB_NOT_FOUND", `no blob ${m[1]}`);
+      if ((options.withhold && !redistributable.has(m[1])) || (faults.has("withholds-redistributable") && redistributable.has(m[1]))) return error(403, "NOT_DISTRIBUTABLE", `${m[1]} is not redistributable`);
       if (faults.has("bad-blob")) bytes = text(new TextDecoder().decode(bytes).toUpperCase());
       return new Response(method === "HEAD" ? null : (bytes as Uint8Array<ArrayBuffer>), { headers: { "content-type": "application/octet-stream", etag: `"sha256:${m[1]}"`, ...IMMUTABLE } });
     }

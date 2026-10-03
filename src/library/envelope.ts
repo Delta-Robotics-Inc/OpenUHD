@@ -3,7 +3,7 @@
  * Pure apart from SHA-256, which comes from Web Crypto (`globalThis.crypto`,
  * in Node 20+ and browsers), so the functions that hash are async.
  */
-import { ENVELOPE_SCHEMA, type Closure, type PartRef, type PartRevisionEnvelope, type UhdSchemaRange } from "./types.js";
+import { ENVELOPE_SCHEMA, type Closure, type EnvelopeArtifact, type EvidenceRef, type PartRef, type PartRevisionEnvelope, type UhdSchemaRange } from "./types.js";
 
 /** Fields that record the publish rather than the content; outside `digest`. */
 export const RECORD_FIELDS = ["digest", "source", "publisher", "createdAt"] as const;
@@ -133,11 +133,33 @@ export async function envelopeProblems(env: PartRevisionEnvelope, options: { sch
     if (!carried.has(path) && !declared.has(path)) add("ARTIFACT_UNACCOUNTED", `artifact ${artifactId} references ${path}, neither carried nor listed missing`, "artifacts");
   }
   env.missingArtifacts.forEach((m, i) => carried.has(m.path) && add("MISSING_ARTIFACT_CARRIED", `${m.path} is carried and listed missing`, `missingArtifacts[${i}]`));
+  const termed: [{ terms?: { licensePath?: string } }, string][] = [...env.artifacts.map((a, i) => [a, `artifacts[${i}]`] as [EnvelopeArtifact, string]), ...env.evidence.map((e, i) => [e, `evidence[${i}]`] as [EvidenceRef, string])];
+  for (const [f, at] of termed) {
+    const lp = f.terms?.licensePath;
+    if (lp !== undefined && !paths.has(lp)) add("LICENSE_PATH", `terms.licensePath ${lp} is not a file of this revision`, `${at}.terms.licensePath`);
+  }
 
   const d = env.derivedFrom;
   if (d && d.partId === env.partId && d.revision >= env.revision) add("DERIVED_FROM_ORDER", "a revision derives from an earlier revision of its part", "derivedFrom");
   if (env.revision > 1 && !d) add("DERIVED_FROM_REQUIRED", "a revision after the first names the revision it was derived from", "derivedFrom");
   return out;
+}
+
+/** Whether a file's terms allow passing it on (§ 4.5); a file without terms is `unknown`. */
+export const isRedistributable = (file: { terms?: { distribution?: string } }): boolean => file.terms?.distribution === "redistributable";
+
+/**
+ * Whether a revision can be given out as it is (§ 4.5): every file that
+ * backs one of the definition's artifacts (an `artifacts` entry with an
+ * `artifactId`) is redistributable. Other files (thumbnail, licence texts,
+ * attachments, evidence) are optional: a redistributable copy leaves out the
+ * ones that are not. Dependencies are not looked at here; a closure is
+ * redistributable when each of its revisions is.
+ */
+export function revisionDistribution(env: Pick<PartRevisionEnvelope, "artifacts" | "evidence">): { redistributable: boolean; blocking: string[]; withheld: string[] } {
+  const blocking = env.artifacts.filter((a) => a.artifactId !== undefined && !isRedistributable(a)).map((a) => a.path);
+  const withheld = [...env.artifacts.filter((a) => a.artifactId === undefined), ...env.evidence.filter((e) => e.path !== undefined)].filter((f) => !isRedistributable(f)).map((f) => f.path!);
+  return { redistributable: blocking.length === 0, blocking, withheld };
 }
 
 /**

@@ -16,6 +16,8 @@ import {
   envelopeDigest,
   envelopeProblems,
   formatConformance,
+  isRedistributable,
+  revisionDistribution,
   runConformance,
   sealEnvelope,
   sha256Hex,
@@ -92,6 +94,30 @@ describe("envelope rules", () => {
     const env = await base();
     expect(validateShape("envelope", { ...env, price: 3 }).map((p) => p.at)).toEqual(["/price"]);
     expect(validateShape("envelope", { ...env, artifacts: [{ ...env.artifacts[0], role: "pcb" }] })[0]).toMatchObject({ at: "/artifacts/0/role" });
+  });
+
+  it("file terms: shape, licence file present, and which files block redistribution (§ 4.5)", async () => {
+    const { envelopes } = await fakeLibrary();
+    const screw = envelopes.find((e) => e.partId === "acme-m2-screw")!;
+    expect(validateShape("envelope", screw)).toEqual([]);
+    expect(await envelopeProblems(screw)).toEqual([]);
+    expect(screw.artifacts.map((a) => [a.path, isRedistributable(a)])).toEqual([
+      ["parts/acme-m2-screw/body.glb", true],
+      ["parts/acme-m2-screw/LICENSE.txt", true],
+      ["parts/acme-m2-screw/thumbnail.png", false],
+    ]);
+    // the thumbnail is optional: the revision is redistributable without it
+    expect(revisionDistribution(screw)).toEqual({ redistributable: true, blocking: [], withheld: ["parts/acme-m2-screw/thumbnail.png"] });
+    const internal = await sealEnvelope({ ...screw, artifacts: screw.artifacts.map((a) => (a.artifactId ? { ...a, terms: { distribution: "internal" as const, summary: "vendor terms forbid redistribution" } } : a)) });
+    expect(revisionDistribution(internal)).toMatchObject({ redistributable: false, blocking: ["parts/acme-m2-screw/body.glb"] });
+    // a file without terms is unknown
+    expect(revisionDistribution({ artifacts: [{ ...screw.artifacts[0], terms: undefined }], evidence: [] }).redistributable).toBe(false);
+    // terms are content: changing them changes the digest
+    expect(internal.digest).not.toBe(screw.digest);
+    const lost = await sealEnvelope({ ...screw, artifacts: screw.artifacts.filter((a) => a.role !== "license") });
+    expect((await envelopeProblems(lost)).map((p) => p.code)).toEqual(["LICENSE_PATH"]);
+    const bad = { ...screw, artifacts: [{ ...screw.artifacts[0], terms: { distribution: "public", price: 1 } }] };
+    expect(validateShape("envelope", bad).map((p) => p.at)).toEqual(["/artifacts/0/terms/distribution", "/artifacts/0/terms/price"]);
   });
 
   it("closures: dependencies first, nothing missing, conflicts recomputed", async () => {
@@ -172,6 +198,16 @@ describe("conformance kit", () => {
     const withToken = await runConformance(lib.url, { fetch: lib.fetch, token: "s3cret" });
     expect(withToken.checks.filter((c) => c.status !== "pass").map((c) => c.id)).toEqual([]);
     expect(JSON.stringify(withToken)).not.toContain("s3cret");
+  });
+
+  it("accepts a library that withholds files whose terms are not redistributable, and only those", async () => {
+    const lib = await fakeLibrary({ withhold: true });
+    const report = await runConformance(lib.url, { fetch: lib.fetch, partId: "acme-m2-screw" });
+    expect(report.checks.filter((c) => c.status !== "pass"), formatConformance(report)).toEqual([]);
+    expect(report.checks.find((c) => c.id === "blobs")!.message).toBe("2 file(s) verified, 1 withheld as not redistributable");
+    const wrong = await fakeLibrary({ faults: ["withholds-redistributable"] });
+    const failed = await runConformance(wrong.url, { fetch: wrong.fetch, partId: "acme-m2-screw" });
+    expect(failed.checks.find((c) => c.id === "blobs")!.status).toBe("fail");
   });
 
   const cases: [Fault, string, RegExp][] = [

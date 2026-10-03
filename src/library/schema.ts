@@ -7,7 +7,7 @@
  * Only the keywords `validateShape` (json-schema.ts) implements are used, so
  * the conformance kit checks responses against this very schema.
  */
-import { ARTIFACT_ROLES, ENVELOPE_SCHEMA, ERROR_CODES, EVIDENCE_KINDS, LIBRARY_PROTOCOL } from "./types.js";
+import { ARTIFACT_ROLES, DISTRIBUTION_CLASSES, ENVELOPE_SCHEMA, ERROR_CODES, EVIDENCE_KINDS, LIBRARY_PROTOCOL } from "./types.js";
 
 const str = { type: "string" } as const;
 const nonEmpty = { type: "string", minLength: 1 } as const;
@@ -19,6 +19,7 @@ const semver = { type: "string", pattern: "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?
 const partId = { type: "string", pattern: "^[a-z0-9][a-z0-9._-]{0,127}$" } as const;
 const strings = { type: "array", items: str } as const;
 const counts = { type: "object", additionalProperties: count } as const;
+const url = { type: "string", pattern: "^https?://" } as const;
 const ref = (name: string) => ({ $ref: `#/$defs/${name}` });
 
 export const LIBRARY_SCHEMA_ID = "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/schemas/uhd-library-v1.schema.json";
@@ -152,10 +153,26 @@ export const LIBRARY_SCHEMA = {
         artifacts: { type: "array", items: { type: "object", required: ["id"], properties: { id: str, filePath: str } } },
       },
     },
+    fileTerms: {
+      type: "object",
+      required: ["distribution"],
+      properties: {
+        distribution: { enum: [...DISTRIBUTION_CLASSES] },
+        license: nonEmpty,
+        licenseUrl: url,
+        licensePath: nonEmpty,
+        attribution: str,
+        summary: str,
+        sourceUrl: url,
+        sourceSha256: sha256,
+        retrieved: nonEmpty,
+      },
+      additionalProperties: false,
+    },
     envelopeArtifact: {
       type: "object",
       required: ["path", "sha256", "size", "mediaType", "role"],
-      properties: { path: nonEmpty, sha256, size: count, mediaType: nonEmpty, role: { enum: [...ARTIFACT_ROLES] }, artifactId: str },
+      properties: { path: nonEmpty, sha256, size: count, mediaType: nonEmpty, role: { enum: [...ARTIFACT_ROLES] }, artifactId: str, terms: ref("fileTerms") },
       additionalProperties: false,
     },
     missingArtifact: {
@@ -167,7 +184,7 @@ export const LIBRARY_SCHEMA = {
     evidenceRef: {
       type: "object",
       required: ["kind"],
-      properties: { kind: { enum: [...EVIDENCE_KINDS] }, title: str, path: nonEmpty, sha256, size: count, mediaType: nonEmpty, url: { type: "string", pattern: "^https?://" } },
+      properties: { kind: { enum: [...EVIDENCE_KINDS] }, title: str, path: nonEmpty, sha256, size: count, mediaType: nonEmpty, url, terms: ref("fileTerms") },
       additionalProperties: false,
     },
     revisionSource: {
