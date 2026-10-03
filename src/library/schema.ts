@@ -21,7 +21,7 @@ const strings = { type: "array", items: str } as const;
 const counts = { type: "object", additionalProperties: count } as const;
 const ref = (name: string) => ({ $ref: `#/$defs/${name}` });
 
-export const LIBRARY_SCHEMA_ID = "https://uhd.dev/schemas/uhd-library-v1.schema.json";
+export const LIBRARY_SCHEMA_ID = "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/schemas/uhd-library-v1.schema.json";
 
 export const LIBRARY_SCHEMA = {
   $schema: "https://json-schema.org/draft/2020-12/schema",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uhd.dev/schemas/uhd-library-v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/Delta-Robotics-Inc/uhd/main/schemas/uhd-library-v1.schema.json",
   "title": "UHD library protocol uhd-library/v1",
   "description": "Response bodies of the UHD library protocol and the revision envelope uhd.part-revision/v1 (docs/library-protocol.md).",
   "$defs": {
