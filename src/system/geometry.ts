@@ -582,6 +582,15 @@ export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
   ];
 }
 
+/** A shaft interface whose `shaft` trait states a thread (e.g. "M5"): what a nut on it engages. */
+function threadedShaft(iface: InterfaceDef): { thread: string; length?: number } | undefined {
+  if (!iface.protocols?.some((p) => p.type === "shaft")) return undefined;
+  const thread = iface.traits?.find((t) => t.type === "shaft" && typeof t.params?.thread === "string")?.params?.thread as string | undefined;
+  if (!thread) return undefined;
+  const length = paramValue(iface, "length");
+  return { thread, ...(length !== undefined ? { length } : {}) };
+}
+
 /** Frame as a Mat4 (columns x, y, z = normal; translation = origin). */
 export function frameMatrix(frame: GeometryFrame): Mat4 {
   const [x, y, z] = basis(frame);
@@ -616,6 +625,10 @@ function placeHardware(
     if (!at) continue;
     const base = multiplyMat4(at.matrix, frameMatrix(s.frame));
     const holes = boltPatternHoles(s.iface);
+    // A nut on a threaded shaft (a prop nut on a motor shaft): the structure end is a shaft whose `shaft`
+    // trait states a thread, so the shaft is the threaded member, from its frame outward along the normal
+    // (to its `length` parameter when it states one).
+    const shaftThread = threadedShaft(s.iface);
 
     const counts = new Map<string, number>();
     const spans = new Map<string, { kind: string; child: string; from: number; to: number }[]>();
@@ -659,7 +672,9 @@ function placeHardware(
     const reported = new Set<string>();
     for (const list of spans.values()) {
       for (const nut of list.filter((x) => x.kind === "nut")) {
-        const screw = list.find((x) => x.kind === "screw" && x.from <= nut.to && x.to >= nut.from);
+        const screw =
+          list.find((x) => x.kind === "screw" && x.from <= nut.to && x.to >= nut.from) ??
+          (shaftThread && nut.from >= 0 ? { child: `the threaded shaft ${s.iface.id}`, from: 0, to: shaftThread.length ?? Infinity } : undefined);
         const msg = !screw
           ? `${nut.child}: no screw passes through it`
           : screw.to < nut.to && screw.from <= nut.from

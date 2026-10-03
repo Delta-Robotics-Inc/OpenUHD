@@ -105,6 +105,11 @@ export interface ArtifactProvenance {
  * under a plate), positive toward the mounted part. Each item is placed at
  * every hole of the structure's bolt pattern unless `positions` says
  * otherwise.
+ *
+ * Every nut must sit on thread: on a screw of the same stack, or, when the
+ * structure-side interface is a shaft whose `shaft` trait states a `thread`
+ * (a propeller nut on a motor shaft), on that shaft, from its frame outward
+ * (to its `length` parameter when it states one).
  */
 export interface FastenerStackItem {
   /** Harness child id; its module supplies the geometry and length. */

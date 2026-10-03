@@ -198,6 +198,47 @@ describe("assemble", () => {
     expect(errors[0].message).toMatch(/screws ends 0\.8 mm short of the far face of nuts/);
   });
 
+  it("takes a threaded shaft as the screw for a nut on it (a prop nut)", () => {
+    const nut: ModuleDef = {
+      id: "test-m5-prop-nut",
+      name: "M5 prop nut",
+      kind: "module",
+      tags: ["fastener", "nut"],
+      interfaces: [{ id: "thread", domain: "mechanical", exposed: true, protocols: [{ type: "custom", roles: ["peer"] }], parameters: [{ id: "fastener_diameter", unit: "mm", value: 5 }, { id: "length", unit: "mm", value: 5 }] }],
+    };
+    const propHardware: ModuleDef = {
+      id: "test-prop-hardware",
+      name: "Prop nut",
+      kind: "harness",
+      interfaces: [],
+      children: [{ id: "nut", moduleDefId: nut.id }],
+      // hub 0–6 mm on the shaft, nut on top of it
+      fastenerStack: [{ child: "nut", atMm: 6, positions: [[0, 0]] }],
+    };
+    const arm0 = lookup("quadcopter-5in-arm")!;
+    const arm: ModuleDef = {
+      ...arm0,
+      children: [...(arm0.children ?? []), { id: "prop_hardware", moduleDefId: propHardware.id }],
+      links: arm0.links!.map((l) => (l.id === "prop_on_shaft" ? { ...l, harness: "prop_hardware" } : l)),
+    };
+    const extra = new Map([nut, propHardware, arm].map((d) => [d.id, d]));
+    const run = (motorShaftThreaded: boolean) => {
+      const motor0 = lookup(MOTOR)!;
+      const motor: ModuleDef = motorShaftThreaded
+        ? motor0
+        : { ...motor0, interfaces: motor0.interfaces.map((i) => (i.id === "shaft" ? { ...i, traits: [] } : i)) };
+      return assemble(SYSTEM, (id) => (id === MOTOR ? motor : extra.get(id) ?? lookup(id)), { root: ["frame"] });
+    };
+    const ok = run(true);
+    const placed = ok.hardware.filter((h) => h.child === "nut" && h.harness.endsWith("prop_hardware"));
+    expect(placed).toHaveLength(4);
+    expect(ok.issues.filter((i) => i.severity === "error")).toEqual([]);
+    const fl = placed.find((h) => h.harness === "arm_fl/prop_hardware")!;
+    close(applyMat4(fl.matrix, [0, 0, 0]), [79.55, 79.55, 5.5 + 19.3 + 6]);
+    // without a stated thread the shaft is not a screw
+    expect(run(false).issues.filter((i) => i.severity === "error").map((i) => i.message)).toContain("nut: no screw passes through it");
+  });
+
   it("points every motor's leads down its arm", () => {
     for (const arm of ["arm_fl", "arm_fr", "arm_rl", "arm_rr"]) {
       const p = asm.placements.find((x) => x.key === `${arm}/motor`)!;
