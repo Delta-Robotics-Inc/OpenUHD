@@ -328,7 +328,7 @@ const thtMount: InterfaceDef = {
 const TI_L293DNE_BASE: ModuleDef = defineModule({
   id: "ti-l293dne",
   name: "TI L293D Quadruple Half-H Driver (PDIP-16)",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "Texas Instruments",
   part_number: "L293DNE",
   description:
@@ -370,10 +370,17 @@ const TI_L293DNE_BASE: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 19.8, width: 6.35, height: 5.08 },
+      package: {
+        name: "PDIP-16",
+        code: "NE (R-PDIP-T**)",
+        pin_count: 16,
+        pitch_mm: 2.54,
+        exposed_pad: false,
+        source: `${SRC.datasheet} (Device Information: L293DNE PDIP (16) 19.80 mm × 6.35 mm; "NE Package 16-Pin PDIP"); ${SRC.pkg} (2.54 mm pitch)`,
+      },
       metadata: {
         body_size_nom_mm: "19.80 x 6.35 (SLRS008D Device Information)",
         height_note: "5.08 mm is the maximum seating-plane-to-top height (MPDI003)",
-        pitch_mm: 2.54,
         row_spacing_mm: [7.37, 7.87],
         mounting_method: "through-hole",
       },

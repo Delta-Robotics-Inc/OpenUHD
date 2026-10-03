@@ -24,7 +24,10 @@
  *     requires a MISO slot.
  *   - Mode 2 sensor-hub I2C master on SDx (MSDA) / SCx (MSCL), with MDRDY on
  *     INT2. In Mode 1 SDx/SCx must be tied to VDDIO or GND.
- *   - `pcb_mount` is the SMD land pattern bound to the 14 pad faces of the
+ *   - Package facts (LGA-14L, 14 pads, 0.5 mm pitch, no exposed pad) are the
+ *     mechanical domain's `package`; every pad leaf carries its Table 2
+ *     designator.
+ *   - `pcb_mount` is the SMD pad set bound to the 14 pad faces of the
  *     generated package (seating plane frame, normal -Z); no bolt pattern on
  *     a bare IC.
  *   - Height: the cover gives 0.83 mm typ, Figure 17 gives 0.86 mm max;
@@ -150,7 +153,7 @@ const hubI2c = withTraits(
 
 const pcbMount: InterfaceDef = {
   id: "pcb_mount",
-  name: "LGA-14L land pattern (SMD)",
+  name: "LGA-14L pads (SMD)",
   domain: "mechanical",
   exposed: true,
   default_active: true,
@@ -175,7 +178,7 @@ const pcbMount: InterfaceDef = {
 const ST_LSM6DS3TR_C_BASE: ModuleDef = defineModule({
   id: "st-lsm6ds3tr-c",
   name: "ST LSM6DS3TR-C",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "STMicroelectronics",
   part_number: "LSM6DS3TR-C",
   description:
@@ -205,7 +208,14 @@ const ST_LSM6DS3TR_C_BASE: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 3.0, width: 2.5, height: 0.83 },
-      metadata: { package: "LGA-14L", height_max_mm: 0.86, pitch_mm: 0.5, source: `${SRC.datasheet} (cover, Figure 17)` },
+      package: {
+        name: "LGA-14L",
+        pin_count: 14,
+        pitch_mm: 0.5,
+        exposed_pad: false,
+        source: `${SRC.datasheet} (cover: LGA-14L 2.5 x 3 x 0.83 mm typ.; Figure 17 package outline)`,
+      },
+      metadata: { height_max_mm: 0.86, source: `${SRC.datasheet} (Figure 17)` },
     },
     { domain: "thermal", operating_temperature_C: [-40, 85], metadata: { source: `${SRC.datasheet} (Table 4)` } },
   ],

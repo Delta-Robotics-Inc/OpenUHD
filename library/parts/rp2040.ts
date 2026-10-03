@@ -1816,7 +1816,7 @@ const thermalPad: InterfaceDef = {
 export const RP2040: ModuleDef = defineModule({
   id: "rp2040",
   name: "Raspberry Pi RP2040",
-  version: "2.0.0",
+  version: "2.1.0",
   manufacturer: "Raspberry Pi",
   part_number: "RP2040",
   description:
@@ -1995,9 +1995,17 @@ export const RP2040: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 7, width: 7, height: 0.9 },
+      package: {
+        name: "QFN-56",
+        pin_count: 56,
+        pitch_mm: 0.4,
+        exposed_pad: true,
+        exposed_pad_pin: 57,
+        source:
+          "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf (build-date 2025-02-20: §5.1 \"The RP2040 7×7 mm QFN-56 package\", \"0.4mm QFN-56\", central GND pad (ePad); §5.5 Pinout, Table 621: GND 57, \"Common ground connection via central pad\")",
+      },
       metadata: {
         package_type: "QFN-56 (7x7) EP",
-        pitch_mm: 0.4,
         exposed_pad_mm: "3.0-3.2 (nominal 3.1) square (Datasheet §5.1 D2/E2)",
         max_height_mm: 0.9, // Datasheet Table §5.1: A max 0.900 mm
         mounting_method: "surface_mount",

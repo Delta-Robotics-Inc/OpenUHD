@@ -33,6 +33,9 @@
  *   - FB is an analog input (the divider's tap). EN and PS/SYNC are digital
  *     inputs (must not float); PS/SYNC also accepts a 2.2-2.6 MHz sync clock.
  *     PG is an open-drain digital output.
+ *   - Package facts (VSON-14 DSJ, 14 pins, 0.5 mm pitch, exposed pad
+ *     2.85 x 1.58 mm labelled "EP": TI gives it no number) are the mechanical
+ *     domain's `package`.
  *   - `pcb_mount` (14 lead pads) and `thermal_pad` (exposed pad) are bound to
  *     the generated package geometry; a bare IC has no bolt pattern, so the
  *     frames are the seating plane (normal -Z).
@@ -175,7 +178,7 @@ const vout: InterfaceDef = {
 
 const pcbMount: InterfaceDef = {
   id: "pcb_mount",
-  name: "VSON-14 (DSJ) land pattern (SMD)",
+  name: "VSON-14 (DSJ) leads (SMD)",
   domain: "mechanical",
   exposed: true,
   default_active: true,
@@ -226,7 +229,7 @@ const thermalPad: InterfaceDef = {
 const TI_TPS63020DSJR_BASE: ModuleDef = defineModule({
   id: "ti-tps63020dsjr",
   name: "TI TPS63020DSJR buck-boost converter",
-  version: "1.0.0",
+  version: "1.1.0",
   manufacturer: "Texas Instruments",
   part_number: "TPS63020DSJR",
   description:
@@ -263,7 +266,18 @@ const TI_TPS63020DSJR_BASE: ModuleDef = defineModule({
     {
       domain: "mechanical",
       dimensions_mm: { length: 4.0, width: 3.0, height: 0.9 },
-      metadata: { package: "VSON-14 (DSJ), R-PVSON-N14", pitch_mm: 0.5, height_range_mm: [0.8, 1.0], source: SRC.drawing },
+      package: {
+        name: "VSON-14",
+        code: "DSJ (R-PVSON-N14)",
+        pin_count: 14,
+        pitch_mm: 0.5,
+        exposed_pad: true,
+        exposed_pad_pin: "EP",
+        exposed_pad_mm: [2.85, 1.58],
+        source: `${SRC.datasheet} (§5: "DSJ Package, 14-Pin VSON with Exposed Thermal Pad"; p.32 exposed pad 2.85 x 1.58 mm); ${SRC.drawing} (body 3.85-4.15 x 2.85-3.15 x 0.80-1.00 mm, pitch 0.50)`,
+        assumption: "TI numbers no exposed pad; \"EP\" is this part's label for it. Height 0.9 mm is the midpoint of 0.80-1.00 mm (see the assumption trait).",
+      },
+      metadata: { height_range_mm: [0.8, 1.0], source: SRC.drawing },
     },
     {
       domain: "thermal",
