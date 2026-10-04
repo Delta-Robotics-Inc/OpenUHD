@@ -273,7 +273,9 @@ has the designation as the source writes it, the hand (default right),
 `nylon_patch`, `adhesive_patch`, `all_metal`).
 
 The pair check `thread_fit`: an error for a different diameter, pitch or
-hand; otherwise an info with the length of thread engaged. A head, a hex
+hand; otherwise an info with the length of thread engaged. A `length`
+parameter on a thread (a screw's length under the head, an insert's
+length: what fastener stacks read) is not compared between the two. A head, a hex
 or a drive recess is not a thread: describe it in metadata, or as a
 `TSlot` insert when it slides in a track.
 

@@ -197,6 +197,9 @@ describe("threads", () => {
     expect(c.state).toBe("valid");
     expect(c.diagnostics[0].message).toBe("up to 4 mm of thread engaged (8 mm external, 4 mm internal, through)");
     expect(validatePair(screw(), screw()).connections.filter((x) => x.protocol === "thread")).toEqual([]);
+    // a screw's length (what fastener stacks read) is not compared with an insert's
+    const withLength = (m: ModuleDef, mm: number): ModuleDef => ({ ...m, interfaces: m.interfaces.map((i) => ({ ...i, parameters: [...(i.parameters ?? []), { id: "length", unit: "mm", value: mm }] })) });
+    expect(connection(withLength(screw(), 6), withLength(nut(), 4), "thread")!.state).toBe("valid");
   });
 
   it("refuses another diameter, pitch or hand; TPI is stored as a pitch", () => {

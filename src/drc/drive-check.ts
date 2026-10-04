@@ -35,7 +35,8 @@ export function checkPairDrive(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
 const DRIVE_CHECKED: Record<string, string[]> = {
   gear_mesh: ["gear_module", "pressure_angle", "tooth_count", "face_width"],
   bearing_fit: ["bearing_od", "bearing_width", "bearing_bore", "seat_depth", "load_rating"],
-  thread: ["fastener_diameter", "thread_pitch", "thread_length"],
+  // `length` is a screw's length under the head or an insert's length (what fastener stacks read), not a fit
+  thread: ["fastener_diameter", "thread_pitch", "thread_length", "length"],
   t_slot: ["slot_opening", "channel_width", "channel_depth", "slot_length", "neck_width", "head_width", "head_height"],
   axial_stop: ["face_od", "face_id", "axial_length"],
   rolling_contact: ["wheel_diameter", "tread_width", "load_rating", "min_wheel_diameter"],
