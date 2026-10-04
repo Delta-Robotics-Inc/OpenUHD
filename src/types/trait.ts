@@ -32,7 +32,7 @@ export interface IsPickableTrait extends TraitDef {
 
 /**
  * A power output that is not its own regulator but a branch of another
- * output on the same module (PB-797): e.g. a flight controller's "4.5V"
+ * output on the same module: e.g. a flight controller's "4.5V"
  * receiver/GPS pads fed from its 5 V BEC through a diode. Loads on it count
  * against the parent output's rating in the supply_budget check.
  *
@@ -53,7 +53,7 @@ export interface SuppliedFromTrait extends TraitDef {
 }
 
 /**
- * A part made in rotation-handed variants under one definition (PB-797),
+ * A part made in rotation-handed variants under one definition,
  * e.g. a propeller sold as a 2 CW + 2 CCW pack. Which variant an instance is
  * comes from `ChildModuleRef.spin`; the prop_handedness check compares it
  * with the spin of the motor the part is mounted on.
@@ -70,7 +70,7 @@ export interface HandednessTrait extends TraitDef {
 }
 
 /**
- * A two-terminal passive component (PB-824): a resistor, capacitor,
+ * A two-terminal passive component: a resistor, capacitor,
  * inductor or ferrite bead on a board. The value is a fact of the part; its
  * terminals are `passive` leaves (see `Passive()` in src/protocols). The
  * bus_pullup check reads resistors from it.
@@ -174,7 +174,7 @@ export interface Region {
 
 /**
  * Requirements a custom module (a board, an enclosure) must meet, stated
- * before it is designed (PB-824): the largest body it may have and regions it
+ * before it is designed: the largest body it may have and regions it
  * must keep clear. A design tool honours them; the design_envelope check
  * compares the stated body (`dimensions_mm`) with `max_mm`. Layout itself is
  * never UHD.
@@ -192,12 +192,12 @@ export interface DesignEnvelopeTrait extends TraitDef {
 }
 
 /**
- * A strap (PB-869): a configuration input the part samples as a fixed level,
+ * A strap: a configuration input the part samples as a fixed level,
  * set on the board by tying the pin to a supply or ground, directly or
- * through a resistor (the BMI270's SDO selects its I2C address; a boot-mode
+ * through a resistor (an IMU's address pin selects its I2C address; a boot-mode
  * pin). On an interface leaf. A pin shared by several functions is a strap
- * only while the part runs the interfaces in `when` (the BMI270's SDO is its
- * SPI MISO, and an address strap only in I2C mode): the strap applies when a
+ * only while the part runs the interfaces in `when` (an IMU's address pin may
+ * also be its SPI MISO, and an address strap only in I2C mode): the strap applies when a
  * link to one of them is derived on the board. Without `when` it always is.
  *
  * The net rule reports a strap on a net that carries another part's signal

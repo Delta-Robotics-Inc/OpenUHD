@@ -3,9 +3,10 @@
 Status: draft v1 · Source designs: `design/visualizer.pen` (boards: Vocabulary, B5, B6, B7a–c, B8, B3, B4, screen "Validate — Results")
 Companion: `docs/drc-implementation-plan.md` (engine work this spec depends on), `docs/drc-spec.md` (tier/state model).
 
-This document is the **visual contract** for the 2-module validator at protoboard.ai/validate.
-It locks the decisions made across design iterations so engine and UI work can proceed
-against a stable target. Rationale lives on the Pencil canvas; rules live here.
+This document is a **visual contract** for a two-module pair validator: a view that shows
+what `validatePair` found between two modules. It records the decisions made across design
+iterations so that an engine and any UI built on it can work against a stable target.
+Rationale lives on the design canvas; rules live here. Any tool may implement it.
 
 ---
 
@@ -151,7 +152,7 @@ current pair carry the region-1 tint (region fill = selection signal, not decora
    interrupted conductor → `CONFIGURATION_NEEDED`; `assign leaf…` opens manual link flow.
 4. **Split fulfillment**: one composed interface fed by several modules. Each slot carries
    a provenance chip (`arm-controller.d9 · pwm`); missing sources render the socket +
-   `needs power · source` and suggest library parts. Pair view admits **ghost third-party
+   `needs power · source` and may suggest parts from a library. Pair view admits **ghost third-party
    modules** for context.
 5. **Connector glyphs**: mated ○—○ pair with `connector_type` chip on the conductor;
    ecosystem-locked connectors render the refusal in red (`✕ ecosystem lock: dynamixel`).

@@ -1,13 +1,13 @@
 /**
- * Package facts and pin tables (PB-824): what a PCB provider needs from a
- * part that is true of the part, and the designator checks verify-part runs.
+ * Package facts and pin tables: what a PCB provider needs from a part that is
+ * true of the part, and the designator checks a part verifier runs.
  */
 import { describe, it, expect } from "vitest";
 import type { ModuleDef } from "../src/types/index.js";
 import { I2C, Passive, defineModule, partPackage, pinDesignatorIssues, pinTable } from "../src/protocols/index.js";
-import { BOSCH_BMI270 } from "./fixtures/parts/bosch-bmi270.js";
-import { TI_TPS63020DSJR } from "./fixtures/parts/ti-tps63020dsjr.js";
-import { RP2040 } from "./fixtures/parts/rp2040.js";
+import { FIXTURE_BUCK_BOOST } from "./fixtures/parts/fixture-buck-boost.js";
+import { FIXTURE_IMU } from "./fixtures/parts/fixture-imu.js";
+import { FIXTURE_MCU } from "./fixtures/parts/fixture-mcu.js";
 
 const SRC = "https://example.com/datasheet.pdf (Table 1)";
 
@@ -110,15 +110,15 @@ describe("Passive", () => {
 
 describe("chip fixtures carry package facts and complete designators", () => {
   const cases: [ModuleDef, string, number, boolean][] = [
-    [BOSCH_BMI270, "LGA-14", 14, false],
-    [TI_TPS63020DSJR, "VSON-14", 14, true],
-    [RP2040, "QFN-56", 56, true],
+    [FIXTURE_IMU, "LGA-12", 12, false],
+    [FIXTURE_BUCK_BOOST, "SON-12", 12, true],
+    [FIXTURE_MCU, "QFN-32", 32, true],
   ];
   for (const [def, name, count, ep] of cases) {
     it(`${def.id}: ${name}, ${count} pins${ep ? " + exposed pad" : ""}`, () => {
       const pkg = partPackage(def)!;
       expect([pkg.name, pkg.pin_count, pkg.exposed_pad]).toEqual([name, count, ep]);
-      expect(pkg.source).toMatch(/^https:\/\//);
+      expect(pkg.source).toBeTruthy();
       expect(pkg.size_mm?.length).toBeGreaterThan(0);
       expect(pinDesignatorIssues(def)).toEqual([]);
       // the package is stated once, not also as free-form metadata

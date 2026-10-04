@@ -9,7 +9,7 @@ import { isNet } from "./net.js";
 import { PASSIVE_PROTOCOL } from "./passive.js";
 
 /**
- * Component packages and pin tables (PB-824): the facts a PCB tool needs from
+ * Component packages and pin tables: the facts a PCB tool needs from
  * a part that are true of the part — package name, pin count, pitch, exposed
  * pad, body size, and a designator on every pin. Footprints and land patterns
  * are the tool's own choice and stay out of UHD.

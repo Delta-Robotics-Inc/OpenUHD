@@ -1,5 +1,5 @@
 /**
- * Fastener joints and their tightening torques (PB-797).
+ * Fastener joints and their tightening torques.
  *
  * A joint is a harness module with a `fastenerStack`. `jointTorques` lists
  * the torqued items of each; the fastener_torque rule reports joints with no

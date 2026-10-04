@@ -1,6 +1,6 @@
 # Pneumatic and hydraulic ports
 
-Status: implemented (PB-864). Code: `src/protocols/fluid.ts` (`FluidPort`),
+Status: implemented. Code: `src/protocols/fluid.ts` (`FluidPort`),
 `src/drc/joint-check.ts` (`fluid_joint_mismatch`), role table in
 `src/matching/roles.ts`. Tests: `test/vocabulary.test.ts`.
 

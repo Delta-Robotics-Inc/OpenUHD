@@ -1,4 +1,4 @@
-# Geometry artifacts: tying CAD to modules and interfaces (PB-775)
+# Geometry artifacts: tying CAD to modules and interfaces
 
 UHD keeps geometry **in CAD artifacts** and records **references** into them.
 A module lists its CAD files as artifacts; an interface says *where it is*
@@ -122,8 +122,8 @@ hardware with no supplier weight; nominal geometry makes its material an
 attach them; `withGeometry` throws on an unknown interface id so a renamed
 interface can't silently lose its geometry. Which artifacts a generator
 writes is the generator's knowledge, so a helper that lists them lives with
-the generator, not in UHD. UHD has no part library and no generators: the
-library lives in ProtoBoard's parts service.
+the generator, not in UHD. UHD has no part library and no generators: parts
+come from libraries served over the open library protocol.
 
 ## Notes from generator work
 

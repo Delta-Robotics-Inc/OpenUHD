@@ -77,7 +77,7 @@ interface PairValidationResult {
 }
 ```
 
-Deliverable: types + JSON-schema snapshot test (contract stability for the website).
+Deliverable: types + JSON-schema snapshot test (contract stability for consumers).
 
 ## Phase 2 — `validatePair()` orchestrator (`src/drc/validate-pair.ts`) ✅ (protocol tier)
 
@@ -164,23 +164,24 @@ string; gender?: ... }` to `InterfaceDef` (and endpoint override). Check: mated
 connectors must agree on type; `ecosystem` present ⇒ both sides same ecosystem, else
 INCOMPATIBLE with the `ecosystem lock` diagnostic.
 *Decision needed:* field placement (InterfaceDef vs ArtifactDef vs new ConnectorDef) —
-recommend `InterfaceDef.connector`, mirroring ProtoPart's `connector_type` resource
-field for future migration.
+recommend `InterfaceDef.connector`.
 
 ## Phase 8 — Serialization + package
 
 - `PairValidationResult` is plain JSON (no class instances, branded ids as strings).
 - Ship `./drc` subpath; zero runtime deps preserved (browser execution is the point).
-- Add golden-JSON tests per fixture pair (the website can pin against them).
+- Add golden-JSON tests per fixture pair (consumers can pin against them).
 
-## Phase 9 — Web plumbing (Protoboard-Website repo)
+## Phase 9 — A web view (consumer side, outside this repository)
+
+What a web application needs to show a pair validation; UHD supplies the engine and
+the result object, the view lives with the application.
 
 1. Parts come from a library served over the open library protocol (`docs/library-protocol.md`); UHD has no part library of its own.
-2. `/validate` page: engine runs client-side; state in URL.
+2. The engine runs client-side (zero runtime dependencies); the selected pair can live in the URL.
 3. **Pair-scene layout engine** (visualizer-spec §9): DOM rows + measured ports
    (ResizeObserver), SVG overlay for shared regions/wires, row-pairing from `rowPair`,
-   band stacking by severity. Build as an isolated React component
-   (`<PairScene result={…}/>`) — it is also the future node-editor edge inspector.
+   band stacking by severity, as an isolated component fed one `PairValidationResult`.
 4. DRC results list = Concept C rows fed from the same `PairValidationResult`.
 
 ## Build order & estimates
@@ -197,7 +198,7 @@ field for future migration.
 | 6 | capacity engine | 2 | M |
 | 7 | connector/ecosystem | 1 | S |
 | 8 | serialization/golden tests | 2+ | S |
-| 9 | website: manifest, PairScene, /validate | 2–8 as available | L |
+| 9 | web view (consumer side): pair scene, results list | 2–8 as available | L |
 
 Critical path: 0 → 1 → 2 → 3a → 9. Phases 4–7 attach independently after 2.
 
@@ -233,7 +234,7 @@ Critical path: 0 → 1 → 2 → 3a → 9. Phases 4–7 attach independently aft
 
 - `split`/`or` topology UX beyond the B3/B4 vignettes (fan-out geometry in the SVG overlay).
 - Constraint solver (architecture doc §future) — validation-only is fine for the demo.
-- ProtoPart→UHD importer (library scale-up) and how its `resources[].functions`
-  map onto capabilities (ProtoPart `gap-report.ts` "uhd-drift" is the hook).
+- Importers from other part formats, and how their pin-function tables map onto
+  capabilities.
 - ASCII/HTML visualizer parity: emit the B8 semantics in `renderPairAscii` (donut/census
   markers) so terminal demos match the web story.

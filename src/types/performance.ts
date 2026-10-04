@@ -1,5 +1,5 @@
 /**
- * Performance data carried by a part's `performance` trait (PB-797).
+ * Performance data carried by a part's `performance` trait.
  *
  * Only the shapes that system helpers and generated documents compute from
  * are typed here; other performance fields stay free-form trait params.

@@ -172,9 +172,10 @@ We are actively interested in:
 ### What is not in this repository
 
 UHD holds the schema, pure helpers and the test fixtures its own tests use
-(`test/fixtures/`: invented parts and systems, and a few frozen copies of
-datasheet parts). It has no part library: the library lives in ProtoBoard's
-parts service, which serves it over the open [library protocol](docs/library-protocol.md).
+(`test/fixtures/`: invented parts and systems, a few small public-part
+examples, and synthetic chips for the board tests). It has no part library:
+libraries are served by their hosts over the open
+[library protocol](docs/library-protocol.md), and any tool can read them.
 Tools that run on UHD (CAD generators, document generators, part research
 and verification workflows) live with the tools built on it.
 

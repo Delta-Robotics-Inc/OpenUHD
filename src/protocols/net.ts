@@ -4,7 +4,7 @@ import type { TraitDef } from "../types/trait.js";
 import { voltageRangeV, voltageV } from "./params.js";
 
 /**
- * Nets (PB-824): the conductors of a board joining two or more pins.
+ * Nets: the conductors of a board joining two or more pins.
  *
  * A net is an interface on the board module itself (protocol `net`, not
  * exposed). Each pin on the net is joined to it by an ordinary stored link

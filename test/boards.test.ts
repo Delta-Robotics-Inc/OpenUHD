@@ -1,8 +1,8 @@
 /**
- * Boards and nets (PB-824): a custom PCB as a module whose nets are `Net`
- * interfaces joined by membership links. Uses the fixture board in
- * fixtures/imu-board.ts (RP2040 + BMI270 + TPS63020, frozen copies of
- * datasheet parts in fixtures/parts).
+ * Boards and nets: a custom PCB as a module whose nets are `Net` interfaces
+ * joined by membership links. Uses the fixture board in fixtures/imu-board.ts
+ * (an MCU, an IMU and a buck-boost regulator, synthetic parts in
+ * fixtures/parts).
  */
 import { describe, it, expect } from "vitest";
 import type { InterfaceDef, InterfaceLink, ModuleDef } from "../src/types/index.js";
@@ -12,7 +12,7 @@ import { validateLinks } from "../src/system/index.js";
 import { moduleNets } from "../src/system/nets.js";
 import { Ground, Net, Passive, PowerIn, PowerOut, defineModule, netLinks, pinTable } from "../src/protocols/index.js";
 import { IMU_BOARD, lookupBoardModule } from "./fixtures/imu-board.js";
-import { BOSCH_BMI270 } from "./fixtures/parts/bosch-bmi270.js";
+import { FIXTURE_IMU } from "./fixtures/parts/fixture-imu.js";
 import { areRolesCompatible } from "../src/matching/roles.js";
 
 const check = (board: ModuleDef, lookup = lookupBoardModule) => checkSystem(board, lookup).diagnostics;
@@ -30,7 +30,7 @@ function variant(changes: { drop?: string[]; add?: InterfaceLink[]; nets?: Modul
 
 describe("netLinks", () => {
   it("joins each member to the net on the board itself", () => {
-    expect(netLinks("gnd", ["u2:pin_6"])).toEqual([{ id: "gnd.u2.pin_6", a: { child: "u2", interfaceId: "pin_6" }, b: { self: true, interfaceId: "gnd" } }]);
+    expect(netLinks("gnd", ["u2:pin_9"])).toEqual([{ id: "gnd.u2.pin_9", a: { child: "u2", interfaceId: "pin_9" }, b: { self: true, interfaceId: "gnd" } }]);
   });
 
   it("rejects a member that is not <child>:<interface>", () => {
@@ -51,8 +51,8 @@ describe("the fixture board", () => {
 
   it("indexes each net with its pins", () => {
     const nets = new Map(moduleNets(IMU_BOARD, result.links).map((n) => [n.iface.id, n.members.map((m) => m.path)]));
-    expect(nets.get("sda")).toEqual(["u1:pin_2", "u2:pin_14", "r3:pin_2"]);
-    expect(nets.get("v3v3")).toHaveLength(17);
+    expect(nets.get("sda")).toEqual(["u1:pin_2", "u2:pin_1", "r3:pin_2"]);
+    expect(nets.get("v3v3")).toHaveLength(13);
   });
 
   it("derives the I2C link from the SDA and SCL nets, lifted to the controllers", () => {
@@ -61,32 +61,32 @@ describe("the fixture board", () => {
     expect([i2c[0].a.path, i2c[0].b.path]).toEqual(["u1:i2c_0", "u2:i2c"]);
     expect(i2c[0].state).toBe("configured");
     expect(i2c[0].derived?.nets).toEqual(["scl", "sda"]);
-    expect(i2c[0].children.map((c) => `${c.a.leafId}>${c.b.leafId}`)).toEqual(["pin_2>pin_14", "pin_3>pin_13"]);
+    expect(i2c[0].children.map((c) => `${c.a.leafId}>${c.b.leafId}`)).toEqual(["pin_2>pin_1", "pin_3>pin_2"]);
   });
 
   it("derives supply links from the regulator to every load on 3V3, and none between two loads", () => {
     const supply = result.links.filter((r) => r.derived?.nets?.includes("v3v3") && r.protocol === "power");
-    expect(new Set(supply.map((r) => r.a.path))).toEqual(new Set(["u3:pin_4", "u3:pin_5"]));
+    expect(new Set(supply.map((r) => r.a.path))).toEqual(new Set(["u3:pin_8", "u3:pin_9"]));
     expect(new Set(supply.map((r) => r.b.path))).toEqual(
-      new Set(["u1:pin_1", "u1:pin_10", "u1:pin_22", "u1:pin_33", "u1:pin_42", "u1:pin_49", "u1:pin_43", "u1:pin_44", "u1:pin_48", "u2:pin_8", "u2:pin_5"]),
+      new Set(["u1:pin_1", "u1:pin_9", "u1:pin_19", "u1:pin_24", "u1:pin_25", "u2:pin_7", "u2:pin_8"]),
     );
   });
 
-  it("derives the RP2040's own regulator feeding its core through the 1V1 net", () => {
-    const core = result.links.filter((r) => r.derived?.nets?.includes("v1v1"));
-    expect(core.map((r) => `${r.a.path}>${r.b.path}`)).toEqual(["u1:pin_45>u1:pin_23", "u1:pin_45>u1:pin_50"]);
+  it("derives the MCU's own regulator feeding its core through the VCORE net", () => {
+    const core = result.links.filter((r) => r.derived?.nets?.includes("vcore"));
+    expect(core.map((r) => `${r.a.path}>${r.b.path}`)).toEqual(["u1:pin_26>u1:pin_27", "u1:pin_26>u1:pin_28"]);
   });
 
   it("makes no link for passives, straps or pads that only share a net", () => {
     const paths = result.links.filter((r) => r.derived).flatMap((r) => [r.a.path, r.b.path]);
     expect(paths.some((p) => /^(r\d|l1):/.test(p))).toBe(false);
-    expect(paths).not.toContain("u2:pin_12"); // CSB strapped to 3V3
-    expect(paths).not.toContain("u2:pin_1"); // SDO strapped to GND
-    expect(paths).not.toContain("u1:pin_19"); // TESTEN strapped to GND
+    expect(paths).not.toContain("u2:pin_3"); // CS strapped to 3V3
+    expect(paths).not.toContain("u2:pin_4"); // ADDR strapped to GND
+    expect(paths).not.toContain("u1:pin_10"); // TEST strapped to GND
   });
 
   it("derives only power links over a rail, and none between ground pins", () => {
-    const onRails = result.links.filter((r) => r.derived?.nets?.some((n) => ["gnd", "v3v3", "v1v1", "vin"].includes(n)));
+    const onRails = result.links.filter((r) => r.derived?.nets?.some((n) => ["gnd", "v3v3", "vcore", "vin"].includes(n)));
     expect(onRails.length).toBeGreaterThan(0);
     expect(onRails.filter((r) => r.protocol !== "power")).toEqual([]);
     expect(result.links.filter((r) => r.derived?.nets?.includes("gnd"))).toEqual([]);
@@ -103,8 +103,8 @@ describe("the fixture board", () => {
 
   it("budgets 3V3 on the regulator's output port at the net's 3.3 V, each load once", () => {
     const d = result.diagnostics.find((x) => x.id === "supply_budget:u3:vout")!;
-    expect(d.details?.capacityW).toBeCloseTo(6.6, 6); // 3.3 V net × 2 A port rating
-    expect((d.details?.unknownLoads as string[]).length).toBe(11);
+    expect(d.details?.capacityW).toBeCloseTo(4.95, 6); // 3.3 V net × 1.5 A port rating
+    expect((d.details?.unknownLoads as string[]).length).toBe(7);
   });
 
   it("lifted links are one use of a pin, however many pins share its net", () => {
@@ -116,22 +116,22 @@ describe("seeded board faults", () => {
   it("IMU on a 5 V net: the net's design voltage exceeds VDD", () => {
     const board = variant({
       nets: [Net({ id: "v5", name: "5V", voltageV: 5 })],
-      drop: ["v3v3.u2.pin_8"],
-      add: netLinks("v5", ["u2:pin_8"]),
+      drop: ["v3v3.u2.pin_7"],
+      add: netLinks("v5", ["u2:pin_7"]),
     });
     const d = check(board).filter((x) => x.rule === "net" && x.severity === "error");
-    expect(d.map((x) => x.id)).toContain("net:v5:voltage:u2:pin_8");
-    expect(d.find((x) => x.id === "net:v5:voltage:u2:pin_8")!.message).toMatch(/1\.71–3\.6 V but net v5 \(5V\) is 5 V/);
+    expect(d.map((x) => x.id)).toContain("net:v5:voltage:u2:pin_7");
+    expect(d.find((x) => x.id === "net:v5:voltage:u2:pin_7")!.message).toMatch(/1\.71–3\.6 V but net v5 \(5V\) is 5 V/);
   });
 
   it("3V3 net declared at 5 V: every 3.3 V pin is flagged, the adjustable regulator is not", () => {
     const board = variant({ nets: [Net({ id: "v3v3", name: "3V3", voltageV: 5 })] });
     const flagged = check(board).filter((x) => x.id.startsWith("net:v3v3:voltage:")).map((x) => x.refs[1]);
-    expect(flagged).toContain("u2:pin_8");
+    expect(flagged).toContain("u2:pin_7");
     expect(flagged).toContain("u1:pin_1");
-    expect(flagged).not.toContain("u3:pin_4"); // VOUT is 1.2–5.5 V
-    // CSB is a logic input: flagged because 5 V is above its maximum
-    const csb = check(board).find((x) => x.id === "net:v3v3:voltage:u2:pin_12")!;
+    expect(flagged).not.toContain("u3:pin_8"); // VOUT is 1.0–5.5 V
+    // CS is a logic input: flagged because 5 V is above its maximum
+    const csb = check(board).find((x) => x.id === "net:v3v3:voltage:u2:pin_3")!;
     expect(csb.message).toMatch(/rated to 3\.6 V but net v3v3 \(3V3\) reaches 5 V/);
   });
 
@@ -152,19 +152,19 @@ describe("seeded board faults", () => {
     expect(r.diagnostics.filter((d) => d.severity !== "info")).toEqual([]);
   });
 
-  it("a second BMI270 on the same bus with SDO low is an address conflict", () => {
+  it("a second IMU on the same bus with ADDR low is an address conflict", () => {
     const board = variant({
-      children: [{ id: "u4", moduleDefId: BOSCH_BMI270.id, name: "IMU 2" }],
+      children: [{ id: "u4", moduleDefId: FIXTURE_IMU.id, name: "IMU 2" }],
       add: [
-        ...netLinks("sda", ["u4:pin_14"]),
-        ...netLinks("scl", ["u4:pin_13"]),
-        ...netLinks("v3v3", ["u4:pin_8", "u4:pin_5", "u4:pin_12"]),
-        ...netLinks("gnd", ["u4:pin_6", "u4:pin_7", "u4:pin_1"]),
+        ...netLinks("sda", ["u4:pin_1"]),
+        ...netLinks("scl", ["u4:pin_2"]),
+        ...netLinks("v3v3", ["u4:pin_7", "u4:pin_8", "u4:pin_3"]),
+        ...netLinks("gnd", ["u4:pin_9", "u4:pin_10", "u4:pin_4"]),
       ],
     });
     const d = check(board).find((x) => x.rule === "bus_address")!;
     expect(d.severity).toBe("error");
-    expect(d.message).toMatch(/0x68 \(u2:i2c, u4:i2c\)/);
+    expect(d.message).toMatch(/0x6A \(u2:i2c, u4:i2c\)/);
   });
 
   it("no pull-ups on SDA and SCL is a warning on each net", () => {
@@ -181,32 +181,32 @@ describe("seeded board faults", () => {
 
   it("SDA and SCL swapped at the IMU is caught as miswiring", () => {
     const board = variant({
-      drop: ["sda.u2.pin_14", "scl.u2.pin_13"],
-      add: [...netLinks("sda", ["u2:pin_13"]), ...netLinks("scl", ["u2:pin_14"])],
+      drop: ["sda.u2.pin_1", "scl.u2.pin_2"],
+      add: [...netLinks("sda", ["u2:pin_2"]), ...netLinks("scl", ["u2:pin_1"])],
     });
     const i2c = checkSystem(board, lookupBoardModule).links.find((r) => r.protocol === "i2c")!;
     expect(i2c.state).toBe("incompatible");
     expect(i2c.diagnostics.map((d) => d.code)).toContain("harness_wiring");
   });
 
-  it("SDx and INT1 swapped at the IMU leave the I2C bus incomplete", () => {
+  it("SDA and INT1 swapped at the IMU leave the I2C bus incomplete", () => {
     const board = variant({
-      drop: ["sda.u2.pin_14", "imu_int1.u2.pin_4"],
-      add: [...netLinks("sda", ["u2:pin_4"]), ...netLinks("imu_int1", ["u2:pin_14"])],
+      drop: ["sda.u2.pin_1", "imu_int1.u2.pin_5"],
+      add: [...netLinks("sda", ["u2:pin_5"]), ...netLinks("imu_int1", ["u2:pin_1"])],
     });
     const r = checkSystem(board, lookupBoardModule);
     const i2c = r.links.find((x) => x.protocol === "i2c")!;
     expect(i2c.state).toBe("incompatible");
-    expect(i2c.children.map((c) => `${c.a.leafId}>${c.b.leafId}`)).toEqual(["pin_3>pin_13"]);
-    expect(i2c.diagnostics.find((d) => d.code === "bus_incomplete")!.message).toMatch(/sda: u1:i2c_0 pin_2 and u2:i2c pin_14 are not wired/);
+    expect(i2c.children.map((c) => `${c.a.leafId}>${c.b.leafId}`)).toEqual(["pin_3>pin_2"]);
+    expect(i2c.diagnostics.find((d) => d.code === "bus_incomplete")!.message).toMatch(/sda: u1:i2c_0 pin_2 and u2:i2c pin_1 are not wired/);
     expect(r.diagnostics.some((d) => d.rule === "link_state" && d.severity === "error")).toBe(true);
   });
 
   it("ground joined to 3V3 is a short", () => {
-    const board = variant({ add: netLinks("v3v3", ["u2:pin_7"]) });
+    const board = variant({ add: netLinks("v3v3", ["u2:pin_10"]) });
     const d = check(board);
     expect(d.map((x) => x.id)).toContain("net:v3v3:ground");
-    expect(d.map((x) => x.id)).toContain("net:short:u2:pin_7"); // on GND and 3V3
+    expect(d.map((x) => x.id)).toContain("net:short:u2:pin_10"); // on GND and 3V3
   });
 
   it("a second supply driving 3V3 is reported", () => {
@@ -214,21 +214,21 @@ describe("seeded board faults", () => {
     const board = variant({ children: [{ id: "u5", moduleDefId: ldo.id }], add: netLinks("v3v3", ["u5:vout"]) });
     const d = checkSystem(board, (id) => (id === ldo.id ? ldo : lookupBoardModule(id))).diagnostics.find((x) => x.id === "net:v3v3:drivers")!;
     expect(d.severity).toBe("error");
-    expect(d.refs).toEqual(expect.arrayContaining(["u3:pin_4", "u5:vout"]));
+    expect(d.refs).toEqual(expect.arrayContaining(["u3:pin_8", "u5:vout"]));
   });
 
   it("a net with one pin, and a removed regulator output, leave loads unpowered", () => {
     const board = variant({ drop: IMU_BOARD.links!.filter((l) => l.id.startsWith("v3v3.u3.")).map((l) => l.id) });
     const d = check(board);
-    expect(d.filter((x) => x.rule === "unpowered").map((x) => x.refs[0])).toEqual(expect.arrayContaining(["u2:pin_8", "u1:pin_1"]));
-    const lonely = check(variant({ drop: ["imu_int1.u2.pin_4"] })).find((x) => x.id === "net:imu_int1:members")!;
+    expect(d.filter((x) => x.rule === "unpowered").map((x) => x.refs[0])).toEqual(expect.arrayContaining(["u2:pin_7", "u1:pin_1"]));
+    const lonely = check(variant({ drop: ["imu_int1.u2.pin_5"] })).find((x) => x.id === "net:imu_int1:members")!;
     expect(lonely.message).toMatch(/joins only u1:pin_4/);
   });
 
   it("without the board-edge export, the regulator's input pins are unpowered", () => {
     const board = { ...IMU_BOARD, exports: IMU_BOARD.exports!.filter((e) => e.id !== "power_in") };
     const unpowered = check(board).filter((x) => x.rule === "unpowered").map((x) => x.refs[0]);
-    expect(unpowered).toEqual(expect.arrayContaining(["u3:pin_10", "u3:pin_11", "u3:pin_1", "u3:vin"]));
+    expect(unpowered).toEqual(expect.arrayContaining(["u3:pin_1", "u3:pin_2", "u3:pin_3", "u3:vin"]));
   });
 
   it("a membership link to a composite or a child's net is invalid", () => {
@@ -277,15 +277,15 @@ describe("the board inside a system", () => {
   });
 
   it("an export may not reuse a net's id", () => {
-    expect(() => defineModule({ ...IMU_BOARD, exports: [{ id: "gnd", from: { child: "u3", interfaceId: "pin_2" } }] })).toThrow(/export "gnd" has the id of an interface/);
+    expect(() => defineModule({ ...IMU_BOARD, exports: [{ id: "gnd", from: { child: "u3", interfaceId: "pin_11" } }] })).toThrow(/export "gnd" has the id of an interface/);
   });
 
   it("links to the board's edge export, and the nets stay inside the board", () => {
     const r = checkSystem(system, lookup);
     const battery = r.links.find((x) => x.link.id === "battery")!;
     expect(battery.state).toBe("configured");
-    expect(battery.b.owner.id).toBe("ti-tps63020dsjr");
-    expect(battery.b.iface.id).toBe("pin_10");
+    expect(battery.b.owner.id).toBe("fixture-buck-boost-son12");
+    expect(battery.b.iface.id).toBe("pin_1");
     expect(r.diagnostics.filter((d) => d.severity !== "info")).toEqual([]);
   });
 });
@@ -324,10 +324,10 @@ describe("board rules from a real board", () => {
     // the IMU's VDD (1.71-3.6 V) on a 3.0-4.2 V cell rail: it overlaps, but 4.2 V is above its rating
     const board = variant({
       nets: [Net({ id: "vbat", name: "VBAT", voltageV: [3.0, 4.2] })],
-      drop: ["v3v3.u2.pin_8"],
-      add: netLinks("vbat", ["u2:pin_8"]),
+      drop: ["v3v3.u2.pin_7"],
+      add: netLinks("vbat", ["u2:pin_7"]),
     });
-    const d = check(board).find((x) => x.id === "net:vbat:voltage:u2:pin_8")!;
+    const d = check(board).find((x) => x.id === "net:vbat:voltage:u2:pin_7")!;
     expect(d.severity).toBe("error");
     expect(d.message).toMatch(/outside its rating at one end/);
   });
@@ -401,7 +401,7 @@ describe("drive levels on a board's nets", () => {
   });
 });
 
-describe("a part's own pins on the board's nets (PB-869)", () => {
+describe("a part's own pins on the board's nets", () => {
   // fixture part: a 100 nF decoupling capacitor
   const C100N = Passive({ id: "fixture-c-100n-0402", name: "Capacitor 100 nF 0402", kind: "capacitor", value: 100e-9, unit: "F", assumption: "Fixture value." });
   const withCap = (id: string) => (x: string) => (x === C100N.id ? C100N : lookupBoardModule(x));
@@ -432,35 +432,35 @@ describe("a part's own pins on the board's nets (PB-869)", () => {
   });
 
   it("the regulator's VOUT tied to its VIN shorts output to input", () => {
-    const board = variant({ drop: ["v3v3.u3.pin_4"], add: netLinks("vin", ["u3:pin_4"]) });
+    const board = variant({ drop: ["v3v3.u3.pin_8"], add: netLinks("vin", ["u3:pin_8"]) });
     const d = errors(board).find((x) => x.id === "net:vin:feedback:u3")!;
-    expect(d.message).toMatch(/ties u3's output u3:pin_4 \(VOUT\) to its own input .*u3:pin_10 \(VIN\)/);
-    expect(d.refs).toEqual(expect.arrayContaining(["u3:pin_4", "u3:pin_10", "u3:pin_11", "u3:pin_1"]));
+    expect(d.message).toMatch(/ties u3's output u3:pin_8 \(VOUT\) to its own input .*u3:pin_1 \(VIN\)/);
+    expect(d.refs).toEqual(expect.arrayContaining(["u3:pin_8", "u3:pin_1", "u3:pin_2", "u3:pin_3"]));
   });
 
-  it("a part that states its bridges may feed its own other inputs: the RP2040's VREG_VOUT on DVDD", () => {
+  it("a part that states its bridges may feed its own other inputs: the MCU's VREG_OUT on VCORE", () => {
     expect(check(IMU_BOARD).some((x) => x.id.includes(":feedback:"))).toBe(false);
-    // its regulator's own input (VREG_VIN bridges to VREG_VOUT) on the 1V1 net is the fault
-    const board = variant({ drop: ["v3v3.u1.pin_44"], add: netLinks("v1v1", ["u1:pin_44"]) });
-    const d = check(board).find((x) => x.id === "net:v1v1:feedback:u1")!;
+    // its regulator's own input (VREG_IN bridges to VREG_OUT) on the VCORE net is the fault
+    const board = variant({ drop: ["v3v3.u1.pin_25"], add: netLinks("vcore", ["u1:pin_25"]) });
+    const d = check(board).find((x) => x.id === "net:vcore:feedback:u1")!;
     expect(d.severity).toBe("error");
-    expect(d.details?.inputs).toEqual(["u1:pin_44"]);
+    expect(d.details?.inputs).toEqual(["u1:pin_25"]);
   });
 
-  it("the BMI270's address strap SDO moved from GND onto SDA follows the bus", () => {
-    const board = variant({ drop: ["gnd.u2.pin_1"], add: netLinks("sda", ["u2:pin_1"]) });
-    const d = errors(board).find((x) => x.id === "net:sda:strap:u2:pin_1")!;
-    expect(d.message).toMatch(/u2:pin_1 \(SDO\) is a strap \(I2C address bit 0\) but net sda \(SDA\) carries .*u1:pin_2/);
+  it("the IMU's address strap ADDR moved from GND onto SDA follows the bus", () => {
+    const board = variant({ drop: ["gnd.u2.pin_4"], add: netLinks("sda", ["u2:pin_4"]) });
+    const d = errors(board).find((x) => x.id === "net:sda:strap:u2:pin_4")!;
+    expect(d.message).toMatch(/u2:pin_4 \(ADDR\) is a strap \(I2C address bit 0\) but net sda \(SDA\) carries .*u1:pin_2/);
   });
 
   it("a strap is at a fixed level on a supply net, or on a net of its own through a resistor", () => {
-    const high = variant({ drop: ["gnd.u2.pin_1"], add: netLinks("v3v3", ["u2:pin_1"]) });
+    const high = variant({ drop: ["gnd.u2.pin_4"], add: netLinks("v3v3", ["u2:pin_4"]) });
     expect(check(high).some((x) => x.id.includes(":strap:"))).toBe(false);
     const pulled = variant({
-      drop: ["gnd.u2.pin_1"],
-      nets: [Net({ id: "sdo", name: "SDO" })],
+      drop: ["gnd.u2.pin_4"],
+      nets: [Net({ id: "addr", name: "ADDR" })],
       children: [{ id: "r9", moduleDefId: "fixture-r-4k7-0402" }],
-      add: [...netLinks("sdo", ["u2:pin_1", "r9:pin_1"]), ...netLinks("gnd", ["r9:pin_2"])],
+      add: [...netLinks("addr", ["u2:pin_4", "r9:pin_1"]), ...netLinks("gnd", ["r9:pin_2"])],
     });
     expect(check(pulled).some((x) => x.id.includes(":strap:"))).toBe(false);
   });

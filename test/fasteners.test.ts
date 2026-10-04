@@ -4,7 +4,7 @@ import { fastenerHarnesses, fastenerTorqueRule, jointTorques } from "../src/syst
 import type { ModuleDef } from "../src/types/index.js";
 import { DRONE, MOTOR_HARDWARE, STACK_HARDWARE, lookup } from "./fixtures/drone.js";
 
-describe("fastener torques (PB-797)", () => {
+describe("fastener torques", () => {
   it("finds every fastener harness once, with the instances that use it", () => {
     const hs = fastenerHarnesses(DRONE, lookup);
     expect(hs.map((h) => h.def.id).sort()).toEqual(["fixture-gps-hardware", "fixture-motor-hardware", "fixture-plate-hardware", "fixture-stack-hardware"]);

@@ -1,5 +1,5 @@
 /**
- * System-level design checks (PB-789): rules that need the whole system,
+ * System-level design checks: rules that need the whole system,
  * not one link at a time.
  *
  *   link_state          every stored link, from validateLinks
@@ -152,7 +152,7 @@ interface SupplyGroup {
 }
 
 /**
- * The design voltage of the board net a derived link runs over (PB-824), if
+ * The design voltage of the board net a derived link runs over, if
  * it states one: an adjustable regulator's output is what its net says, not
  * the low end of what the part allows.
  */
@@ -497,7 +497,7 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
 
 /**
  * Connector types a link end can present: its own connector traits plus those
- * of connector composites on its module that bind it or its pads (PB-805).
+ * of connector composites on its module that bind it or its pads.
  */
 function sideConnectorTypes(side: ResolvedEndpoint): string[] {
   const ids = new Set([side.iface.id, ...Object.values(slotBindings(side.iface))]);
@@ -598,7 +598,7 @@ const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 } as const;
 
 /**
  * Run every system rule over a module's stored links and the functional
- * links derived through its connectors and harnesses (PB-805). A diagnostic
+ * links derived through its connectors and harnesses. A diagnostic
  * on a derived link also names the stored links it runs through.
  */
 export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: CheckSystemOptions = {}): SystemCheckResult {

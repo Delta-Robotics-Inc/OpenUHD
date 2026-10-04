@@ -33,13 +33,14 @@
     "schemas",
     "skills",
     "docs/**/*.md",
+    "!docs/PR-*.md",
     "LICENSE",
     "NOTICE",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "build:library": "node -e \"console.log('UHD has no part library: it lives in ProtoBoard\\u2019s parts service, read over the open library protocol (docs/library-protocol.md).')\"",
+    "build:library": "node -e \"console.log('UHD has no part library: parts come from libraries served over the open library protocol (docs/library-protocol.md).')\"",
     "build:taxonomy": "tsx scripts/build-taxonomy.ts",
     "prepack": "npm run build",
     "test": "vitest run",
@@ -76,8 +77,5 @@
     "tsx": "^4.23.1",
     "typescript": "^5.7.0",
     "vitest": "^3.1.0"
-  },
-  "publishConfig": {
-    "registry": "http://127.0.0.1:4873/"
   }
 }

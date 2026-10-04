@@ -4,7 +4,7 @@ import { propMounts, resolveSpins } from "../src/system/rotation.js";
 import type { ModuleDef } from "../src/types/index.js";
 import { ARM, DRONE, lookup, lookupWith } from "./fixtures/drone.js";
 
-describe("spin direction and prop handedness (PB-797)", () => {
+describe("spin direction and prop handedness", () => {
   it("an arm instance's spin carries down to its motor and prop", () => {
     const spins = resolveSpins(DRONE, lookup);
     expect(spins.get("arm_rr/motor")?.spin).toBe("cw");

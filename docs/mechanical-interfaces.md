@@ -1,6 +1,6 @@
 # Mechanical interfaces: bolt patterns, shafts, linear motion
 
-Status: implemented (PB-862). Code: `src/protocols/mechanical.ts`
+Status: implemented. Code: `src/protocols/mechanical.ts`
 (`BoltPattern`, `Shaft`, `LinearMotion`), `src/drc/joint-check.ts`
 (`bolt_pattern_shape`, `bolt_pattern_line`, `shaft_fit`,
 `linear_motion_capacity`), hole positions in `src/system/geometry.ts`

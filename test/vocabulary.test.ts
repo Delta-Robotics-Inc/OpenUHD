@@ -1,5 +1,5 @@
 /**
- * PB-864: the vocabulary gaps logged by the ProtoPart port (PB-796):
+ * Vocabulary for motion, buses, connectors and fluids:
  * steppers and step/dir, brushed motor outputs, encoder ports, RC servo
  * ports, shield headers, the CAN role family, cross bolt patterns, and
  * pneumatic and hydraulic ports.
@@ -133,7 +133,7 @@ describe("brushed motor outputs", () => {
 
 describe("encoder ports", () => {
   // A through-bore encoder (A, B, index, absolute PWM, 5 V) and a smart motor
-  // controller's encoder input: the pair PB-796 could not mate.
+  // controller's encoder input.
   const encoder = (index = true) =>
     mod("stub-through-bore", [
       PowerIn({ id: "vcc", voltageV: [3.3, 5] }),
