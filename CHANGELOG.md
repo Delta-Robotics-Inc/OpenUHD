@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- `validatePair` (PB-866): mechanical interfaces that are interchangeable twins (identical but for id and name: an extrusion's four slots, a bracket's two legs, a plate's bearing seats) are one choice, so one connection is made per pair of twin classes and the other placements stay potentials, and a twin whose clean pairings a twin connection holds does not fall back to one with errors; two shafts or two bores are never auto-connected (potentials only), while an explicit link (`explicit: true`, used by `validateLink`) still reports `shaft_fit`. `Thread` pitch and `AcPower` line frequency may be left out when the source states none; `InductiveLoad` takes leads with no designator; `thread_fit` does not compare a fastener's `length`.
 - Board rules as a real board needs them (found on the ProtoBoard wearable watch's main board):
   - `passive` terminals pair with each other (a lead soldered to a pad), but still pair with nothing over a board net.
   - A supply input's stated range must contain the whole rail, not just overlap it. A 3.0-4.2 V cell rail on a 1.7-3.6 V input is an error, reported as "outside its rating at one end".
