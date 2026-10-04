@@ -87,8 +87,8 @@ export interface AcPowerConfig {
   role: "input" | "output";
   /** RMS voltage: an input's accepted range ([100, 240]), an outlet's nominal (120) or range. */
   voltageV: number | [number, number];
-  /** Line frequency in Hz: [50, 60], 60, [47, 63]. */
-  frequencyHz: number | [number, number];
+  /** Line frequency in Hz: [50, 60], 60, [47, 63]. Left out when the source states none (then not compared). */
+  frequencyHz?: number | [number, number];
   /** Output: rated current in A. Input: the most it draws, as `maxCurrentA` too (the rating on its label). */
   maxCurrentA?: number;
   /** Input: rated input power in W (the supply budget counts it). */
@@ -125,7 +125,8 @@ export function AcPower(config: AcPowerConfig): InterfaceDef[] {
   t("earth", "PE", config.protectiveEarth, false);
   const generated: InterfaceDef[] = [];
   const { slots, bindings } = linkSlots(id, "ac_power", signals, generated);
-  const parameters: Parameter[] = [volts(config.voltageV), lineFrequencyHz(config.frequencyHz)];
+  const parameters: Parameter[] = [volts(config.voltageV)];
+  if (config.frequencyHz !== undefined) parameters.push(lineFrequencyHz(config.frequencyHz));
   if (config.maxCurrentA !== undefined) parameters.push(maxCurrentA(config.maxCurrentA));
   if (config.powerW !== undefined) {
     if (config.role !== "input") throw new Error(`AcPower ${id}: powerW is an input's rating`);
