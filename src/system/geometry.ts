@@ -11,6 +11,7 @@
  * - checkGeometryBindings: compares feature/artifact refs with the
  *   manifests the CAD generators write, reporting missing or stale refs.
  */
+import { patternHoles } from "../drc/joint-check.js";
 import type { InterfaceDef } from "../types/interface.js";
 import type { EndpointTarget, InterfaceLink as Link, ModuleDef } from "../types/module.js";
 import { resolveBelow, resolveExports, type ModuleLookup } from "./index.js";
@@ -552,6 +553,7 @@ const paramValue = (iface: InterfaceDef, id: string) => {
 export function boltPatternHoles(iface: InterfaceDef): [number, number][] {
   const shape = iface.traits?.find((t) => t.type === "bolt_pattern")?.params?.shape;
   if (shape === "slot") return [];
+  if (shape === "grid" || shape === "arc") return patternHoles(iface) ?? [];
   const spacing = paramValue(iface, "hole_spacing");
   if (spacing === undefined) return [];
   const count = paramValue(iface, "hole_count") ?? 4;

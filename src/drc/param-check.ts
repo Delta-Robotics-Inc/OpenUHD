@@ -22,6 +22,8 @@ export const CAPACITY_PARAM_IDS = new Set([
   "linear_speed",
   "max_flow",
   "flow_rate",
+  "load_rating",
+  "coil_current",
 ]);
 
 /** SI-prefix normalization so 40 mA and 0.04 A compare in the same base unit. */

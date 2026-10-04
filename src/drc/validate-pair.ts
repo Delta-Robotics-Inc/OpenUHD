@@ -11,6 +11,8 @@ import {
 import { checkPairParameters } from "./param-check.js";
 import { checkPairJoints, pairCheckedParams } from "./joint-check.js";
 import { checkPairLinks, linkCheckedParams } from "./link-check.js";
+import { checkPairDrive, driveCheckedParams } from "./drive-check.js";
+import { checkPairSignals, signalCheckedParams } from "./signal-check.js";
 import type {
   ConnectionResult,
   ConnectionState,
@@ -63,9 +65,21 @@ export function validatePair(
       if (!match.compatible) continue;
       // parameters the joint check compares itself (a cross against a circle, a row against a slot)
       // and those the link check compares (speeds, lane rates, bus widths, PoE power)
-      const skip = new Set([...pairCheckedParams(a.iface, b.iface), ...linkCheckedParams(a.iface, b.iface)]);
+      // and those the drive and signal checks compare (gear modules, bearing diameters, IR carriers)
+      const skip = new Set([
+        ...pairCheckedParams(a.iface, b.iface),
+        ...linkCheckedParams(a.iface, b.iface),
+        ...driveCheckedParams(a.iface, b.iface),
+        ...signalCheckedParams(a.iface, b.iface),
+      ]);
       const params = checkPairParameters(a.iface.parameters, b.iface.parameters).filter((d) => !d.refs?.some((r) => skip.has(r)));
-      const diagnostics = [...params, ...checkPairJoints(a.iface, b.iface), ...checkPairLinks(a.iface, b.iface)];
+      const diagnostics = [
+        ...params,
+        ...checkPairJoints(a.iface, b.iface),
+        ...checkPairLinks(a.iface, b.iface),
+        ...checkPairDrive(a.iface, b.iface),
+        ...checkPairSignals(a.iface, b.iface),
+      ];
       candidates.push({
         a,
         b,

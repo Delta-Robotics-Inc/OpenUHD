@@ -262,6 +262,115 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
   ieee802154: {
     node: ["node"],
   },
+  // ---- Mechanical round (PB-866): drive train, bearings, threads, tracks, wheels.
+  gear_mesh: {
+    mesh: ["mesh"],
+  },
+  bearing_fit: {
+    bearing: ["seat"],
+    seat: ["bearing"],
+  },
+  thread: {
+    external: ["internal"],
+    internal: ["external"],
+  },
+  t_slot: {
+    track: ["insert"],
+    insert: ["track"],
+  },
+  axial_stop: {
+    face: ["face"],
+  },
+  rolling_contact: {
+    wheel: ["surface"],
+    surface: ["wheel"],
+  },
+  // ---- Serial links, IR, mains and coils (PB-866).
+  // RS-485: every node on the bus; half duplex A to A and B to B, full
+  // duplex one side's driver pair (Y/Z) to the other's receiver pair (A/B).
+  rs485: {
+    node: ["node"],
+    a: ["a"],
+    b: ["b"],
+    tx_p: ["rx_p"],
+    tx_n: ["rx_n"],
+    rx_p: ["tx_p"],
+    rx_n: ["tx_n"],
+    ground: ["ground"],
+  },
+  rs485_signal: {
+    line: [],
+  },
+  // RS-232: DTE with DCE straight through; two DTEs (or two DCEs) through a
+  // null modem, which crosses TXD/RXD, RTS/CTS and DTR/DSR (rs232_null_modem warns).
+  rs232: {
+    dte: ["dce", "dte"],
+    dce: ["dte", "dce"],
+    txd_out: ["txd_in", "rxd_in"],
+    txd_in: ["txd_out", "rxd_out"],
+    rxd_out: ["rxd_in", "txd_in"],
+    rxd_in: ["rxd_out", "txd_out"],
+    rts_out: ["rts_in", "cts_in"],
+    rts_in: ["rts_out", "cts_out"],
+    cts_out: ["cts_in", "rts_in"],
+    cts_in: ["cts_out", "rts_out"],
+    dtr_out: ["dtr_in", "dsr_in"],
+    dtr_in: ["dtr_out", "dsr_out"],
+    dsr_out: ["dsr_in", "dtr_in"],
+    dsr_in: ["dsr_out", "dtr_out"],
+    dcd_out: ["dcd_in"],
+    dcd_in: ["dcd_out"],
+    ri_out: ["ri_in"],
+    ri_in: ["ri_out"],
+    ground: ["ground"],
+  },
+  // SWD: a probe debugs a target. Older parts gave the target leaves role
+  // "target", which the generic table pairs with host and controller.
+  swd: {
+    probe: ["target"],
+    target: ["probe"],
+    swdio: ["swdio"],
+    swclk_out: ["swclk_in"],
+    swclk_in: ["swclk_out"],
+    swo_out: ["swo_in"],
+    swo_in: ["swo_out"],
+    nreset_out: ["nreset_in"],
+    nreset_in: ["nreset_out"],
+    vtref_out: ["vtref_in"],
+    vtref_in: ["vtref_out"],
+    ground: ["ground"],
+  },
+  ppm: {
+    output: ["input"],
+    input: ["output"],
+    signal_out: ["signal_in"],
+    signal_in: ["signal_out"],
+  },
+  ir_remote: {
+    transmitter: ["receiver"],
+    receiver: ["transmitter"],
+  },
+  ac_power: {
+    input: ["output"],
+    output: ["input"],
+    line: ["line"],
+    neutral: ["neutral"],
+    earth: ["earth"],
+  },
+  ac_terminal: {
+    terminal: [],
+  },
+  inductive_load: {
+    driver: ["load"],
+    load: ["driver"],
+    drive_plus: ["coil_plus"],
+    coil_plus: ["drive_plus"],
+    drive_minus: ["coil_minus"],
+    coil_minus: ["drive_minus"],
+  },
+  inductive_terminal: {
+    terminal: [],
+  },
 };
 
 /**
@@ -289,6 +398,21 @@ const NO_GENERIC_FALLBACK = new Set([
   "wifi",
   "bluetooth",
   "ieee802154",
+  "gear_mesh",
+  "bearing_fit",
+  "thread",
+  "t_slot",
+  "axial_stop",
+  "rolling_contact",
+  "rs485",
+  "rs485_signal",
+  "rs232",
+  "ppm",
+  "ir_remote",
+  "ac_power",
+  "ac_terminal",
+  "inductive_load",
+  "inductive_terminal",
 ]);
 
 /**

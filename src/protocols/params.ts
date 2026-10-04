@@ -177,9 +177,14 @@ export function minSupplyCurrentA(value: number): Parameter {
   return { id: "min_supply_current", unit: "A", value };
 }
 
-/** Hole-to-hole pitch of a row of holes in mm (BoltPattern shape "row"). */
-export function holePitchMm(value: number): Parameter {
-  return { id: "hole_pitch", unit: "mm", value };
+/** Hole-to-hole pitch of a row of holes in mm (BoltPattern shape "row"; a grid's pitch along x, or with axis "y" along y). */
+export function holePitchMm(value: number, axis?: "y"): Parameter {
+  return { id: axis === "y" ? "hole_pitch_y" : "hole_pitch", unit: "mm", value };
+}
+
+/** Angle between neighbouring holes of a partial bolt circle in degrees (BoltPattern shape "arc"). */
+export function angularPitchDeg(value: number): Parameter {
+  return { id: "angular_pitch", unit: "deg", value };
 }
 
 /** Usable length of a mounting slot in mm: fasteners sit anywhere along it (BoltPattern shape "slot"). */
@@ -333,4 +338,112 @@ export function ledCurrentmA(value: number | [number, number]): Parameter {
   return Array.isArray(value)
     ? { id: "led_current", unit: "mA", range: value }
     : { id: "led_current", unit: "mA", value };
+}
+
+// ---------------------------------------------------------------------------
+// Drive train, bearings, fasteners and wheels (PB-866, mechanical round)
+// ---------------------------------------------------------------------------
+
+/**
+ * Gear module in mm (pitch diameter ÷ tooth count). A diametral pitch P
+ * (teeth per inch of pitch diameter) is module 25.4 / P. Two gears mesh only
+ * with the same module and pressure angle (`gear_mesh`).
+ */
+export function gearModuleMm(value: number): Parameter {
+  return { id: "gear_module", unit: "mm", value };
+}
+
+/** Gear pressure angle in degrees (20° is the common standard; 14.5° older inch gears). */
+export function pressureAngleDeg(value: number): Parameter {
+  return { id: "pressure_angle", unit: "deg", value };
+}
+
+/** Number of teeth on a gear, or on the length of a rack. Not compared between two gears. */
+export function toothCount(value: number): Parameter {
+  return { id: "tooth_count", unit: "dimensionless", value };
+}
+
+/** Face width of gear teeth in mm (axial length of the teeth). Not compared: the engaged width is the narrower. */
+export function faceWidthMm(value: number): Parameter {
+  return { id: "face_width", unit: "mm", value };
+}
+
+/** Outside diameter of a bearing (or bushing), and the bore of the seat that holds it, in mm. */
+export function bearingOdMm(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "bearing_od", unit: "mm", range: value } : { id: "bearing_od", unit: "mm", value };
+}
+
+/** Bore of a bearing in mm (the shaft it takes). The bore itself is a `Shaft` bore; this is the bearing's nominal size. */
+export function bearingBoreMm(value: number): Parameter {
+  return { id: "bearing_bore", unit: "mm", value };
+}
+
+/** Width of a bearing in mm (its outer ring, or a plain bearing's length). */
+export function bearingWidthMm(value: number): Parameter {
+  return { id: "bearing_width", unit: "mm", value };
+}
+
+/** Depth of a bearing seat (the counterbore that holds a bearing) in mm. */
+export function seatDepthMm(value: number): Parameter {
+  return { id: "seat_depth", unit: "mm", value };
+}
+
+/** Length of thread in mm: a screw's threaded length, a tapped hole's or insert's thread depth, a nut's height. */
+export function threadLengthMm(value: number): Parameter {
+  return { id: "thread_length", unit: "mm", value };
+}
+
+/** Width of a T-slot's opening (the gap the fastener's neck passes through) in mm. */
+export function slotOpeningMm(value: number): Parameter {
+  return { id: "slot_opening", unit: "mm", value };
+}
+
+/** Wheel outside diameter in mm. */
+export function wheelDiameterMm(value: number): Parameter {
+  return { id: "wheel_diameter", unit: "mm", value };
+}
+
+/** Tread (contact) width of a wheel in mm. */
+export function treadWidthMm(value: number): Parameter {
+  return { id: "tread_width", unit: "mm", value };
+}
+
+/** Rated load in N: a wheel's or bearing's load rating (a capacity: not range-compared). */
+export function loadRatingN(value: number): Parameter {
+  return { id: "load_rating", unit: "N", value };
+}
+
+/** Outside diameter of an annular contact face in mm (a spacer's or collar's end face). */
+export function faceOdMm(value: number): Parameter {
+  return { id: "face_od", unit: "mm", value };
+}
+
+/** Inside diameter of an annular contact face in mm (its bore). */
+export function faceIdMm(value: number): Parameter {
+  return { id: "face_id", unit: "mm", value };
+}
+
+/** Axial length in mm (a spacer's or collar's length along the shaft). */
+export function axialLengthMm(value: number): Parameter {
+  return { id: "axial_length", unit: "mm", value };
+}
+
+/** AC line frequency in Hz: fixed (60) or [min, max] ([47, 63]). */
+export function lineFrequencyHz(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "line_frequency", unit: "Hz", range: value } : { id: "line_frequency", unit: "Hz", value };
+}
+
+/** IR carrier (modulation) frequency in kHz, e.g. 38. Compared by `ir_carrier`, not by overlap. */
+export function irCarrierKHz(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "ir_carrier", unit: "kHz", range: value } : { id: "ir_carrier", unit: "kHz", value };
+}
+
+/** Coil current in A at the rated voltage (a solenoid, valve or brake coil). A draw: compared with the driver's rating by `inductive_load`. */
+export function coilCurrentA(value: number): Parameter {
+  return { id: "coil_current", unit: "A", value };
+}
+
+/** Coil resistance in Ω. */
+export function coilResistanceOhm(value: number): Parameter {
+  return { id: "coil_resistance", unit: "Ω", value };
 }
