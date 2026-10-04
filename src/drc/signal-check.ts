@@ -3,8 +3,8 @@ import type { Diagnostic } from "./types.js";
 import { getEffectiveRange } from "../parameters/range.js";
 
 /**
- * Pair checks for serial links, IR remotes, AC mains and coils (PB-866;
- * `protocols/serial.ts`, `protocols/actuation.ts`):
+ * Pair checks for serial links, IR remotes, AC mains and coils
+ * (`protocols/serial.ts`, `protocols/actuation.ts`):
  *
  * - `rs485_duplex` (error): a half-duplex port against a full-duplex one.
  * - `rs232_null_modem` (warning): two DTEs or two DCEs: the link needs a

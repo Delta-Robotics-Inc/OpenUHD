@@ -341,7 +341,7 @@ export function ledCurrentmA(value: number | [number, number]): Parameter {
 }
 
 // ---------------------------------------------------------------------------
-// Drive train, bearings, fasteners and wheels (PB-866, mechanical round)
+// Drive train, bearings, fasteners and wheels
 // ---------------------------------------------------------------------------
 
 /**

@@ -3,8 +3,8 @@ import type { Diagnostic } from "./types.js";
 import { getEffectiveRange } from "../parameters/range.js";
 
 /**
- * Pair checks for the drive-train and fastening vocabulary (PB-866,
- * mechanical round; `protocols/drive.ts`):
+ * Pair checks for the drive-train and fastening vocabulary
+ * (`protocols/drive.ts`):
  *
  * - `gear_mesh`: two gears with a different module or pressure angle
  *   (error); kinds that do not go together (two racks, two internal gears,

@@ -5,7 +5,7 @@ import { baudRate, bitRateBps, channelCount, frameRateHz, voltageRangeV, voltage
 import type { SignalRef } from "./signal.js";
 
 /**
- * Serial links beyond logic-level UART (PB-866): RS-485, RS-232, SWD and
+ * Serial links beyond logic-level UART: RS-485, RS-232, SWD and
  * PPM. Each is a composite whose slots carry a sub-role per conductor
  * (`link.ts`), so two ports pair conductor by conductor. Pins are optional:
  * a port without them is a logical port (a connector on a controller whose

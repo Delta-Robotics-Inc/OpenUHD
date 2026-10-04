@@ -15,8 +15,7 @@ import {
 import type { SignalRef } from "./signal.js";
 
 /**
- * Infrared remote links, AC mains power, and switched inductive loads
- * (PB-866).
+ * Infrared remote links, AC mains power, and switched inductive loads.
  */
 
 const volts = (v: number | [number, number]): Parameter => (Array.isArray(v) ? voltageRangeV(v[0], v[1]) : voltageV(v));

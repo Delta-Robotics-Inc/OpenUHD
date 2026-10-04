@@ -24,7 +24,7 @@ import {
 } from "./params.js";
 
 /**
- * Drive-train and fastening vocabulary (PB-866, mechanical round): gears,
+ * Drive-train and fastening vocabulary: gears,
  * bearings and the seats that hold them, threads, T-slot tracks and what
  * slides in them, axial faces (spacers, collars, hubs), and wheels.
  *

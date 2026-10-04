@@ -1,5 +1,5 @@
 /**
- * PB-866, mechanical round: gears, bearings and seats, bolt grids and
+ * Gears, bearings and seats, bolt grids and
  * partial circles, threads, T-slots, axial faces, wheels and the round bore
  * clamped on a hex shaft.
  */

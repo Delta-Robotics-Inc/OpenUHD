@@ -262,7 +262,7 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
   ieee802154: {
     node: ["node"],
   },
-  // ---- Mechanical round (PB-866): drive train, bearings, threads, tracks, wheels.
+  // ---- Mechanical: drive train, bearings, threads, tracks, wheels.
   gear_mesh: {
     mesh: ["mesh"],
   },
@@ -285,7 +285,7 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
     wheel: ["surface"],
     surface: ["wheel"],
   },
-  // ---- Serial links, IR, mains and coils (PB-866).
+  // ---- Serial links, IR, mains and coils.
   // RS-485: every node on the bus; half duplex A to A and B to B, full
   // duplex one side's driver pair (Y/Z) to the other's receiver pair (A/B).
   rs485: {

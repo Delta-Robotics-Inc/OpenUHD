@@ -1,5 +1,5 @@
 /**
- * PB-866: RS-485, RS-232, SWD, PPM, infrared remotes, AC mains input and
+ * RS-485, RS-232, SWD, PPM, infrared remotes, AC mains input and
  * switched inductive loads.
  */
 import { describe, expect, it } from "vitest";
