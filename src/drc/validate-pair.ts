@@ -113,7 +113,16 @@ export function validatePair(
     descendants(node).some((d) => consumed.has(d)) ||
     ancestorConsumed(node, consumed);
 
-  const alive = (c: Candidate) => !c.potentialOnly && !blocked(c.a, consumedA) && !blocked(c.b, consumedB);
+  // A mechanical feature that has interchangeable twins (an extrusion's four identical slots, a
+  // bracket's identical legs, a plate's identical bearing seats) is one choice, not several: one
+  // connection per pair of twin classes is made, on the first twin of each, and the rest stay potentials.
+  const twinClassesDone = new Set<string>();
+  const twinPair = (c: Candidate) => {
+    const [ka, kb] = [twinKey(c.a), twinKey(c.b)];
+    return ka !== undefined && kb !== undefined ? `${ka}\u0000${kb}` : undefined;
+  };
+  const alive = (c: Candidate) =>
+    !c.potentialOnly && !blocked(c.a, consumedA) && !blocked(c.b, consumedB) && !(twinPair(c) !== undefined && twinClassesDone.has(twinPair(c)!));
 
   let progressed = true;
   while (progressed) {
@@ -123,6 +132,8 @@ export function validatePair(
       if (!alive(c)) continue; // may have been consumed earlier this sweep
       if (!isUnambiguous(c, aliveCandidates.filter(alive))) continue;
       accepted.push(c);
+      const tp = twinPair(c);
+      if (tp !== undefined) twinClassesDone.add(tp);
       consumedA.add(c.a);
       for (const d of descendants(c.a)) consumedA.add(d);
       consumedB.add(c.b);
@@ -223,7 +234,10 @@ function isUnambiguous(c: Candidate, aliveCandidates: Candidate[]): boolean {
       .filter((x, _, all) => !all.some((y) => y !== x && composite(y[side]) && composite(y[other]) && isAncestor(y[other], x[other])));
     const clean = forEndpoint.filter((x) => x.clean);
     const pool = clean.length > 0 ? clean : forEndpoint;
-    if (pool.length !== 1 || pool[0] !== c) return false;
+    if (pool.length === 1 && pool[0] === c) continue;
+    // rivals that differ only by which interchangeable twin they use are the same choice: take the first
+    const twin = twinKey(c[other]);
+    if (twin === undefined || pool[0] !== c || !pool.every((x) => twinKey(x[other]) === twin)) return false;
   }
   return true;
 }
@@ -427,4 +441,24 @@ function buildCensus(
 
     return { ...base, status: "no_counterpart" as const };
   });
+}
+
+/**
+ * Interchangeable mechanical features: a mechanical interface without a pin,
+ * keyed by everything but its id, name and geometry (protocols,
+ * capabilities, parameters, traits, slots). Two interfaces of one module with
+ * the same key are twins: bolting a bracket to one face of an extrusion or
+ * another is the same connection. Electrical interfaces are never twins
+ * (choosing a pin is a wiring decision).
+ */
+const twinKeys = new WeakMap<RegionNode, string | undefined>();
+function twinKey(node: RegionNode): string | undefined {
+  if (twinKeys.has(node)) return twinKeys.get(node);
+  const i = node.iface;
+  const key =
+    i.domain === "mechanical" && i.pin === undefined && node.parent === undefined
+      ? JSON.stringify([i.protocols, i.capabilities ?? [], i.parameters ?? [], i.traits ?? [], i.slots ?? []])
+      : undefined;
+  twinKeys.set(node, key);
+  return key;
 }

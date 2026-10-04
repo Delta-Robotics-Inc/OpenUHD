@@ -243,3 +243,26 @@ describe("axial faces and wheels", () => {
     expect(() => Wheel({ kind: "traction", diameterMm: 90, rollers: 3 })).toThrow(/omni or mecanum/);
   });
 });
+
+describe("interchangeable twins", () => {
+  const M3 = { fastener: "M3", fastenerDiameterMm: 3 } as const;
+  const extrusion = mod("extrusion", ["px", "nx", "py", "ny"].map((f) => BoltPattern({ id: `slot_${f}`, name: `Slot ${f}`, role: "structure", shape: "slot", slotLengthMm: 120, slotKind: "t_slot", ...M3 })));
+  const bracket = mod("bracket", ["a", "b"].map((l) => BoltPattern({ id: `leg_${l}`, name: `Leg ${l}`, role: "component", shape: "row", pitchMm: 8, holeCount: 5, ...M3 })));
+
+  it("a bracket's identical legs on an extrusion's identical slots make one connection; the other placements stay potentials", () => {
+    const r = validatePair(bracket, extrusion);
+    expect(r.verdict.state).toBe("valid");
+    expect(r.connections.map((c) => `${c.a.regionPath[0]}~${c.b.regionPath[0]}`)).toEqual(["leg_a~slot_nx"]);
+    expect(r.potentials).toHaveLength(7);
+  });
+
+  it("features that differ are still a choice", () => {
+    const mixed = mod("mixed", [
+      BoltPattern({ id: "short", role: "structure", shape: "slot", slotLengthMm: 60, slotKind: "t_slot", ...M3 }),
+      BoltPattern({ id: "long", role: "structure", shape: "slot", slotLengthMm: 120, slotKind: "t_slot", ...M3 }),
+    ]);
+    const leg = mod("leg", [BoltPattern({ id: "leg", role: "component", shape: "row", pitchMm: 8, holeCount: 5, ...M3 })]);
+    expect(validatePair(leg, mixed).verdict.state).toBe("not_configured");
+  });
+});
+

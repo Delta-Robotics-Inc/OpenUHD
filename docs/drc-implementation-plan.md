@@ -224,7 +224,12 @@ Critical path: 0 → 1 → 2 → 3a → 9. Phases 4–7 attach independently aft
    auto-*connect* only unambiguous pairings (the sole viable candidate for both
    endpoints, preferring parametrically clean ones); ambiguous matches (a GPIO a dozen
    pins could serve) surface as potentials/◉ for the user to click. Implemented in
-   `validatePair` (`isUnambiguous`).
+   `validatePair` (`isUnambiguous`). Two refinements (PB-866): mechanical features
+   that are interchangeable twins (identical but for id and name: an extrusion's four
+   slots, a bracket's two legs, a plate's three bearing seats) are one choice, so one
+   connection is made per pair of twin classes and the other placements stay
+   potentials; and pairings that never mate (two shafts, two bores) are potentials
+   only, unless the pair is an explicit link (`explicit: true`).
 7. Potential ranking: engine ranks by cleanliness → confidence → altitude and returns
    all; the view applies top-k (default 3 dashed bands per side, rest behind an
    expander). Final k is UX tuning at build time.
