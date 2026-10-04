@@ -47,17 +47,17 @@ on a rectangular grid, `angular_pitch` (degrees) on an arc and
 angle are in the `bolt_pattern` trait.
 
 **Grids.** Use a grid for a plate, channel or web drilled on a hole grid:
-a REV 0.75 module plastic gear has M3 holes on every point of an 8 mm
-triangular lattice out to Ø32 except the bore
+a moulded gear with M3 holes on every point of an 8 mm triangular lattice
+out to Ø32 except the bore
 (`lattice: "triangular", pitchMm: 8, withinDiameterMm: 32, minDiameterMm: 1`);
 a 2 × 6 plate on a 16 mm pitch is `rows: 2, columns: 6, pitchMm: 16`. A grid
 of one row is a `row`.
 
 **Partial circles.** Use an arc when only some positions of a bolt circle
-are drilled: REV's UltraPlanetary brackets have five of six positions on
-Ø32 (the sixth falls in a notch), `holeCount: 5, angularPitchDeg: 60,
-startAngleDeg: -30`; a bent bracket has four of the six Motion Pattern
-positions on Ø16, `holeCount: 4, angularPitchDeg: 60`. A full `circle`
+are drilled: a gearbox bracket with five of six positions on Ø32 (the
+sixth falls in a notch) is `holeCount: 5, angularPitchDeg: 60,
+startAngleDeg: -30`; a bent motor bracket with four of six positions on
+Ø16 is `holeCount: 4, angularPitchDeg: 60`. A full `circle`
 spaces its holes evenly round the whole circle, so it cannot say which
 positions are missing.
 
@@ -210,8 +210,7 @@ with gears only). The bore or hub that carries the gear is a separate
 The pair check `gear_mesh`:
 
 - an error for a different module (within 0.1 %) or pressure angle (within
-  0.01°): REV's 0.75 module plastic gears do not mesh with its 0.8 module
-  metal gears;
+  0.01°): a 0.75 module gear does not mesh with a 0.8 module gear;
 - an error for kinds that do not mesh: spur and helical each mesh with
   their own kind, an internal gear and a rack; an internal gear with spur
   or helical; bevel with bevel; a worm with a worm wheel. Two helical gears
@@ -236,8 +235,8 @@ Shaft({ id: "hub", role: "bidirectional", gender: "bore", profile: "hex", diamet
 `Bearing` returns two interfaces: its outside, protocol `bearing_fit` role
 `bearing` (parameters `bearing_od`, `bearing_width`, `bearing_bore`, and
 `load_rating` from the dynamic rating), and its bore as a `Shaft` bore
-(role `bidirectional`, round unless `bore.profile` says otherwise: REV's
-through-bore bearings have a 5 mm hex bore). `kind` is `ball`, `roller`,
+(role `bidirectional`, round unless `bore.profile` says otherwise: a
+through-bore bearing for a hex shaft has a hex bore). `kind` is `ball`, `roller`,
 `needle`, `tapered_roller`, `thrust` or `plain` (a bushing or sleeve
 bearing); the trait carries the designation, flange, seals, material,
 static and dynamic ratings and speed.
@@ -303,8 +302,8 @@ place to bolt a bracket keeps its `BoltPattern` slot as well: that pairs
 with hole patterns, the `TSlot` with the hardware in the slot.
 
 ```ts
-TSlot({ role: "track", profile: "REV 15 mm", openingMm: 3.2, channelWidthMm: 6.2, channelDepthMm: 2.2, lengthMm: 120, entry: ["end"] });
-TSlot({ role: "insert", profile: "REV 15 mm", neckWidthMm: 3, headWidthMm: 5.5, headHeightMm: 1.8, entry: ["end"] });
+TSlot({ role: "track", profile: "15 mm extrusion", openingMm: 3.2, channelWidthMm: 6.2, channelDepthMm: 2.2, lengthMm: 120, entry: ["end"] });
+TSlot({ role: "insert", profile: "15 mm extrusion", neckWidthMm: 3, headWidthMm: 5.5, headHeightMm: 1.8, entry: ["end"] });
 ```
 
 ## Axial faces: spacers, collars, hubs

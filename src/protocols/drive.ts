@@ -374,7 +374,7 @@ export interface TSlotConfig {
    * screw head, a slide or carriage foot).
    */
   role: "track" | "insert";
-  /** The profile as the source names it ("REV 15 mm", "2020 B-type slot 6", "80/20 10 series"). */
+  /** The profile as the source names it ("15 mm extrusion", "2020 B-type slot 6", "10 series"). */
   profile?: string;
   /** Track: the opening between the lips, in mm. */
   openingMm?: number;

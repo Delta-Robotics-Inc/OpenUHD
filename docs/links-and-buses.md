@@ -303,8 +303,8 @@ and the receiver pair A/B as `rx_p`/`rx_n`, which pair one side's driver
 with the other's receiver. Leaves have protocol `rs485_signal` and
 capabilities `rs485_a`, `rs485_b`, `rs485_y`, `rs485_z`. Manufacturers
 disagree on which line is "A": follow the part's labels and say so in
-`note`. `carries` names the protocol on top (Modbus RTU, REV's expansion
-bus). The pair check `rs485_duplex` (error) refuses half duplex against full
+`note`. `carries` names the protocol on top (Modbus RTU, a vendor's
+expansion bus). The pair check `rs485_duplex` (error) refuses half duplex against full
 duplex.
 
 **RS-232.** `RS232({ role, txd, rxd, rts, cts, dtr, dsr, dcd, ri, ground,

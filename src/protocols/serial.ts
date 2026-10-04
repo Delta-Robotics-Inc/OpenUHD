@@ -56,9 +56,10 @@ export interface RS485Config {
   /** "half": one pair, A/B, shared by every node. "full": a driver pair Y/Z (TX+/TX−) and a receiver pair A/B (RX+/RX−). Default "half". */
   duplex?: "half" | "full";
   /**
-   * Half duplex: the bus pair. Full duplex: the receiver pair. A is the
-   * non-inverting line (TIA-485 "A" is the inverting one on many parts:
-   * follow the part's own labels, and say which in `note`).
+   * Half duplex: the bus pair. Full duplex: the receiver pair. Manufacturers
+   * disagree on which line is "A" (TIA-485 names A the inverting line; many
+   * transceivers label A the non-inverting one): follow the part's own
+   * labels, and say which in `note`.
    */
   a?: SignalRef;
   b?: SignalRef;
@@ -73,7 +74,7 @@ export interface RS485Config {
   termination?: "built_in" | "switchable" | "none";
   /** The node biases the idle bus (fail-safe resistors). */
   failSafeBias?: boolean;
-  /** Protocol carried, as the source names it ("Modbus RTU", "REV RS-485 expansion"). */
+  /** Protocol carried, as the source names it ("Modbus RTU", "DMX512", a vendor's expansion bus). */
   carries?: string;
   note?: string;
   exposed?: boolean;

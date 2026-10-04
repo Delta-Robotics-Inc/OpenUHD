@@ -165,7 +165,7 @@ function threadFit(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
   const internal = rolesOf(a, "thread").has("internal") ? a : b;
   const ti = internal === a ? ta : tb;
   const [li, le] = internal === a ? [la, lb] : [lb, la];
-  const engaged = ti.through ? Math.min(li, le) : Math.min(li, le);
+  const engaged = Math.min(li, le);
   return [diag("info", "thread_fit", `up to ${fmt(engaged)} mm of thread engaged (${fmt(le)} mm external, ${fmt(li)} mm internal${ti.through ? ", through" : ""})`, a, b)];
 }
 

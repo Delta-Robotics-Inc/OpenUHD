@@ -117,7 +117,7 @@ describe("bolt pattern grids and partial circles", () => {
     const g = BoltPattern({ id: "g", role: "structure", shape: "grid", rows: 2, columns: 3, pitchMm: 8, ...M3 });
     expect(g.parameters!.map((p) => [p.id, p.value])).toEqual([["hole_count", 6], ["hole_pitch", 8], ["hole_pitch_y", 8], ["fastener_diameter", 3]]);
     expect(boltPatternHoles(g)).toEqual([[-8, -4], [0, -4], [8, -4], [-8, 4], [0, 4], [8, 4]]);
-    // REV's 0.75 module gears: the 8 mm triangular grid out to Ø32 without the hub
+    // a 0.75 module gear's 8 mm triangular hole grid out to Ø32, without the hub
     const tri = BoltPattern({ id: "t", role: "component", shape: "grid", lattice: "triangular", pitchMm: 8, withinDiameterMm: 32, minDiameterMm: 1, holeCount: 18, ...M3 });
     expect(tri.traits![0].params).toMatchObject({ shape: "grid", lattice: "triangular", within_diameter_mm: 32, min_diameter_mm: 1 });
     expect(boltPatternHoles(tri)).toHaveLength(18);
@@ -215,8 +215,8 @@ describe("threads", () => {
 });
 
 describe("T-slots", () => {
-  const track = mod("extrusion", [TSlot({ role: "track", profile: "REV 15 mm", openingMm: 3.2, channelWidthMm: 6.2, channelDepthMm: 2.2, lengthMm: 120, entry: ["end"] })]);
-  const head = (w: number, extra: Partial<Parameters<typeof TSlot>[0]> = {}) => mod(`head${w}`, [TSlot({ role: "insert", profile: "REV 15 mm", neckWidthMm: 3, headWidthMm: w, headHeightMm: 1.8, entry: ["end"], ...extra })]);
+  const track = mod("extrusion", [TSlot({ role: "track", profile: "15 mm extrusion", openingMm: 3.2, channelWidthMm: 6.2, channelDepthMm: 2.2, lengthMm: 120, entry: ["end"] })]);
+  const head = (w: number, extra: Partial<Parameters<typeof TSlot>[0]> = {}) => mod(`head${w}`, [TSlot({ role: "insert", profile: "15 mm extrusion", neckWidthMm: 3, headWidthMm: w, headHeightMm: 1.8, entry: ["end"], ...extra })]);
 
   it("an insert whose neck passes the opening and whose head fits the channel slides in", () => {
     expect(connection(track, head(5.5), "t_slot")!.state).toBe("valid");
@@ -226,7 +226,7 @@ describe("T-slots", () => {
     expect(diags(track, head(3), "t_slot").map((d) => d.message)).toEqual(["the 3 mm head passes through the 3.2 mm opening: the lips do not hold it"]);
     expect(diags(track, head(7), "t_slot").map((d) => d.message)).toEqual(["the 7 mm head is wider than the 6.2 mm channel"]);
     expect(diags(track, head(5.5, { entry: ["drop_in"] }), "t_slot").map((d) => d.message)).toEqual(["the insert goes in drop-in; the track takes from an end"]);
-    expect(codes(mod("t", [TSlot({ role: "track", profile: "2020 B-type" })]), mod("n", [TSlot({ role: "insert", profile: "REV 15 mm" })]), "t_slot")).toEqual(["warning:t_slot_fit"]);
+    expect(codes(mod("t", [TSlot({ role: "track", profile: "2020 B-type" })]), mod("n", [TSlot({ role: "insert", profile: "15 mm extrusion" })]), "t_slot")).toEqual(["warning:t_slot_fit"]);
     expect(() => TSlot({ role: "insert", openingMm: 3, headWidthMm: 5 })).toThrow(/for a track/);
   });
 });
