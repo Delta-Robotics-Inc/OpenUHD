@@ -51,7 +51,7 @@ describe("gears", () => {
   it("two gears of one module and pressure angle mesh; the pair states the ratio and centre distance", () => {
     const c = connection(gear("g15", 15), gear("g72", 72, { faceWidthMm: 8 }), "gear_mesh")!;
     expect(c.state).toBe("valid");
-    expect(c.diagnostics).toEqual([expect.objectContaining({ severity: "info", code: "gear_mesh", message: "ratio 15:72 (4.8); centre distance 32.625 mm; engaged face width 8 mm" })]);
+    expect(c.diagnostics).toEqual([expect.objectContaining({ severity: "info", code: "gear_mesh", message: "15 teeth to 72: ratio 4.8:1; centre distance 32.625 mm; engaged face width 8 mm" })]);
   });
 
   it("another module or pressure angle does not mesh", () => {

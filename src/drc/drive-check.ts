@@ -112,7 +112,7 @@ function gearMesh(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
     const internal = ka === "internal" || kb === "internal";
     const beta = ka === "helical" ? (Number(ta.helix_angle_deg) * Math.PI) / 180 : 0;
     const centre = ((internal ? Math.abs(za - zb) : za + zb) * ma) / (2 * Math.cos(beta));
-    parts.push(`ratio ${za}:${zb} (${fmt(zb / za)}); centre distance ${fmt(centre)} mm`);
+    parts.push(`${za} teeth to ${zb}: ratio ${fmt(Math.max(za, zb) / Math.min(za, zb))}:1; centre distance ${fmt(centre)} mm`);
   }
   const [fa, fb] = [value(a, "face_width"), value(b, "face_width")];
   if (fa !== undefined && fb !== undefined) parts.push(`engaged face width ${fmt(Math.min(fa, fb))} mm`);
