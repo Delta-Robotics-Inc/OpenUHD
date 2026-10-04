@@ -153,6 +153,21 @@ export function AcPower(config: AcPowerConfig): InterfaceDef[] {
 // Switched inductive loads
 // ---------------------------------------------------------------------------
 
+/**
+ * A coil or drive terminal: a pin (an inline `SignalSpec` or an existing
+ * leaf id), or a lead or screw terminal with no designator (`{ id, name }`:
+ * a flying lead, a junction-box terminal the source does not number).
+ */
+export type CoilTerminal = SignalRef | { id?: string; name?: string; pin?: undefined };
+
+/** Resolve a terminal with no designator to a generated leaf; pass pins through to `linkSlots`. */
+function terminalRef(t: CoilTerminal, fallbackId: string, fallbackName: string, capability: string, leaf: ProtocolDef[], generated: InterfaceDef[]): SignalRef {
+  if (typeof t === "string" || t.pin !== undefined) return t as SignalRef;
+  const id = t.id ?? fallbackId;
+  generated.push({ id, name: t.name ?? fallbackName, domain: "electrical", exposed: true, default_active: true, protocols: leaf, capabilities: [capability] });
+  return id;
+}
+
 /** What the coil drives. */
 export type CoilKind = "solenoid" | "valve" | "brake" | "clutch" | "relay_coil" | "contactor" | "other";
 
@@ -161,9 +176,9 @@ export interface InductiveLoadConfig {
   id?: string;
   name?: string;
   kind: CoilKind;
-  /** Coil terminals, where the pinout is modelled (a pigtail's red and black leads, a DIN connector's pins). */
-  plus?: SignalRef;
-  minus?: SignalRef;
+  /** Coil terminals, where they are modelled: pins (a DIN connector's), or leads and terminals with no designator (`{ id, name }`). */
+  plus?: CoilTerminal;
+  minus?: CoilTerminal;
   /** Rated coil voltage (DC), or the range it operates on. */
   ratedVoltageV: number | [number, number];
   /** Coil current at the rated voltage in A. Derived from `coilResistanceOhm` when only that is given. */
@@ -171,8 +186,8 @@ export interface InductiveLoadConfig {
   coilResistanceOhm?: number;
   /** Coil power in W, as the source states it. */
   powerW?: number;
-  /** Suppression built into the coil or its connector: none, a diode, a TVS, a zener and diode, an RC snubber, or an LED and diode in the connector. */
-  suppression?: "none" | "diode" | "tvs" | "zener_diode" | "rc" | "led_diode";
+  /** Suppression built into the coil or its connector: none, a diode, a TVS, a zener and diode, an RC snubber, an LED and diode in the connector, or a protective circuit of a type the source does not state (`built_in`). */
+  suppression?: "none" | "diode" | "tvs" | "zener_diode" | "rc" | "led_diode" | "built_in";
   /** The coil must not be reversed (its diode or LED is polarised). */
   polarized?: boolean;
   /** Duty rating as the source states it ("100% ED", "continuous", "25% at 12 V"). */
@@ -196,11 +211,13 @@ export function InductiveLoad(config: InductiveLoadConfig): InterfaceDef[] {
   if ((config.plus === undefined) !== (config.minus === undefined)) throw new Error(`InductiveLoad ${id}: give both terminals`);
   const leaf: ProtocolDef[] = [{ type: "inductive_terminal", roles: ["terminal"] }];
   const signals: LinkSignal[] = [];
-  if (config.plus !== undefined) {
-    signals.push({ slot: "coil_plus", label: "+", ref: config.plus, leaf, capability: "coil_plus", role: "coil_plus", required: true });
-    signals.push({ slot: "coil_minus", label: "-", ref: config.minus!, leaf, capability: "coil_minus", role: "coil_minus", required: true });
-  }
   const generated: InterfaceDef[] = [];
+  if (config.plus !== undefined) {
+    const plus = terminalRef(config.plus, `${id}_coil_plus`, "Coil +", "coil_plus", leaf, generated);
+    const minus = terminalRef(config.minus!, `${id}_coil_minus`, "Coil -", "coil_minus", leaf, generated);
+    signals.push({ slot: "coil_plus", label: "+", ref: plus, leaf, capability: "coil_plus", role: "coil_plus", required: true });
+    signals.push({ slot: "coil_minus", label: "-", ref: minus, leaf, capability: "coil_minus", role: "coil_minus", required: true });
+  }
   const { slots, bindings } = linkSlots(id, "inductive_load", signals, generated);
   const rated = Array.isArray(config.ratedVoltageV) ? config.ratedVoltageV[1] : config.ratedVoltageV;
   const current = config.coilCurrentA ?? (config.coilResistanceOhm ? Number((rated / config.coilResistanceOhm).toFixed(4)) : undefined);

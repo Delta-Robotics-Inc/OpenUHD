@@ -150,6 +150,12 @@ describe("switched inductive loads", () => {
     expect(diags(hub(), c, "inductive_load")[0].message).toBe("the coil draws 1 A; the channel is rated for 0.5 A");
   });
 
+  it("takes leads with no designator", () => {
+    const leads = InductiveLoad({ kind: "solenoid", plus: { id: "lead_red", name: "Red lead" }, minus: { id: "lead_black" }, ratedVoltageV: 12, suppression: "built_in" });
+    expect(leads.map((i) => [i.id, i.pin, i.protocols[0].type])).toEqual([["lead_red", undefined, "inductive_terminal"], ["lead_black", undefined, "inductive_terminal"], ["coil", undefined, "inductive_load"]]);
+    expect(connection(hub(), mod("leads", leads), "inductive_load")!.state).toBe("valid");
+  });
+
   it("warns when nothing clamps the spike, and when an H-bridge drives a polarised coil", () => {
     expect(codes(hub({ flyback: "none" }), valve(0.4), "inductive_load")).toEqual(["warning:inductive_load"]);
     expect(codes(hub({ switching: "h_bridge" }), valve(0.4, { suppression: "diode", polarized: true }), "inductive_load")).toEqual(["warning:inductive_load"]);

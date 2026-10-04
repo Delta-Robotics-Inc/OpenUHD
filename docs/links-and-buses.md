@@ -374,7 +374,10 @@ coilResistanceOhm, powerW, suppression, polarized, duty })`: a solenoid, a
 pneumatic valve's coil, a brake or a clutch: protocol `inductive_load`,
 role `load`, with `voltage`, `coil_current` (derived from the resistance
 when only that is given; the trait says so) and `coil_resistance`, slots
-`coil_plus` and `coil_minus`. `InductiveDrive({ switching, toPlus,
+`coil_plus` and `coil_minus`. A terminal is a pin, or a lead or screw
+terminal the source does not number (`{ id, name }`, a leaf with no
+designator); `suppression` `built_in` is a protective circuit of a type the
+source does not state. `InductiveDrive({ switching, toPlus,
 toMinus, voltageV, maxCurrentA, flyback, pwm })`: the channel that switches
 it (a pneumatic hub's solenoid output, a valve driver), role `driver`, with
 `voltage` and `max_current`, slots `to_plus` and `to_minus`; `switching` is
