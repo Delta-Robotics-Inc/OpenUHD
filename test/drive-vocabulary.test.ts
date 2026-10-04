@@ -259,6 +259,12 @@ describe("interchangeable twins", () => {
     expect(r.potentials).toHaveLength(7);
   });
 
+  it("the other twin does not fall back to a pairing with errors", () => {
+    const withEnds = mod("extrusion2", [...extrusion.interfaces, BoltPattern({ id: "end", role: "structure", shape: "square", spacingMm: 10, holeCount: 4, ...M3 })]);
+    const r = validatePair(bracket, withEnds);
+    expect([r.verdict.state, r.connections.length]).toEqual(["valid", 1]);
+  });
+
   it("features that differ are still a choice", () => {
     const mixed = mod("mixed", [
       BoltPattern({ id: "short", role: "structure", shape: "slot", slotLengthMm: 60, slotKind: "t_slot", ...M3 }),

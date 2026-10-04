@@ -130,6 +130,10 @@ export function validatePair(
     const aliveCandidates = candidates.filter(alive);
     for (const c of aliveCandidates) {
       if (!alive(c)) continue; // may have been consumed earlier this sweep
+      // an endpoint whose clean pairings are taken by a twin's connection waits rather than
+      // falling back to a pairing with errors
+      const twinHeld = candidates.filter((x) => x.clean && !x.potentialOnly && twinPair(x) !== undefined && twinClassesDone.has(twinPair(x)!));
+      if (!c.clean && twinHeld.some((x) => x.a === c.a || x.b === c.b)) continue;
       if (!isUnambiguous(c, aliveCandidates.filter(alive))) continue;
       accepted.push(c);
       const tp = twinPair(c);
