@@ -265,7 +265,8 @@ Bearing({ kind: "ball", boreMm: 5, odMm: 9, widthMm: 4, flange: { odMm: 10.2, wi
 bolt, a set screw, a stud, threaded rod, a standoff's male end) or
 `internal` (a nut, a tapped hole, a heat-set insert, a standoff's female
 end). Parameters `fastener_diameter` (nominal), `thread_pitch` (from
-`pitchMm`, or `tpi` as 25.4 / tpi) and `thread_length` (an external
+`pitchMm`, or `tpi` as 25.4 / tpi; left out when the source states no
+pitch, and then not compared) and `thread_length` (an external
 thread's length, an internal thread's depth or a nut's height). The trait
 has the designation as the source writes it, the hand (default right),
 `kind`, `through` (internal, open both ends) and `lock` (`nylon_insert`,

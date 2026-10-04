@@ -304,7 +304,7 @@ export interface ThreadConfig {
   designation: string;
   /** Nominal (major) diameter in mm. */
   diameterMm: number;
-  /** Thread pitch in mm. Give this or `tpi`. */
+  /** Thread pitch in mm. Give this or `tpi`, or neither when the source states no pitch (say so in an assumption). */
   pitchMm?: number;
   /** Threads per inch (unified threads); stored as pitch 25.4 / tpi. */
   tpi?: number;
@@ -335,10 +335,11 @@ export function Thread(config: ThreadConfig): InterfaceDef {
   const fail = (why: string): never => {
     throw new Error(`Thread ${id}: ${why}`);
   };
-  if ((config.pitchMm === undefined) === (config.tpi === undefined)) fail("give pitchMm or tpi (one of them)");
+  if (config.pitchMm !== undefined && config.tpi !== undefined) fail("give pitchMm or tpi, not both");
   if (config.through && config.gender !== "internal") fail("through is for an internal thread");
-  const pitch = config.pitchMm ?? r6(25.4 / config.tpi!);
-  const parameters: Parameter[] = [fastenerDiameterMm(config.diameterMm), threadPitchMm(pitch)];
+  const pitch = config.pitchMm ?? (config.tpi !== undefined ? r6(25.4 / config.tpi) : undefined);
+  const parameters: Parameter[] = [fastenerDiameterMm(config.diameterMm)];
+  if (pitch !== undefined) parameters.push(threadPitchMm(pitch));
   if (config.lengthMm !== undefined) parameters.push(threadLengthMm(config.lengthMm));
   return mech(
     id,

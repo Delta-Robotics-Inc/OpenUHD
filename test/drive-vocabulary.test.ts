@@ -205,6 +205,9 @@ describe("threads", () => {
     expect(codes(screw(), nut({ hand: "left" }), "thread")).toEqual(["error:thread_fit"]);
     expect(Thread({ gender: "external", designation: "1/4-20 UNC", diameterMm: 6.35, tpi: 20 }).parameters![1]).toEqual({ id: "thread_pitch", unit: "mm", value: 1.27 });
     expect(() => Thread({ gender: "external", designation: "x", diameterMm: 3, pitchMm: 0.5, through: true })).toThrow(/internal/);
+    expect(() => Thread({ gender: "external", designation: "x", diameterMm: 3, pitchMm: 0.5, tpi: 20 })).toThrow(/not both/);
+    // a source that states no pitch: the pitch is not compared
+    expect(connection(screw({ pitchMm: undefined, designation: "M3" }), nut(), "thread")!.state).toBe("valid");
   });
 });
 
