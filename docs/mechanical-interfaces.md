@@ -1,11 +1,16 @@
-# Mechanical interfaces: bolt patterns, shafts, linear motion
+# Mechanical interfaces: bolt patterns, shafts, linear motion, drive train
 
-Status: implemented (PB-862). Code: `src/protocols/mechanical.ts`
-(`BoltPattern`, `Shaft`, `LinearMotion`), `src/drc/joint-check.ts`
-(`bolt_pattern_shape`, `bolt_pattern_line`, `shaft_fit`,
-`linear_motion_capacity`), hole positions in `src/system/geometry.ts`
-(`boltPatternHoles`). Tests: `test/vocabulary.test.ts` (cross patterns) and
-`test/mechanical-vocabulary.test.ts`.
+Status: implemented (PB-862; grids, partial circles, clamped bores and the
+drive-train builders PB-866). Code: `src/protocols/mechanical.ts`
+(`BoltPattern`, `Shaft`, `LinearMotion`), `src/protocols/drive.ts` (`Gear`,
+`Bearing`, `BearingSeat`, `Thread`, `TSlot`, `AxialFace`, `Wheel`,
+`RollingSurface`), `src/drc/joint-check.ts` (`bolt_pattern_shape`,
+`bolt_pattern_line`, `bolt_pattern_holes`, `shaft_fit`,
+`linear_motion_capacity`), `src/drc/drive-check.ts` (`gear_mesh`,
+`bearing_fit`, `thread_fit`, `t_slot_fit`, `axial_face`,
+`rolling_contact`), hole positions in `src/system/geometry.ts`
+(`boltPatternHoles`). Tests: `test/vocabulary.test.ts` (cross patterns),
+`test/mechanical-vocabulary.test.ts` and `test/drive-vocabulary.test.ts`.
 
 The minimum supply current is at the end of this page, because it is
 checked the same way: the source's rating against what the input states it
@@ -32,9 +37,29 @@ and whether the holes are threaded.
 | `cross` | `spacingMm` and `spacingYmm` (the two diagonals), four holes | One pair on x, the other on y (a "16 × 19" motor base) |
 | `row` | `pitchMm`, `holeCount` (two or more) | In a line on x, centred, `pitchMm` apart; `hole_spacing` is the span, first to last |
 | `slot` | `slotLengthMm`, `slotKind` (`t_slot` or `through`), optional `holeCount` | None fixed: a fastener sits anywhere along the slot |
+| `grid` | `pitchMm`, `lattice` (`rectangular`, with optional `pitchYmm`, or `triangular`), and `rows` × `columns` or a disc (`withinDiameterMm`, optional `minDiameterMm`); `holeCount` is derived and, when given, checked | Every lattice point of the extent: rows × columns centred on the frame, or every point within the disc around the origin (a lattice point) and outside `minDiameterMm`. Rows run along x; a triangular lattice offsets every other row by half a pitch, rows pitch × √3/2 apart |
+| `arc` | `spacingMm` (the circle's diameter), `holeCount`, `angularPitchDeg`, `startAngleDeg` (default 0) | A partial bolt circle: the first hole at the start angle from x, counter-clockwise about the normal, the others a pitch apart |
 
 Parameters: `hole_spacing`, `hole_spacing_y`, `hole_count`,
-`fastener_diameter`, plus `hole_pitch` on a row and `slot_length` on a slot.
+`fastener_diameter`, plus `hole_pitch` on a row and a grid, `hole_pitch_y`
+on a rectangular grid, `angular_pitch` (degrees) on an arc and
+`slot_length` on a slot. A grid's lattice and extent and an arc's start
+angle are in the `bolt_pattern` trait.
+
+**Grids.** Use a grid for a plate, channel or web drilled on a hole grid:
+a REV 0.75 module plastic gear has M3 holes on every point of an 8 mm
+triangular lattice out to Ø32 except the bore
+(`lattice: "triangular", pitchMm: 8, withinDiameterMm: 32, minDiameterMm: 1`);
+a 2 × 6 plate on a 16 mm pitch is `rows: 2, columns: 6, pitchMm: 16`. A grid
+of one row is a `row`.
+
+**Partial circles.** Use an arc when only some positions of a bolt circle
+are drilled: REV's UltraPlanetary brackets have five of six positions on
+Ø32 (the sixth falls in a notch), `holeCount: 5, angularPitchDeg: 60,
+startAngleDeg: -30`; a bent bracket has four of the six Motion Pattern
+positions on Ø16, `holeCount: 4, angularPitchDeg: 60`. A full `circle`
+spaces its holes evenly round the whole circle, so it cannot say which
+positions are missing.
 
 **Rows.** Use a row for holes on a pitch in one line: a bracket leg with
 five M3 holes on an 8 mm pitch, one line of a channel's hole grid, a
@@ -57,6 +82,13 @@ pattern's shape and give `spacingMm` a `[min, max]` range.
 | Row ↔ slot | The row's span fits in the slot's length | `bolt_pattern_line` |
 | Slot ↔ slot | At least one is a through slot | `bolt_pattern_line` (two T-slots: neither has a hole for the fastener) |
 | Row or slot ↔ square, circle, cross, rectangle with a y spacing | Never: those holes are not on one line | `bolt_pattern_line` |
+| Grid or arc ↔ any pattern with fixed holes | The pattern with fewer holes lands on the other's holes under one rotation and shift, or their mirror image, within 0.05 mm (a 5-hole row along a grid line; a 6-hole Ø16 circle on an 8 mm triangular grid; five of six positions on the full circle) | `bolt_pattern_holes` |
+| Grid ↔ slot | Always: fasteners go through one line of the grid's holes (info) | |
+| Arc ↔ slot | Never | `bolt_pattern_holes` |
+
+For a pair with a grid or an arc the hole rule compares the holes
+themselves (`holesFitOn`, `patternHoles`) and the overlap check skips the
+spacings, counts and pitches.
 
 For a pair with a row or a slot the line rule compares the spans, counts,
 pitches and lengths itself, and the parameter overlap check skips them
@@ -109,6 +141,13 @@ The pair check `shaft_fit`:
   | square | square |
 
   Anything else is an error ("a hex shaft does not fit a round bore").
+- A round bore with `clampsOn` (an adapter: a shaft collar's Ø6 bore
+  that goes over a 5 mm hex shaft and is held by a set screw on a flat)
+  fits a shaft of that profile and size (a rounded hex for a hex), with an
+  info saying what holds it; the diameters are not compared as parameters.
+  The builder refuses `clampsOn` on anything but a round bore, and a bore
+  that does not clear the shaft's corners (5 mm hex: 5.77 mm across
+  corners).
 - When neither side states a gender, profiles are compared either way
   round. A side that states no profile is compared by diameter only, as
   before this vocabulary.
@@ -148,6 +187,143 @@ state them (a screw and its nut).
 ```ts
 LinearMotion({ id: "output", role: "output", strokeMm: 304.8, leadMm: 12, threadPitchMm: 2, starts: 6, forceN: 667, mechanism: "lead_screw", backdrivable: true, note: "Minimum dynamic load rating 150 lbf." });
 ```
+
+## Gears
+
+`Gear` is a gear's teeth: protocol `gear_mesh`, role `mesh` (gears pair
+with gears only). The bore or hub that carries the gear is a separate
+`Shaft`; its bolt holes are `BoltPattern`s.
+
+| Field | Parameter or trait | Meaning |
+| --- | --- | --- |
+| `moduleMm` or `diametralPitch` | `gear_module` (mm) | Module (pitch Ø ÷ teeth; the normal module of a helical gear). A diametral pitch P is stored as 25.4 / P, and the trait says which the source gave |
+| `pressureAngleDeg` | `pressure_angle` (deg) | 20°, 14.5°, 25° |
+| `teeth` | `tooth_count` | A worm's starts; a rack's teeth along its length |
+| `faceWidthMm` | `face_width` (mm) | Axial width of the teeth |
+| `kind` | trait | `spur` (default), `helical` (needs `helixAngleDeg` and `hand`), `internal`, `rack`, `bevel`, `worm`, `worm_wheel` |
+| | trait | `pitch_diameter_mm`, and `outside_diameter_mm` (or `inside_diameter_mm` for an internal gear), computed |
+
+The pair check `gear_mesh`:
+
+- an error for a different module (within 0.1 %) or pressure angle (within
+  0.01°): REV's 0.75 module plastic gears do not mesh with its 0.8 module
+  metal gears;
+- an error for kinds that do not mesh: spur and helical each mesh with
+  their own kind, an internal gear and a rack; an internal gear with spur
+  or helical; bevel with bevel; a worm with a worm wheel. Two helical gears
+  on parallel shafts need the same helix angle and opposite hands. An
+  internal gear needs a pinion with fewer teeth;
+- otherwise an info with the ratio and the centre distance
+  (m (z1 + z2) / 2, divided by cos β for helical gears; m (z2 − z1) / 2 with
+  an internal gear), or for a rack the pinion axis's height over the pitch
+  line and the travel per turn, and the engaged face width.
+
+`gear_module`, `pressure_angle`, `tooth_count` and `face_width` are not
+compared as parameters between two gears (two gears of different sizes
+mesh).
+
+```ts
+Gear({ moduleMm: 0.75, pressureAngleDeg: 20, teeth: 72, faceWidthMm: 11, material: "acetal" });
+Shaft({ id: "hub", role: "bidirectional", gender: "bore", profile: "hex", diameterMm: 5 });
+```
+
+## Bearings and bearing seats
+
+`Bearing` returns two interfaces: its outside, protocol `bearing_fit` role
+`bearing` (parameters `bearing_od`, `bearing_width`, `bearing_bore`, and
+`load_rating` from the dynamic rating), and its bore as a `Shaft` bore
+(role `bidirectional`, round unless `bore.profile` says otherwise: REV's
+through-bore bearings have a 5 mm hex bore). `kind` is `ball`, `roller`,
+`needle`, `tapered_roller`, `thrust` or `plain` (a bushing or sleeve
+bearing); the trait carries the designation, flange, seals, material,
+static and dynamic ratings and speed.
+
+`BearingSeat` is the housing bore that holds one: protocol `bearing_fit`
+role `seat`, with `bearing_od` (a single size, or a range for a seat made
+for several) and `seat_depth`, and in its trait `through`, `retention`
+(`press`, `slip`, `shoulder`, `snap_ring`, `flange`) and the `kinds` it is
+for.
+
+The pair check `bearing_fit`: an error when the bearing's outside diameter
+is not the seat's (0.05 mm tolerance); a warning when the seat names the
+kinds it is for and this is not one; an info when the bearing is wider than
+a blind seat is deep (it stands proud; a flanged bearing's flange sits
+outside).
+
+```ts
+BearingSeat({ id: "bearing_seat", odMm: 9, depthMm: 3, kinds: ["ball"], retention: "flange" });
+Bearing({ kind: "ball", boreMm: 5, odMm: 9, widthMm: 4, flange: { odMm: 10.2, widthMm: 0.6 }, bore: { profile: "hex" } });
+```
+
+## Threads
+
+`Thread` is a screw thread: protocol `thread`, role `external` (a screw, a
+bolt, a set screw, a stud, threaded rod, a standoff's male end) or
+`internal` (a nut, a tapped hole, a heat-set insert, a standoff's female
+end). Parameters `fastener_diameter` (nominal), `thread_pitch` (from
+`pitchMm`, or `tpi` as 25.4 / tpi) and `thread_length` (an external
+thread's length, an internal thread's depth or a nut's height). The trait
+has the designation as the source writes it, the hand (default right),
+`kind`, `through` (internal, open both ends) and `lock` (`nylon_insert`,
+`nylon_patch`, `adhesive_patch`, `all_metal`).
+
+The pair check `thread_fit`: an error for a different diameter, pitch or
+hand; otherwise an info with the length of thread engaged. A head, a hex
+or a drive recess is not a thread: describe it in metadata, or as a
+`TSlot` insert when it slides in a track.
+
+```ts
+Thread({ gender: "external", designation: "M3 x 0.5", diameterMm: 3, pitchMm: 0.5, lengthMm: 8, kind: "screw" });
+Thread({ gender: "internal", designation: "M3 x 0.5", diameterMm: 3, pitchMm: 0.5, lengthMm: 4, through: true, kind: "nut", lock: "nylon_insert" });
+```
+
+## T-slot and linear-track mounts
+
+`TSlot` is an undercut track and what slides in it: protocol `t_slot`, role
+`track` (an extrusion's slot, a slotted rail) or `insert` (a T-nut, a
+screw head, a carriage foot). A track states `profile`, `openingMm`
+(between the lips), `channelWidthMm` and `channelDepthMm` (under the lips),
+`lengthMm` and `entry` (`end`, `drop_in`); an insert its `neckWidthMm`,
+`headWidthMm`, `headHeightMm` and `entry`. Parameters `slot_opening`,
+`channel_width`, `channel_depth`, `slot_length`, `neck_width`,
+`head_width`, `head_height`.
+
+The pair check `t_slot_fit`: errors for a neck that does not pass the
+opening, a head no wider than the opening (the lips do not hold it), a head
+wider or taller than the channel, and no entry in common; a warning for two
+different named profiles with nothing to compare. A slot that is also a
+place to bolt a bracket keeps its `BoltPattern` slot as well: that pairs
+with hole patterns, the `TSlot` with the hardware in the slot.
+
+```ts
+TSlot({ role: "track", profile: "REV 15 mm", openingMm: 3.2, channelWidthMm: 6.2, channelDepthMm: 2.2, lengthMm: 120, entry: ["end"] });
+TSlot({ role: "insert", profile: "REV 15 mm", neckWidthMm: 3, headWidthMm: 5.5, headHeightMm: 1.8, entry: ["end"] });
+```
+
+## Axial faces: spacers, collars, hubs
+
+`AxialFace` is an annular face that spaces or stops parts along a shaft:
+protocol `axial_stop`, role `face` (faces pair with faces), with `face_od`,
+`face_id` and optionally `axial_length`. The trait has `kind` (`spacer`,
+`collar`, `hub`, `bearing_inner`, `bearing_outer`, `shoulder`, `washer`,
+`housing`), `turns_with` (`shaft` or `housing`) and `clamps` (a collar
+that takes axial load). A spacer has two faces, one per end.
+
+The pair check `axial_face`: an error when the annuli do not overlap (one
+face passes inside the other's bore); a warning when one face turns with
+the shaft and the other with the housing (they rub: touch only a bearing's
+inner ring, or use a thrust washer).
+
+## Wheels
+
+`Wheel` is a wheel's rolling contact: protocol `rolling_contact`, role
+`wheel`, with `wheel_diameter`, `tread_width` and `load_rating`, and in its
+trait `kind` (`traction`, `omni`, `mecanum`, `caster`, `pneumatic`,
+`roller`), `tread`, `rollers` (omni and mecanum) and `hand` (mecanum,
+required). It pairs with a `RollingSurface` (role `surface`: a floor, a
+field tile, a rail, a belt), which may state `min_wheel_diameter`; the pair
+check `rolling_contact` refuses a smaller wheel. The hub is a `Shaft`, the
+bolt holes `BoltPattern`s.
 
 ## Minimum supply current
 
