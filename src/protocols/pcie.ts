@@ -5,7 +5,7 @@ import { DIGITAL_IN, DIGITAL_OUT, diffSignals, linkSlots, type DiffPair, type Li
 import type { SignalRef } from "./signal.js";
 
 /**
- * PCI Express and M.2 (PB-866).
+ * PCI Express and M.2.
  *
  * `PCIe` is one PCIe port: protocol `pcie`, role `root` (a root port, a
  * switch's downstream port, the host side of a slot, socket or cable) or

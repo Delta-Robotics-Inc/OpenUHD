@@ -125,7 +125,7 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
     sink: ["source", "bidirectional"],
     bidirectional: ["source", "sink", "bidirectional", "sensing"],
     sensing: ["source", "bidirectional"],
-  },  // ---- Links (PB-866). Each composite's slots carry a sub-role per conductor,
+  },  // ---- Links. Each composite's slots carry a sub-role per conductor,
   // so ports pair conductor by conductor and nothing else.
   // PCIe: a root (root port, switch downstream port, host side of a slot) with
   // an endpoint (card, SSD, switch upstream port). Lanes TX→RX, clock, sideband.

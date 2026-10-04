@@ -217,7 +217,7 @@ export interface StrapTrait extends TraitDef {
 }
 
 /**
- * An LED, an LED package with several emitters, or an LED display (PB-866):
+ * An LED, an LED package with several emitters, or an LED display:
  * what it emits and at what drive. `ledTrait()` and `Led()` in
  * src/protocols build it. Facts are per emitter (a die or a segment colour);
  * `anode` and `cathode` name the emitter's terminal interfaces where they
@@ -277,7 +277,7 @@ export interface LedEmitter {
 }
 
 /**
- * A relay (PB-866): an electromechanical, reed or solid-state switch whose
+ * A relay: an electromechanical, reed or solid-state switch whose
  * coil (or input) is isolated from its contacts (or output). `relayTrait()`
  * in src/protocols builds and checks it; `RelayCoil` and `RelayContacts`
  * declare the pins.
@@ -333,7 +333,7 @@ export interface RelayTrait extends TraitDef {
 }
 
 /**
- * A storage device or memory (PB-866): a memory chip, an eMMC, a memory
+ * A storage device or memory: a memory chip, an eMMC, a memory
  * card, an SSD. `storageTrait()` in src/protocols builds and checks it. The
  * interfaces it is reached over are interfaces of the part (`SPI`, `I2C`,
  * `SDCard`, `M2`...); `interfaces` names them for search and review.

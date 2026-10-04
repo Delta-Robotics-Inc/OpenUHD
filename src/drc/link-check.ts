@@ -4,7 +4,7 @@ import { getEffectiveRange } from "../parameters/range.js";
 
 /**
  * Pair checks on links that negotiate or must agree beyond overlapping
- * parameters (PB-866): PCIe, M.2, MIPI, Ethernet and PoE, SFP, I2S, DVP,
+ * parameters: PCIe, M.2, MIPI, Ethernet and PoE, SFP, I2S, DVP,
  * SD, LED drive, and wireless.
  *
  * - `link_width` (info): a PCIe link (or an M.2 socket and card carrying PCIe) trains to the widest width and

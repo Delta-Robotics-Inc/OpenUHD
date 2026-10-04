@@ -10,7 +10,7 @@ import { linkSlots, type LinkSignal } from "./link.js";
 import type { SignalRef } from "./signal.js";
 
 /**
- * LEDs (PB-866): the `led` trait, `Led()` for a two-terminal LED, and
+ * LEDs: the `led` trait, `Led()` for a two-terminal LED, and
  * `LedDrive` for pairing an LED with the driver channel that sets its
  * current.
  *

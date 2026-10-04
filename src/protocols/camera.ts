@@ -5,7 +5,7 @@ import { DIGITAL_IN, DIGITAL_OUT, linkSlots, type LinkSignal } from "./link.js";
 import type { SignalRef } from "./signal.js";
 
 /**
- * DVP, the parallel camera bus (OV2640, OV7670 and kin) (PB-866).
+ * DVP, the parallel camera bus (OV2640, OV7670 and kin).
  *
  * Protocol `dvp`, role `camera` (the sensor) or `host` (an MCU's camera
  * interface, a camera connector on a board). Camera pairs with host only.

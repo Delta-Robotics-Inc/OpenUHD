@@ -3,7 +3,7 @@ import { diffSignals, linkSlots, type DiffPair, type LinkSignal } from "./link.j
 import type { SignalRef } from "./signal.js";
 
 /**
- * USB data ports (PB-866), for the `usb` type parts already used.
+ * USB data ports, for the `usb` type parts already used.
  *
  * Protocol `usb`, role `host`, `device` or `dual_role` (a USB-C DRP or an
  * OTG port); a host pairs with a device, a dual-role port with either.

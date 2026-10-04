@@ -4,7 +4,7 @@ import { laneCount, laneRateMbps } from "./params.js";
 import { diffSignals, linkSlots, type DiffPair, type LinkSignal } from "./link.js";
 
 /**
- * MIPI CSI-2 (cameras) and DSI (displays) (PB-866).
+ * MIPI CSI-2 (cameras) and DSI (displays).
  *
  * Both are one-way links from a transmitter to a receiver: on CSI-2 the
  * camera transmits and the host receives; on DSI the host transmits and the

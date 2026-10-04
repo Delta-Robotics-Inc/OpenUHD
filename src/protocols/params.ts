@@ -226,7 +226,7 @@ export function linearSpeedMmS(value: number): Parameter {
 }
 
 // ---------------------------------------------------------------------------
-// Links and buses (PB-866): PCIe, M.2, MIPI, Ethernet, audio, cameras, radios
+// Links and buses: PCIe, M.2, MIPI, Ethernet, audio, cameras, radios
 // ---------------------------------------------------------------------------
 
 /**

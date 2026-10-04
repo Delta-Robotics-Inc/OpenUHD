@@ -4,7 +4,7 @@ import { linkSpeedMbps, poePowerW, voltageRangeV, voltageV, wavelengthNm } from 
 import { diffSignals, linkSlots, type DiffPair, type LinkSignal } from "./link.js";
 
 /**
- * Ethernet ports, Power over Ethernet, and SFP cages and modules (PB-866).
+ * Ethernet ports, Power over Ethernet, and SFP cages and modules.
  *
  * `Ethernet` is one port as its medium sees it: copper (an RJ45 jack, a
  * PHY's MDI pins, a board's magnetics) or fibre (an SFP module's optics, a

@@ -3,7 +3,7 @@ import type { RelayTrait } from "../types/trait.js";
 import { PASSIVE_PROTOCOL } from "./passive.js";
 
 /**
- * Relays (PB-866): the `relay` trait (`relayTrait`), and the coil and
+ * Relays: the `relay` trait (`relayTrait`), and the coil and
  * contact pins (`RelayCoil`, `RelayContacts`).
  *
  * A relay's pins are `passive` terminals, like a resistor's: they sit on

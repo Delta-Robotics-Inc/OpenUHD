@@ -1,7 +1,7 @@
 # Links, buses and radios
 
 UHD's builders for high-speed links, camera and display buses, audio ports,
-Ethernet, memory cards and radios (PB-866), and the traits for LEDs, relays
+Ethernet, memory cards and radios, and the traits for LEDs, relays
 and storage. Every builder lives in `src/protocols` and is exported from the
 package root. Each section says what to call, what it emits, what pairs with
 what, and what the pair check (`checkPairLinks`, `src/drc/link-check.ts`)

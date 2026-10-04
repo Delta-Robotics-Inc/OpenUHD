@@ -1,7 +1,7 @@
 import type { InterfaceDef } from "../types/interface.js";
 
 /**
- * Wireless interfaces (PB-866): Wi-Fi, Bluetooth and IEEE 802.15.4 (Zigbee,
+ * Wireless interfaces: Wi-Fi, Bluetooth and IEEE 802.15.4 (Zigbee,
  * Thread, Matter over Thread), alongside the `wifi` and `bluetooth` types
  * parts already used.
  *

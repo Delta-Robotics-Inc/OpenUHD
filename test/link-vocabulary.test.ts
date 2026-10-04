@@ -1,5 +1,5 @@
 /**
- * PB-866: the vocabulary gaps the first migration wave reported: PCIe and
+ * The link, bus and radio vocabulary: PCIe and
  * M.2, MIPI CSI-2 and DSI, Ethernet with PoE and SFP, I2S / PCM, DVP
  * cameras, Wi-Fi / Bluetooth / IEEE 802.15.4 radios, SD, USB, and the LED,
  * relay and storage traits.

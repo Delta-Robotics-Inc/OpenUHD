@@ -82,7 +82,7 @@ const ADDED_IN_1_0_0 = [
   "component.passive.ferrite_bead", "component.passive.crystal", "component.protection", "component.relay",
 ];
 
-/** Nodes 1.2.0 adds (PB-866): storage, Ethernet, 802.15.4, PCIe adapters, and the nodes the first migration wave filed elsewhere. */
+/** Nodes 1.2.0 adds: storage, Ethernet, 802.15.4, PCIe adapters, and nodes for parts that used to sit under the nearest neighbour. */
 const ADDED_IN_1_2_0 = [
   "connectivity.wireless.ieee802154", "connectivity.wired.ethernet", "mechanical.fastener.standoff", "expansion.pcie",
   "component.ic.analog_switch", "component.ic.led_driver",

@@ -244,9 +244,9 @@ Robotics, 77 nodes, 11 roots). The file's `provenance` records how:
   modules, media converters), `mechanical.fastener.standoff`,
   `expansion.pcie` (PCIe and M.2 adapters), `component.ic.analog_switch`,
   `component.ic.led_driver`, and `component.storage` with `.memory` (memory
-  chips), `.memory_card` and `.ssd`. These are the places the first
-  migration wave had to file parts under the nearest node (a memory chip
-  under `component.ic`, an NVMe SSD under `expansion.breakout`).
+  chips), `.memory_card` and `.ssd`. Before them, such parts had to be
+  filed under the nearest node (a memory chip under `component.ic`, an NVMe
+  SSD under `expansion.breakout`).
 - **Kit fields.** The kit node `kit.freenove_fnk0082` keeps the source's
   `sku` and `vendor`. The source's kit block also names a
   `controller_part_id` and a `manifest`; both point into ProtoPart's own

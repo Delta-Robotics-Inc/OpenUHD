@@ -2,7 +2,7 @@ import type { InterfaceDef, ProtocolDef, SlotDef } from "../types/interface.js";
 import { resolveSignal, type SignalRef } from "./signal.js";
 
 /**
- * Shared plumbing for the link builders (PB-866): PCIe, MIPI, Ethernet, I2S,
+ * Shared plumbing for the link builders: PCIe, MIPI, Ethernet, I2S,
  * DVP and SD. A link is a composite whose slots each carry one conductor;
  * every slot names its own sub-role under the link's protocol, so two ports
  * pair conductor by conductor (TX+ to RX+, BCLK out to BCLK in) and nothing

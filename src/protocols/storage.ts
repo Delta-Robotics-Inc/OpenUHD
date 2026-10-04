@@ -4,7 +4,7 @@ import { DIGITAL_IN, DIGITAL_IO, DIGITAL_OUT, linkSlots, type LinkSignal } from 
 import type { SignalRef } from "./signal.js";
 
 /**
- * Storage (PB-866): the `storage` trait for memory chips, eMMC, memory cards
+ * Storage: the `storage` trait for memory chips, eMMC, memory cards
  * and SSDs, and `SDCard` for SD and microSD slots, card edges and SDIO hosts.
  * Categories: `component.storage.memory`, `.memory_card`, `.ssd`.
  */

@@ -6,7 +6,7 @@ import type { SignalRef } from "./signal.js";
 
 /**
  * Digital audio serial ports: I2S and its relatives (left- and
- * right-justified, TDM, PCM short and long frame, DSP modes) (PB-866).
+ * right-justified, TDM, PCM short and long frame, DSP modes).
  *
  * Protocol `i2s` for all of them; the trait `audio_port` lists the frame
  * formats the port speaks (`formats`), and the pair check refuses two ports
