@@ -288,3 +288,103 @@ traits: [storageTrait({ medium: "ssd", capacity_bytes: 500e9, interfaces: ["nvme
   memory chip, `SDCard` on a card, `M2` (with `PCIe`) on an SSD.
 - Categories `component.storage.memory`, `.memory_card`, `.ssd` (taxonomy
   1.2.0).
+
+## Serial links: RS-485, RS-232, SWD, PPM
+
+`src/protocols/serial.ts`; pair checks in `checkPairSignals`
+(`src/drc/signal-check.ts`). They follow the link pattern above: optional
+pins, one slot per conductor with its own sub-role.
+
+**RS-485.** `RS485({ duplex, a, b, y, z, ground, bitRateBps, termination,
+failSafeBias, carries })`: protocol `rs485`, role `node` (every node pairs
+with every other). Half duplex (the default) has slots `a` and `b`, which
+pair A to A and B to B; full duplex has the driver pair Y/Z as `tx_p`/`tx_n`
+and the receiver pair A/B as `rx_p`/`rx_n`, which pair one side's driver
+with the other's receiver. Leaves have protocol `rs485_signal` and
+capabilities `rs485_a`, `rs485_b`, `rs485_y`, `rs485_z`. Manufacturers
+disagree on which line is "A": follow the part's labels and say so in
+`note`. `carries` names the protocol on top (Modbus RTU, a vendor's
+expansion bus). The pair check `rs485_duplex` (error) refuses half duplex against full
+duplex.
+
+**RS-232.** `RS232({ role, txd, rxd, rts, cts, dtr, dsr, dcd, ri, ground,
+baudRate, levelsV, connector })`: protocol `rs232`, role `dte` (a computer
+or controller port) or `dce` (a modem, most DB9-female devices). Signals
+are named from the DTE's side on both, as the standard does, so each slot's
+sub-role says which side drives it (`txd_out` on a DTE, `txd_in` on a DCE).
+A DTE and a DCE pair straight through; two DTEs or two DCEs pair crossed
+(TXD to RXD, RTS to CTS, DTR to DSR), and `rs232_null_modem` (warning) says
+the cable must be a null modem. RS-232 does not pair with a logic-level
+`UART`: put a level shifter (MAX3232) between them.
+
+**SWD.** `SWD({ role, swdio, swclk, swo, nreset, vtref, ground, voltageV,
+connector })`: protocol `swd`, role `target` (the chip or board) or `probe`
+(the debugger). Slots `swdio` (both ways), `swclk` and `nreset` (probe out,
+target in), `swo` (target out) and `vtref` (the target's reference, sensed
+by the probe). The logic level is a `voltage` parameter: a 5 V target and a
+1.2–3.6 V probe do not overlap. Older parts that gave SWD pins protocol
+`swd` role `target` still pair with a probe.
+
+**PPM.** `PPM({ role, signal, channels, frameRateHz, polarity, voltageV })`:
+protocol `ppm`, role `output` (a receiver's PPM pin) or `input` (a flight
+controller's PPM input), one `signal` slot. An output states how many
+channels it sends, an input the range it decodes. `ppm_channels` (warning):
+the input decodes fewer channels than the output sends. `ppm_polarity`
+(error): positive pulses into an input that takes only negative ones, or the
+reverse (`either` takes both).
+
+## Infrared remotes
+
+`InfraredRemote({ role, carrierKHz, protocols, wavelengthNm, rangeM,
+electrical })` (`src/protocols/actuation.ts`): protocol `ir_remote`, role
+`transmitter` (a remote, an IR LED driver) or `receiver` (a demodulating
+receiver such as the VS1838B), network domain like the radios. Parameters
+`ir_carrier` (kHz; a receiver states its centre or its pass band) and
+`wavelength` (nm; a receiver states its sensitive band). `protocols` names
+the coding (NEC, RC5, Sony SIRC); a demodulating receiver decodes none
+itself, so it leaves them out. `electrical` names the leaf that carries the
+demodulated output or drive input.
+
+The pair check `ir_link`: a carrier outside the receiver's band by up to
+10 % is a warning (it works at a shorter range), further off an error; an
+emitter wavelength outside the receiver's band is a warning; coding
+protocols with none in common, when both state them, an error.
+
+## AC mains
+
+`AcPower({ role, voltageV, frequencyHz, maxCurrentA, powerW, phases, earth,
+plug, line, neutral, protectiveEarth })`: protocol `ac_power`, role `input`
+(a mains inlet, a plug on a cord) or `output` (an outlet, a strip, a UPS),
+separate from DC `power` so a mains inlet never pairs with a DC rail.
+Parameters `voltage` (V RMS), `line_frequency` (Hz), `max_current` and, on
+an input, `min_supply_power` (its rated input power, which the supply
+budget counts). Voltage and frequency are compared as parameters
+(100–240 V, 50/60 Hz against a 120 V, 60 Hz outlet overlaps; 400 V does
+not). The trait has `phases`, `earth` and `plug`.
+
+The pair check `ac_power`: a plug that does not go into the socket (error),
+from the IEC 60320 pairs (a C14 inlet takes C13 and C15, C6 takes C5, C8
+takes C7, C20 takes C19) and the NEMA ones (5-15R takes 1-15P and 5-15P);
+an input that needs protective earth on an outlet without it (error).
+
+## Switched inductive loads
+
+`InductiveLoad({ kind, plus, minus, ratedVoltageV, coilCurrentA,
+coilResistanceOhm, powerW, suppression, polarized, duty })`: a solenoid, a
+pneumatic valve's coil, a brake or a clutch: protocol `inductive_load`,
+role `load`, with `voltage`, `coil_current` (derived from the resistance
+when only that is given; the trait says so) and `coil_resistance`, slots
+`coil_plus` and `coil_minus`. A terminal is a pin, or a lead or screw
+terminal the source does not number (`{ id, name }`, a leaf with no
+designator); `suppression` `built_in` is a protective circuit of a type the
+source does not state. `InductiveDrive({ switching, toPlus,
+toMinus, voltageV, maxCurrentA, flyback, pwm })`: the channel that switches
+it (a pneumatic hub's solenoid output, a valve driver), role `driver`, with
+`voltage` and `max_current`, slots `to_plus` and `to_minus`; `switching` is
+`low_side`, `high_side`, `h_bridge` or `relay`.
+
+The pair check `inductive_load`: a coil that draws more than the channel
+is rated for (error); a coil without suppression on a channel without a
+flyback clamp (warning), or a channel that does not say (info); a polarised
+coil (its diode or LED) on an H-bridge channel that can reverse it
+(warning). The voltage is compared as a parameter.

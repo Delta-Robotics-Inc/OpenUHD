@@ -44,6 +44,17 @@
 | An LED | `Led()` for a two-terminal LED; `ledTrait` for RGB, addressable LEDs and displays, with `LedDrive({ role: "led" })` per terminal a driver reaches; an LED driver channel is `LedDrive({ role: "driver", mode, output })`. |
 | A relay | `relayTrait({ kind, form, coil, contacts })` with every contact rating row, and `RelayCoil` / `RelayContacts` for the pins. |
 | A memory chip, card or SSD | `storageTrait({ medium, capacity_bytes, interfaces })`, with the bus as its own builder (`SPI`, `I2C`, `SDCard`, `M2`). |
+| Gear teeth | `Gear({ kind, moduleMm or diametralPitch, pressureAngleDeg, teeth, faceWidthMm })`; the bore a `Shaft`, the hole pattern a `BoltPattern` (`grid` for a hole lattice). |
+| A bearing, bushing or a pocket that holds one | `Bearing({ kind, boreMm, odMm, widthMm, flange, bore })` (outside plus `Shaft` bore); the pocket is `BearingSeat({ odMm, depthMm, retention })`. Never a `Shaft` standing in for a bearing's outside. |
+| Holes on a grid, or some positions of a bolt circle | `BoltPattern` shape `grid` (`lattice`, `pitchMm`, rows × columns or `withinDiameterMm`) or `arc` (`spacingMm`, `holeCount`, `angularPitchDeg`, `startAngleDeg`). |
+| A screw, nut, set screw, tapped hole or insert | `Thread({ gender, designation, diameterMm, pitchMm or tpi, lengthMm, kind, lock })`. |
+| An extrusion slot and what slides in it | `TSlot({ role: "track", profile, openingMm, channelWidthMm, channelDepthMm, lengthMm })` and `TSlot({ role: "insert", neckWidthMm, headWidthMm, headHeightMm })`; keep the slot's `BoltPattern` for brackets. |
+| Spacer, collar or hub end faces | `AxialFace({ id, kind, odMm, idMm, turnsWith })`, one per face; a collar's bore that clamps a hex shaft is `Shaft({ profile: "round", gender: "bore", clampsOn })`. |
+| A wheel | `Wheel({ kind, diameterMm, treadWidthMm, rollers, hand })`, its hub a `Shaft`. |
+| RS-485, RS-232, SWD or PPM pins or ports | `RS485`, `RS232` (DTE or DCE), `SWD` (target or probe), `PPM` (output or input). |
+| An IR remote or IR receiver | `InfraredRemote({ role, carrierKHz, protocols, wavelengthNm })`; the receiver's output pin is a `Pin`. |
+| A mains inlet, plug or outlet | `AcPower({ role, voltageV, frequencyHz, maxCurrentA, plug, earth })`, not `PowerIn`. |
+| A solenoid or valve coil, or the channel that drives one | `InductiveLoad({ kind, ratedVoltageV, coilCurrentA, suppression })` and `InductiveDrive({ switching, voltageV, maxCurrentA, flyback })`. |
 | Pneumatic or hydraulic port | `FluidPort({ medium, role, joint, pressureBar })`; one per physical port, with the thread or tube size as the source prints it. |
 | Dimensions, mass | `domains[].dimensions_mm` (overall, leads included), `domains[].weight_g` (mechanical). |
 | Operating temperature | A `thermal` domain entry, plus an `operating_conditions` trait. |

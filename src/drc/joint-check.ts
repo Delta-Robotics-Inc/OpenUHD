@@ -1,6 +1,7 @@
 import type { InterfaceDef } from "../types/interface.js";
 import type { Diagnostic } from "./types.js";
 import { getEffectiveRange } from "../parameters/range.js";
+import { arcHoles, latticeHoles, type GridSpec } from "../protocols/mechanical.js";
 
 /**
  * Pair checks on how two matched interfaces physically join, beyond their
@@ -31,6 +32,11 @@ import { getEffectiveRange } from "../parameters/range.js";
  *   never mates a pattern whose holes are not on one line (square, circle,
  *   cross, a rectangle with a y spacing). The check compares the spans,
  *   pitches and lengths itself (see pairCheckedParams).
+ * - `bolt_pattern_holes`: a grid (BoltPattern shape "grid") or a partial
+ *   circle (shape "arc") against another pattern: the pattern with fewer
+ *   holes must land on the other's holes under some rotation and shift (or
+ *   their mirror image), within 0.05 mm. A grid fits a slot (fasteners
+ *   through one line of the grid); an arc does not.
  * - `shaft_fit`: a shaft and a bore (Shaft `gender`, `profile`) that do not
  *   fit: two shafts or two bores; or profiles that do not fit (a hex shaft
  *   in a round bore, two different splines). A round shaft in a keyed bore,
@@ -44,7 +50,19 @@ import { getEffectiveRange } from "../parameters/range.js";
  *   source states no rating.
  */
 export function checkPairJoints(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
-  return [...fluidJoint(a, b), ...boltShape(a, b), ...boltLine(a, b), ...shaftFit(a, b), ...linearCapacity(a, b), ...supplyCurrent(a, b)];
+  return [...fluidJoint(a, b), ...boltHoles(a, b), ...boltShape(a, b), ...boltLine(a, b), ...shaftFit(a, b), ...linearCapacity(a, b), ...supplyCurrent(a, b)];
+}
+
+/**
+ * Pairings whose protocols and roles match but which never mate as they
+ * are: two shafts or two bores (a gear's hex bore and another gear's).
+ * `validatePair` does not auto-connect them; it lists them as potentials,
+ * and an explicit link reports `shaft_fit`.
+ */
+export function neverMates(a: InterfaceDef, b: InterfaceDef): boolean {
+  if (!a.protocols.some((p) => p.type === "shaft") || !b.protocols.some((p) => p.type === "shaft")) return false;
+  const [ga, gb] = [traitParams(a, "shaft")?.gender, traitParams(b, "shaft")?.gender];
+  return ga !== undefined && ga === gb;
 }
 
 /**
@@ -54,6 +72,8 @@ export function checkPairJoints(a: InterfaceDef, b: InterfaceDef): Diagnostic[] 
  * pitches and lengths of row and slot patterns.
  */
 export function pairCheckedParams(a: InterfaceDef, b: InterfaceDef): Set<string> {
+  if (holeRule(a, b)) return new Set(["hole_spacing", "hole_spacing_y", "hole_count", "hole_pitch", "hole_pitch_y", "angular_pitch", "slot_length"]);
+  if (clampFit(a, b)) return new Set(["shaft_diameter"]);
   if (lineRule(a, b)) return new Set(["hole_spacing", "hole_spacing_y", "hole_count", "hole_pitch", "slot_length"]);
   if (boltPatternsShareHoles(a, b)) return new Set(["hole_spacing", "hole_spacing_y"]);
   return new Set();
@@ -164,7 +184,7 @@ function boltShape(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
   const sa = traitParams(a, "bolt_pattern")?.shape;
   const sb = traitParams(b, "bolt_pattern")?.shape;
   if (sa === undefined || sb === undefined || sa === sb) return [];
-  if (lineRule(a, b)) return [];
+  if (lineRule(a, b) || holeRule(a, b)) return [];
   if (sa !== "cross" && sb !== "cross") return [];
   if (boltPatternsShareHoles(a, b)) return [];
   const [da, db] = [squareDiagonal(a), squareDiagonal(b)];
@@ -197,9 +217,131 @@ const isLineShape = (iface: InterfaceDef) => {
   return shape === "row" || shape === "slot";
 };
 
-/** The line rule applies when both sides are bolt patterns and at least one is a row or a slot. */
+/** The line rule applies when both sides are bolt patterns, at least one is a row or a slot, and neither is a grid or an arc (the hole rule). */
 const lineRule = (a: InterfaceDef, b: InterfaceDef) =>
-  traitParams(a, "bolt_pattern") !== undefined && traitParams(b, "bolt_pattern") !== undefined && (isLineShape(a) || isLineShape(b));
+  traitParams(a, "bolt_pattern") !== undefined && traitParams(b, "bolt_pattern") !== undefined && (isLineShape(a) || isLineShape(b)) && !holeRule(a, b);
+
+// ---------------------------------------------------------------------------
+// Grids and arcs: compare the holes themselves
+// ---------------------------------------------------------------------------
+
+const isHoleShape = (iface: InterfaceDef) => {
+  const shape = traitParams(iface, "bolt_pattern")?.shape;
+  return shape === "grid" || shape === "arc";
+};
+
+/** The hole rule applies when both sides are bolt patterns and at least one is a grid or an arc. */
+const holeRule = (a: InterfaceDef, b: InterfaceDef) =>
+  traitParams(a, "bolt_pattern") !== undefined && traitParams(b, "bolt_pattern") !== undefined && (isHoleShape(a) || isHoleShape(b));
+
+const paramNum = (iface: InterfaceDef, id: string) => paramRange(iface, id)?.[0];
+
+/**
+ * The holes of any bolt pattern in its frame's x/y (mm), from its
+ * parameters and trait; undefined for a slot (no fixed holes) or a pattern
+ * whose spacing is a range (slotted holes).
+ */
+export function patternHoles(iface: InterfaceDef): [number, number][] | undefined {
+  const t = traitParams(iface, "bolt_pattern");
+  if (!t) return undefined;
+  const shape = String(t.shape);
+  if (shape === "slot") return undefined;
+  if (shape === "grid") {
+    const spec: GridSpec = {
+      lattice: t.lattice === "triangular" ? "triangular" : "rectangular",
+      pitch: paramNum(iface, "hole_pitch") ?? 0,
+      ...(paramNum(iface, "hole_pitch_y") !== undefined ? { pitchY: paramNum(iface, "hole_pitch_y") } : {}),
+      ...(t.within_diameter_mm !== undefined ? { withinDiameter: Number(t.within_diameter_mm) } : { rows: Number(t.rows), columns: Number(t.columns) }),
+      ...(t.min_diameter_mm !== undefined ? { minDiameter: Number(t.min_diameter_mm) } : {}),
+    };
+    return latticeHoles(spec);
+  }
+  const x = paramRange(iface, "hole_spacing");
+  if (!x || x[1] - x[0] > HOLE_TOLERANCE_MM) return undefined;
+  const count = paramNum(iface, "hole_count") ?? 4;
+  const d = x[0];
+  if (shape === "arc") return arcHoles(d, count, paramNum(iface, "angular_pitch") ?? 0, Number(t.start_angle_deg ?? 0));
+  if (shape === "row") {
+    const pitch = paramNum(iface, "hole_pitch") ?? (count > 1 ? d / (count - 1) : 0);
+    return Array.from({ length: count }, (_, k) => [-d / 2 + k * pitch, 0] as [number, number]);
+  }
+  if (shape === "circle") return arcHoles(d, count, 360 / count, 0);
+  const yr = paramRange(iface, "hole_spacing_y");
+  if (yr && yr[1] - yr[0] > HOLE_TOLERANCE_MM) return undefined;
+  const y = yr?.[0] ?? d;
+  if (shape === "cross") return [[-d / 2, 0], [d / 2, 0], [0, -y / 2], [0, y / 2]];
+  if (shape === "rectangle" && y <= HOLE_TOLERANCE_MM) return count <= 2 ? [[-d / 2, 0], [d / 2, 0]] : undefined;
+  return [[-d / 2, -y / 2], [d / 2, -y / 2], [d / 2, y / 2], [-d / 2, y / 2]];
+}
+
+/**
+ * Whether every hole of `small` lands on a hole of `large` under one rigid
+ * motion of the plane (a rotation and a shift, or their mirror image),
+ * within `tol`. Two holes of `small` fix the motion: its first hole and the
+ * one farthest from it go onto every pair of `large` holes as far apart.
+ */
+export function holesFitOn(small: [number, number][], large: [number, number][], tol = HOLE_TOLERANCE_MM): boolean {
+  if (small.length === 0) return true;
+  if (small.length > large.length) return false;
+  if (small.length === 1) return large.length > 0;
+  const cell = Math.max(tol * 4, 0.5);
+  const key = (x: number, y: number) => `${Math.round(x / cell)},${Math.round(y / cell)}`;
+  const index = new Map<string, [number, number][]>();
+  for (const p of large) {
+    const k = key(p[0], p[1]);
+    index.set(k, [...(index.get(k) ?? []), p]);
+  }
+  const has = (x: number, y: number) => {
+    const [i, j] = [Math.round(x / cell), Math.round(y / cell)];
+    for (let di = -1; di <= 1; di++)
+      for (let dj = -1; dj <= 1; dj++) for (const p of index.get(`${i + di},${j + dj}`) ?? []) if (Math.hypot(p[0] - x, p[1] - y) <= tol) return true;
+    return false;
+  };
+  const s0 = small[0];
+  let s1 = small[1];
+  for (const p of small) if (Math.hypot(p[0] - s0[0], p[1] - s0[1]) > Math.hypot(s1[0] - s0[0], s1[1] - s0[1])) s1 = p;
+  const d = Math.hypot(s1[0] - s0[0], s1[1] - s0[1]);
+  for (const mirror of [false, true]) {
+    const pts = small.map(([x, y]) => [x - s0[0], mirror ? -(y - s0[1]) : y - s0[1]] as [number, number]);
+    const v = [s1[0] - s0[0], mirror ? -(s1[1] - s0[1]) : s1[1] - s0[1]];
+    const aS = Math.atan2(v[1], v[0]);
+    for (const li of large) {
+      for (const lj of large) {
+        if (li === lj || Math.abs(Math.hypot(lj[0] - li[0], lj[1] - li[1]) - d) > tol) continue;
+        const rot = Math.atan2(lj[1] - li[1], lj[0] - li[0]) - aS;
+        const [c, s] = [Math.cos(rot), Math.sin(rot)];
+        if (pts.every(([x, y]) => has(li[0] + c * x - s * y, li[1] + s * x + c * y))) return true;
+      }
+    }
+  }
+  return false;
+}
+
+const describeHoles = (iface: InterfaceDef) => {
+  const t = traitParams(iface, "bolt_pattern") ?? {};
+  const n = paramNum(iface, "hole_count");
+  if (t.shape === "grid") return `a ${t.lattice} grid of ${n} holes (pitch ${fmtRange(paramRange(iface, "hole_pitch") ?? [0, 0])} mm)`;
+  if (t.shape === "arc") return `a partial circle of ${n} holes on Ø${fmtRange(paramRange(iface, "hole_spacing") ?? [0, 0])} mm`;
+  return `a ${t.shape} pattern`;
+};
+
+function boltHoles(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
+  if (!holeRule(a, b)) return [];
+  const problem = (why: string): Diagnostic[] => [{ severity: "error", code: "bolt_pattern_holes", message: `${describeHoles(a)} does not line up with ${describeHoles(b)}: ${why}`, refs: [a.id, b.id] }];
+  const slotSide = [a, b].find((x) => traitParams(x, "bolt_pattern")?.shape === "slot");
+  if (slotSide) {
+    const other = slotSide === a ? b : a;
+    if (traitParams(other, "bolt_pattern")?.shape === "grid") {
+      return [{ severity: "info", code: "bolt_pattern_holes", message: "fasteners go into the slot through one line of the grid's holes", refs: [a.id, b.id] }];
+    }
+    return problem("a partial circle's holes are not on one line");
+  }
+  const [ha, hb] = [patternHoles(a), patternHoles(b)];
+  if (!ha || !hb) return [];
+  const [small, large] = ha.length <= hb.length ? [ha, hb] : [hb, ha];
+  if (holesFitOn(small, large)) return [];
+  return problem(`the ${small.length} holes of one do not all land on the other's ${large.length}`);
+}
 
 function lineOf(iface: InterfaceDef): Line {
   const t = traitParams(iface, "bolt_pattern") ?? {};
@@ -280,11 +422,34 @@ const SHAFT_FITS: Record<string, Record<string, "ok" | "warn">> = {
 const normSpline = (s: unknown) => String(s).replace(/[\s_-]/g, "").toLowerCase();
 const profileName = (p: unknown) => String(p).replace(/_/g, "-");
 
+/** A bore that clamps on another profile (Shaft `clampsOn`) against a shaft: [bore, shaft], or undefined. */
+function clampFit(a: InterfaceDef, b: InterfaceDef): [InterfaceDef, InterfaceDef] | undefined {
+  if (!a.protocols.some((p) => p.type === "shaft") || !b.protocols.some((p) => p.type === "shaft")) return undefined;
+  for (const [bore, shaft] of [[a, b], [b, a]] as const) {
+    if (traitParams(bore, "shaft")?.clamps_on !== undefined && traitParams(shaft, "shaft")?.gender !== "bore") return [bore, shaft];
+  }
+  return undefined;
+}
+
 function shaftFit(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
   const ta = traitParams(a, "shaft");
   const tb = traitParams(b, "shaft");
   if (!a.protocols.some((p) => p.type === "shaft") || !b.protocols.some((p) => p.type === "shaft")) return [];
-  const diag = (severity: "error" | "warning", why: string): Diagnostic[] => [{ severity, code: "shaft_fit", message: why, refs: [a.id, b.id] }];
+  const diag = (severity: "error" | "warning" | "info", why: string): Diagnostic[] => [{ severity, code: "shaft_fit", message: why, refs: [a.id, b.id] }];
+  const clamp = clampFit(a, b);
+  if (clamp) {
+    const [bore, shaft] = clamp;
+    const on = traitParams(bore, "shaft")!.clamps_on as { profile: string; diameter_mm: number; by: string };
+    const profile = traitParams(shaft, "shaft")?.profile;
+    const d = paramRange(shaft, "shaft_diameter");
+    const boreD = paramRange(bore, "shaft_diameter");
+    const sameProfile = profile === undefined || profile === on.profile || (on.profile === "hex" && profile === "rounded_hex");
+    if (sameProfile && d && overlaps(d, [on.diameter_mm, on.diameter_mm])) {
+      return diag("info", `the Ø${boreD ? fmtRange(boreD) : "?"} mm round bore goes over the ${on.diameter_mm} mm ${profileName(on.profile)} shaft and is held by ${String(on.by).replace(/_/g, " ")}`);
+    }
+    if (profile === "round" && d && boreD && overlaps(d, boreD)) return []; // it is still a round bore
+    return diag("error", `the bore clamps on a ${on.diameter_mm} mm ${profileName(on.profile)} shaft, not a ${d ? fmtRange(d) : "?"} mm ${profileName(profile ?? "unstated")} one`);
+  }
   const [ga, gb] = [ta?.gender, tb?.gender];
   if (ga !== undefined && ga === gb) return diag("error", ga === "shaft" ? "two shafts do not mate without a coupler" : "two bores need a shaft between them");
   const [pa, pb] = [ta?.profile, tb?.profile];

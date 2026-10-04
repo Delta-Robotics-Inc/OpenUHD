@@ -31,8 +31,14 @@ peer.
 | `CANLogic` | `digital` leaves + `can_logic: controller/transceiver` | An MCU's CAN TX/RX (controller) and a transceiver's TXD/RXD (transceiver) |
 | `ShieldHeader` | `connector: mate` (a `Connector` with a standard layout) | Arduino UNO R3 shield headers, the Arduino ICSP header, the Raspberry Pi 40-pin header; role `host` or `accessory` |
 | `FluidPort` | `pneumatic` / `hydraulic: source/sink/bidirectional/sensing` | Cylinder, valve, compressor, regulator and sensor ports, fittings and tube ends, with a `fluid_joint` (thread, push-to-connect, tube, barb, quick coupler) |
-| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle`, `cross` (two diagonals, e.g. a 16 × 19 motor base), `row` (holes in a line on a pitch: bracket legs, a line of a hole grid) or `slot` (a T-slot or a through slot that takes fasteners anywhere along its length) |
-| `Shaft` | `shaft: output/input/bidirectional` | Motor shafts and hollow outputs (output), hubs, pulleys, wheels and gearbox inputs (input), loose shafts, spacers and couplers (bidirectional); `gender` shaft or bore, `profile` round, hex, rounded_hex, d_cut, double_d, keyed, spline or square |
+| `BoltPattern` | `bolt_pattern: structure/component` | Mounting hole patterns (frame side = structure); shape `square`, `rectangle`, `circle`, `cross` (two diagonals, e.g. a 16 × 19 motor base), `row` (holes in a line on a pitch: bracket legs, a line of a hole grid), `slot` (a T-slot or a through slot that takes fasteners anywhere along its length), `grid` (a rectangular or triangular hole lattice, rows × columns or a disc) or `arc` (a partial bolt circle: count, angular pitch, start angle) |
+| `Shaft` | `shaft: output/input/bidirectional` | Motor shafts and hollow outputs (output), hubs, pulleys, wheels and gearbox inputs (input), loose shafts, spacers and couplers (bidirectional); `gender` shaft or bore, `profile` round, hex, rounded_hex, d_cut, double_d, keyed, spline or square; `clampsOn` for a round bore that goes over another profile and clamps on it (a collar on a hex shaft) |
+| `Gear` | `gear_mesh: mesh` | Gear teeth: `kind` spur, helical, internal, rack, bevel, worm, worm_wheel; `moduleMm` or `diametralPitch`, `pressureAngleDeg`, `teeth`, `faceWidthMm`; the bore is a `Shaft` |
+| `Bearing` / `BearingSeat` | `bearing_fit: bearing/seat` (+ a `Shaft` bore) | Ball, roller, needle, thrust and plain bearings (bore, OD, width, flange, ratings) and the housing bores that hold them (OD, depth, retention) |
+| `Thread` | `thread: external/internal` | Screws, bolts, set screws, studs, threaded rod (external); nuts, tapped holes, heat-set inserts (internal); designation, diameter, pitch or TPI, length, hand, lock |
+| `TSlot` | `t_slot: track/insert` | An extrusion's or rail's undercut slot (opening, channel, length) and the T-nut, screw head or carriage foot that slides in it (neck, head) |
+| `AxialFace` | `axial_stop: face` | The end faces of spacers, collars, hubs and bearing rings along a shaft (face OD and ID, what it turns with) |
+| `Wheel` / `RollingSurface` | `rolling_contact: wheel/surface` | Traction, omni, mecanum, caster, pneumatic wheels and rollers (diameter, tread, rollers, hand, load); floors, tiles, rails |
 | `LinearMotion` | `linear_motion: output/input` | The moving member of a linear actuator, lead screw or slide (output) and the load it drives (input), with stroke, lead, thread pitch, force and speed |
 | `PCIe` | `pcie_lane`, `pcie_refclk`, `digital` leaves + `pcie: root/endpoint` | PCIe ports: root ports, slots, sockets and FFCs (root), cards, SSDs and switch upstream ports (endpoint); `lanes`, `generation`, optional lane, REFCLK, PERST#, CLKREQ#, WAKE# pins |
 | `M2` | `m2: socket/card` | M.2 sockets and card edges; `key`, `sizes`, `carries` (pcie, sata, usb2, usb3, sdio, uart, i2c, i2s, pcm, cnvi...), `pcie` lanes and generation |
@@ -47,6 +53,13 @@ peer.
 | `Led` / `LedDrive` / `ledTrait` | `passive` terminals + `led_drive: anode/cathode/sink/source` | Two-terminal LEDs (`Led`), LED driver channels (`LedDrive` role driver, mode sink or source), the `led` trait on any LED part or display |
 | `RelayCoil` / `RelayContacts` / `relayTrait` | `passive` terminals | Relay coil and contact pins (capabilities `relay_coil_plus`, `relay_com`, `relay_no`, `relay_nc`) and the `relay` trait (form, coil, contact ratings) |
 | `storageTrait` | trait | Memory chips, eMMC, memory cards, SSDs: medium, `capacity_bytes`, interfaces, endurance |
+| `RS485` | `rs485_signal` leaves + `rs485: node` | RS-485 ports, half duplex (A/B) or full duplex (Y/Z driver, A/B receiver), bit rate, termination, the protocol carried |
+| `RS232` | `rs232_signal` leaves + `rs232: dte/dce` | RS-232 ports at line levels (TXD, RXD, RTS, CTS, DTR, DSR, DCD, RI named from the DTE) |
+| `SWD` | `digital` leaves + `swd: target/probe` | Arm debug ports: SWDIO, SWCLK, SWO, nRESET, VTref |
+| `PPM` | `digital` leaf + `ppm: output/input` | CPPM streams from receivers and into flight controllers: channels, frame rate, polarity |
+| `InfraredRemote` | `ir_remote: transmitter/receiver` (network domain) | IR remotes and demodulating receivers: carrier kHz, wavelength, coding protocols |
+| `AcPower` | `ac_power: input/output` | Mains inlets and plugs (input), outlets and UPS outputs (output): V RMS, line frequency, current, power, plug, earth |
+| `InductiveLoad` / `InductiveDrive` | `inductive_load: load/driver` | Solenoid, valve, brake and clutch coils (rated voltage, coil current or resistance, suppression) and the channels that switch them (low side, high side, H-bridge, relay; current; flyback) |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions; binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
 | `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
@@ -68,7 +81,22 @@ input: the least current its source must be rated for), `lane_count`,
 `pcie_generation`, `lane_rate` (Mbit/s per lane), `link_speed` (Mbit/s),
 `poe_power` (W), `sample_rate` (Hz), `bit_depth`, `channel_count`,
 `bus_width`, `rf_band` (MHz, on `rf` interfaces), `wavelength` (nm),
-`led_current` (mA), `forward_voltage` (V).
+`led_current` (mA), `forward_voltage` (V), `hole_pitch_y` (mm),
+`angular_pitch` (deg), `gear_module` (mm), `pressure_angle` (deg),
+`tooth_count`, `face_width` (mm), `bearing_od`, `bearing_bore`,
+`bearing_width` and `seat_depth` (mm), `thread_length` (mm),
+`slot_opening`, `channel_width`, `channel_depth`, `neck_width`,
+`head_width` and `head_height` (mm), `face_od`, `face_id` and
+`axial_length` (mm), `wheel_diameter` and `tread_width` (mm),
+`load_rating` (N), `line_frequency` (Hz), `ir_carrier` (kHz),
+`coil_current` (A), `coil_resistance` (Ω).
+
+The drive and signal checks compare their own parameters, so the overlap
+check skips them for those pairs (`driveCheckedParams`,
+`signalCheckedParams`): two gears' modules and tooth counts, a bearing's and
+a seat's diameters, two threads, a track and an insert, two faces, a wheel
+and a surface, PPM channel counts, IR carriers and wavelengths, coil
+currents. `load_rating` and `coil_current` are capacities.
 
 `link_speed`, `lane_rate`, `bus_width`, `poe_power` and `wavelength` are
 not range-checked either: `checkPairLinks` compares them (see below).
@@ -96,7 +124,15 @@ compare `min_supply_current` with the source's `max_current`, and a load's
   the older bidirectional with all; `led_drive` sink ↔ cathode, source ↔
   anode; `wifi` client ↔ access_point, peer ↔ peer; `bluetooth` central ↔
   peripheral, broadcaster ↔ observer, peer with central, peripheral and
-  peer; `ieee802154` node ↔ node. Each composite's slots carry per-conductor
+  peer; `ieee802154` node ↔ node.
+- `gear_mesh` mesh ↔ mesh; `bearing_fit` bearing ↔ seat; `thread` external
+  ↔ internal; `t_slot` track ↔ insert; `axial_stop` face ↔ face;
+  `rolling_contact` wheel ↔ surface; `rs485` node ↔ node (slots `a`/`b`, or
+  `tx_p`/`tx_n` ↔ `rx_p`/`rx_n`); `rs232` dte and dce with either (straight
+  or crossed by sub-role); `swd` probe ↔ target (generic fallback kept for
+  older target leaves); `ppm` output ↔ input; `ir_remote` transmitter ↔
+  receiver; `ac_power` input ↔ output; `inductive_load` driver ↔ load
+  (`drive_plus` ↔ `coil_plus`, `drive_minus` ↔ `coil_minus`). Each composite's slots carry per-conductor
   sub-roles (`tx_p` ↔ `rx_p`, `bclk_out` ↔ `bclk_in`, `data_out` ↔
   `data_in`). None of these fall back to the generic pairs.
 
@@ -105,20 +141,27 @@ compare `min_supply_current` with the source's `max_current`, and a load's
 `power`, `digital`, `i2c`, `spi`, `uart`, `usb`, `analog`, `pwm`,
 `interrupt`, `can`, `bluetooth`, `wifi`, `rf`, `i2s`, `jtag`, `swd`,
 `pcie`, `m2`, `mipi_csi2`, `mipi_dsi`, `ethernet`, `sfp`, `dvp`, `sd_card`,
-`led_drive`, `ieee802154`,
+`led_drive`, `ieee802154`, `gear_mesh`, `bearing_fit`, `thread`, `t_slot`,
+`axial_stop`, `rolling_contact`, `rs485`, `rs232`, `ppm`, `ir_remote`,
+`ac_power`, `inductive_load`,
 `mechanical_connection`, `mechanical_drive`, `mechanical_mount`,
 `threaded_connection`, `thermal_connection`, `custom`, and a
 few part-specific types. The older mechanical types
 (`mechanical_connection`, `mechanical_mount`, `threaded_connection`) predate
-`bolt_pattern` and `shaft`. Use the new builders for new parts; converging
-the older ones is tracked as a vocabulary gap.
+`bolt_pattern`, `shaft` and `thread`. Use the new builders for new parts.
 
 ## Pair checks beyond parameters
 
 `checkPairJoints` (`src/drc/joint-check.ts`) reports `fluid_joint_mismatch`,
 `bolt_pattern_shape` (a cross against another shape), `bolt_pattern_line`
-(rows and slots), `shaft_fit` (shaft and bore genders and profiles),
-`linear_motion_capacity` and `supply_current_rating`. See
+(rows and slots), `bolt_pattern_holes` (grids and arcs: the holes of one on
+the other's), `shaft_fit` (shaft and bore genders and profiles, a clamped
+bore), `linear_motion_capacity` and `supply_current_rating`.
+`checkPairDrive` (`src/drc/drive-check.ts`) reports `gear_mesh`,
+`bearing_fit`, `thread_fit`, `t_slot_fit`, `axial_face` and
+`rolling_contact`. `checkPairSignals` (`src/drc/signal-check.ts`) reports
+`rs485_duplex`, `rs232_null_modem`, `ppm_channels`, `ppm_polarity`,
+`ir_link`, `ac_power` and `inductive_load`. See
 [mechanical interfaces](../../../docs/mechanical-interfaces.md) and
 [fluid ports](../../../docs/fluid-ports.md).
 
@@ -148,4 +191,9 @@ Use `custom` with a trait, and log a `vocabulary` gap, for:
   slide and thumbstick actuators; optical apertures and gas inlets; seals and
   gaskets; battery charge ports (charge output on the cell's terminal);
 - crystals as a `Passive` kind (use passive terminals and a `performance`
-  trait).
+  trait);
+- a part that holds two mated connectors together (a cable clip), strap and
+  hook-and-loop joints, an adjustable offset inside one part (an indexable
+  bracket), docking interfaces that carry phases, sensors and alignment
+  together, and proprietary RC radio links (an `rf` interface with a
+  `wireless` trait).

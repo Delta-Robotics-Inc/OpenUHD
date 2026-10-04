@@ -138,10 +138,15 @@ describe("shaft profiles and genders", () => {
     expect(codes(shaft("hex", { role: "output", gender: "shaft", profile: "hex", diameterMm: 12.7 }), roundedBore, "shaft")).toEqual(["shaft_fit"]);
   });
 
-  it("two shafts or two bores do not mate", () => {
+  it("two shafts or two bores do not mate: discovery leaves them as potentials, an explicit link says why", () => {
     const motorShaft = shaft("motor_shaft", { role: "output", gender: "shaft", profile: "hex", diameterMm: 5 });
-    expect(connection(motorShaft, shaft("other", { role: "input", gender: "shaft", profile: "hex", diameterMm: 5 }), "shaft")!.diagnostics[0].message).toBe("two shafts do not mate without a coupler");
-    expect(connection(hexBoreMotor, shaft("hub", { role: "input", gender: "bore", profile: "hex", diameterMm: 5 }), "shaft")!.diagnostics[0].message).toBe("two bores need a shaft between them");
+    const other = shaft("other", { role: "input", gender: "shaft", profile: "hex", diameterMm: 5 });
+    const discovered = validatePair(motorShaft, other);
+    expect([discovered.verdict.state, discovered.connections]).toEqual(["not_configured", []]);
+    expect(discovered.potentials.map((p) => p.diagnostics[0].message)).toEqual(["two shafts do not mate without a coupler"]);
+    const explicit = (a: ModuleDef, b: ModuleDef) => validatePair(a, b, { explicit: true }).connections.find((c) => c.protocol === "shaft")!;
+    expect(explicit(motorShaft, other).diagnostics[0].message).toBe("two shafts do not mate without a coupler");
+    expect(explicit(hexBoreMotor, shaft("hub", { role: "input", gender: "bore", profile: "hex", diameterMm: 5 })).diagnostics[0].message).toBe("two bores need a shaft between them");
   });
 
   it("D-cut and keyed shafts: a D-cut shaft fits a round bore; a key without a keyway warns; key widths must agree", () => {
