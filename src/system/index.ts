@@ -329,7 +329,7 @@ export function validateLink(def: ModuleDef, link: InterfaceLink, lookup: Module
 
 /** Validate a link whose ends are already resolved (stored or derived). */
 export function validateResolved(link: InterfaceLink, a: ResolvedEndpoint, b: ResolvedEndpoint): LinkResult {
-  const pair = validatePair(slice(a.owner, a.iface), slice(b.owner, b.iface), { includePotentials: false });
+  const pair = validatePair(slice(a.owner, a.iface), slice(b.owner, b.iface), { includePotentials: false, explicit: true });
   const connection: ConnectionResult | undefined = pair.connections.find(
     (c) => c.a.regionPath[0] === a.iface.id && c.b.regionPath[0] === b.iface.id,
   );

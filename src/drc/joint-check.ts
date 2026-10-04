@@ -54,6 +54,18 @@ export function checkPairJoints(a: InterfaceDef, b: InterfaceDef): Diagnostic[] 
 }
 
 /**
+ * Pairings whose protocols and roles match but which never mate as they
+ * are: two shafts or two bores (a gear's hex bore and another gear's).
+ * `validatePair` does not auto-connect them; it lists them as potentials,
+ * and an explicit link reports `shaft_fit`.
+ */
+export function neverMates(a: InterfaceDef, b: InterfaceDef): boolean {
+  if (!a.protocols.some((p) => p.type === "shaft") || !b.protocols.some((p) => p.type === "shaft")) return false;
+  const [ga, gb] = [traitParams(a, "shaft")?.gender, traitParams(b, "shaft")?.gender];
+  return ga !== undefined && ga === gb;
+}
+
+/**
  * Parameters the joint check compares itself for this pair, which the
  * pairwise overlap check must skip: hole spacings of bolt patterns that share
  * holes in another shape (a cross and a circle), and the spans, counts,

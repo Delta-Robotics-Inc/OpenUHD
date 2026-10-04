@@ -9,7 +9,7 @@ import {
   type RegionNode,
 } from "./region-tree.js";
 import { checkPairParameters } from "./param-check.js";
-import { checkPairJoints, pairCheckedParams } from "./joint-check.js";
+import { checkPairJoints, neverMates, pairCheckedParams } from "./joint-check.js";
 import { checkPairLinks, linkCheckedParams } from "./link-check.js";
 import { checkPairDrive, driveCheckedParams } from "./drive-check.js";
 import { checkPairSignals, signalCheckedParams } from "./signal-check.js";
@@ -33,6 +33,8 @@ interface Candidate {
   match: ProtocolMatchResult;
   diagnostics: Diagnostic[];
   clean: boolean;
+  /** Never auto-connected (two shafts, two bores): a potential only, unless the pair is explicit. */
+  potentialOnly: boolean;
 }
 
 /**
@@ -86,6 +88,7 @@ export function validatePair(
         match,
         diagnostics,
         clean: diagnostics.every((d) => d.severity !== "error"),
+        potentialOnly: !opts.explicit && neverMates(a.iface, b.iface),
       });
     }
   }
@@ -110,7 +113,7 @@ export function validatePair(
     descendants(node).some((d) => consumed.has(d)) ||
     ancestorConsumed(node, consumed);
 
-  const alive = (c: Candidate) => !blocked(c.a, consumedA) && !blocked(c.b, consumedB);
+  const alive = (c: Candidate) => !c.potentialOnly && !blocked(c.a, consumedA) && !blocked(c.b, consumedB);
 
   let progressed = true;
   while (progressed) {

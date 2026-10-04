@@ -191,4 +191,11 @@ export interface ValidatePairOptions {
   manualLinks?: ManualLinkDef[];
   /** compute census suggestions / potentials (default true) */
   includePotentials?: boolean;
+  /**
+   * The pair is a link someone made (a stored or derived system link), not a
+   * discovery: pairings that never mate (two shafts, two bores) are accepted
+   * as connections so their diagnostics say why. Discovery lists them as
+   * potentials only.
+   */
+  explicit?: boolean;
 }

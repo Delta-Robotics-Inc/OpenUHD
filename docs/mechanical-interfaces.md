@@ -126,7 +126,11 @@ BoltPattern({ id: "slot_px", role: "structure", shape: "slot", slotLengthMm: 120
 
 The pair check `shaft_fit`:
 
-- two shafts, or two bores, do not mate (an error);
+- two shafts, or two bores, do not mate: `validatePair` does not connect
+  them on its own (they stay potentials, so two gears' hub bores do not
+  make a gear pair incompatible), and a link someone makes between them is
+  an error (`validatePair(a, b, { explicit: true })`, which
+  `validateLink` uses);
 - a shaft fits a bore of these profiles (the diameter must also overlap):
 
   | Shaft | Bore |
