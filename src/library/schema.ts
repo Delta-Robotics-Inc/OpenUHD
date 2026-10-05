@@ -187,10 +187,31 @@ export const LIBRARY_SCHEMA = {
       properties: { kind: { enum: [...EVIDENCE_KINDS] }, title: str, path: nonEmpty, sha256, size: count, mediaType: nonEmpty, url, terms: ref("fileTerms") },
       additionalProperties: false,
     },
+    sourceFile: {
+      type: "object",
+      required: ["path", "sha256", "size", "mediaType"],
+      properties: { path: { type: "string", pattern: "\\.ts$" }, sha256, size: count, mediaType: nonEmpty },
+      additionalProperties: false,
+    },
+    sourceRequirements: {
+      type: "object",
+      required: ["uhd", "typescript"],
+      properties: { uhd: nonEmpty, typescript: nonEmpty },
+      additionalProperties: false,
+    },
     revisionSource: {
       type: "object",
       required: ["repository"],
-      properties: { repository: str, commit: str, path: str, dirty: { type: "boolean" } },
+      properties: {
+        repository: str,
+        commit: str,
+        path: str,
+        dirty: { type: "boolean" },
+        entry: nonEmpty,
+        export: { type: "string", pattern: "^[A-Za-z_$][A-Za-z0-9_$]*$" },
+        files: { type: "array", items: ref("sourceFile"), minItems: 1 },
+        requires: ref("sourceRequirements"),
+      },
       additionalProperties: false,
     },
     envelope: {

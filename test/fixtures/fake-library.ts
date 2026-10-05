@@ -18,7 +18,9 @@ export type Fault =
   | "taxonomy-string-prefix"
   | "closure-order"
   | "mutable-envelope"
-  | "withholds-redistributable";
+  | "withholds-redistributable"
+  | "source-drift"
+  | "source-forbidden";
 
 export interface FakeLibraryOptions {
   faults?: Fault[];
@@ -100,7 +102,21 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
   add({ env: await seal(imuDef, 1) });
   const gimbalBody = await file("parts/acme-gimbal/body.glb", "gimbal body", "body", "body");
   add({ env: await seal(gimbal("first"), 1, { dependencies: [{ partId: "acme-m2-screw", revision: 1 }], artifacts: [gimbalBody] }) });
-  add({ env: await seal(gimbal("second"), 2, { dependencies: [{ partId: "acme-m2-screw", revision: 1 }], artifacts: [gimbalBody] }) });
+  const gimbal2 = await seal(gimbal("second"), 2, { dependencies: [{ partId: "acme-m2-screw", revision: 1 }], artifacts: [gimbalBody] });
+  // definition source (§ 4.6): outside the digest, checked by evaluating it
+  const sources = gimbalSource({ drift: faults.has("source-drift"), forbidden: faults.has("source-forbidden") });
+  const sourceFiles = [];
+  const sourceBlobs = new Set<string>();
+  for (const [path, content] of Object.entries(sources)) {
+    const bytes = text(content);
+    const sha256 = await sha256Hex(bytes);
+    blobs.set(sha256, bytes);
+    redistributable.add(sha256);
+    sourceBlobs.add(sha256);
+    sourceFiles.push({ path, sha256, size: bytes.length, mediaType: "text/typescript" });
+  }
+  gimbal2.source = { repository: "acme parts", commit: "0123abc", path: "parts/acme-gimbal.ts", entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL", files: sourceFiles, requires: { uhd: "^0.2.0", typescript: "^5.9.0" } };
+  add({ env: gimbal2 });
   add({ env: await seal(oldDef, 1), deprecated: { reason: "end of life", at: "2026-09-20T00:00:00.000Z" } });
   const partDeprecated = new Set(["acme-old-sensor"]);
 
@@ -114,7 +130,7 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
     envelopeSchemas: ["uhd.part-revision/v1"],
     uhdSchema: { min: "0.2.0", below: "0.3.0" },
     taxonomy: { version: "2.1.0" },
-    capabilities: ["facets", "taxonomy", "definition"],
+    capabilities: ["facets", "taxonomy", "definition", "source"],
     auth: options.token ? { read: "bearer", realm: "acme" } : { read: "none" },
     limits: { defaultPageSize: 2, maxPageSize: 3 },
   };
@@ -231,7 +247,7 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
       let bytes = blobs.get(m[1]);
       if (!bytes) return error(404, "BLOB_NOT_FOUND", `no blob ${m[1]}`);
       if ((options.withhold && !redistributable.has(m[1])) || (faults.has("withholds-redistributable") && redistributable.has(m[1]))) return error(403, "NOT_DISTRIBUTABLE", `${m[1]} is not redistributable`);
-      if (faults.has("bad-blob")) bytes = text(new TextDecoder().decode(bytes).toUpperCase());
+      if (faults.has("bad-blob") && !sourceBlobs.has(m[1])) bytes = text(new TextDecoder().decode(bytes).toUpperCase());
       return new Response(method === "HEAD" ? null : (bytes as Uint8Array<ArrayBuffer>), { headers: { "content-type": "application/octet-stream", etag: `"sha256:${m[1]}"`, ...IMMUTABLE } });
     }
     m = /^\/parts\/([^/]+)(\/revisions(?:\/([^/]+)(\/closure|\/definition)?)?)?$/.exec(rest);
@@ -260,4 +276,33 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
     return handle(init?.method ?? "GET", u, headers);
   };
   return { url, fetch: doFetch, envelopes: [...parts.values()].flatMap((r) => r.map((x) => x.env)) };
+}
+
+/**
+ * The source of acme-gimbal@2: an entry and a helper module. With `drift`
+ * it evaluates to another description; with `forbidden` the helper reads
+ * the environment.
+ */
+export function gimbalSource(o: { drift?: boolean; forbidden?: boolean } = {}): Record<string, string> {
+  return {
+    "acme-gimbal.uhd.ts": `/** Acme gimbal: the definition source of acme-gimbal@2. */
+import type { ModuleDef } from "@deltarobotics/uhd";
+import { mount, screw } from "./acme/common.js";
+
+export const ACME_GIMBAL = {
+  id: "acme-gimbal",
+  name: \`Acme \${"acme-gimbal"}\`,
+  manufacturer: "Acme",
+  description: ${o.drift ? '"second, edited"' : '"second"'},
+  categories: ["actuator.gimbal"],
+  interfaces: [mount()],
+  children: [screw("screw")],
+  artifacts: [{ id: "body", filePath: "parts/acme-gimbal/body.glb" }],
+} as unknown as ModuleDef;
+`,
+    "acme/common.ts": `// shared by Acme's parts; "process" in a string is only text
+export const mount = () => ({ id: "mount", domain: "mechanical", exposed: true, protocols: [{ type: "bolt_pattern" }] });
+export const screw = (id: string) => ({ id, moduleDefId: ${o.forbidden ? "process.env.SCREW ?? " : ""}"acme-m2-screw" });
+`,
+  };
 }

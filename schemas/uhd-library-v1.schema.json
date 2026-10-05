@@ -644,6 +644,52 @@
       },
       "additionalProperties": false
     },
+    "sourceFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "\\.ts$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "sourceRequirements": {
+      "type": "object",
+      "required": [
+        "uhd",
+        "typescript"
+      ],
+      "properties": {
+        "uhd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "typescript": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "revisionSource": {
       "type": "object",
       "required": [
@@ -661,6 +707,24 @@
         },
         "dirty": {
           "type": "boolean"
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "export": {
+          "type": "string",
+          "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceFile"
+          },
+          "minItems": 1
+        },
+        "requires": {
+          "$ref": "#/$defs/sourceRequirements"
         }
       },
       "additionalProperties": false

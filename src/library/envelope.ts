@@ -3,6 +3,7 @@
  * Pure apart from SHA-256, which comes from Web Crypto (`globalThis.crypto`,
  * in Node 20+ and browsers), so the functions that hash are async.
  */
+import { sourceProblems } from "./source.js";
 import { ENVELOPE_SCHEMA, type Closure, type EnvelopeArtifact, type EvidenceRef, type PartRef, type PartRevisionEnvelope, type UhdSchemaRange } from "./types.js";
 
 /** Fields that record the publish rather than the content; outside `digest`. */
@@ -138,6 +139,9 @@ export async function envelopeProblems(env: PartRevisionEnvelope, options: { sch
     const lp = f.terms?.licensePath;
     if (lp !== undefined && !paths.has(lp)) add("LICENSE_PATH", `terms.licensePath ${lp} is not a file of this revision`, `${at}.terms.licensePath`);
   }
+
+  // definition source (§ 4.6): its record; the lint and the evaluation need the files
+  for (const x of sourceProblems(env)) add(x.code, x.message, "source");
 
   const d = env.derivedFrom;
   if (d && d.partId === env.partId && d.revision >= env.revision) add("DERIVED_FROM_ORDER", "a revision derives from an earlier revision of its part", "derivedFrom");
