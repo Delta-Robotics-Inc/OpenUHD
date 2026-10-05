@@ -8,6 +8,7 @@
  */
 import { canonicalJson, closureProblems, envelopeProblems, isRedistributable, sha256Hex, taxonomyAncestors, underTaxonomyPath } from "./envelope.js";
 import { validateShape } from "./json-schema.js";
+import { evaluatedDefinitionDigest, hasDefinitionSource, lintSource, verifySourceFiles } from "./source.js";
 import type { LibrarySchemaDef } from "./schema.js";
 import {
   LIBRARY_PROTOCOL,
@@ -42,6 +43,16 @@ export interface ConformanceOptions {
   maxFiles?: number;
   /** Most further parts whose closures are checked, looking for dependencies. Default 8. */
   maxClosures?: number;
+  /**
+   * Evaluates a revision's definition source (§ 4.6.3): import `entry` from
+   * `files` laid out under one directory, with `@deltarobotics/uhd`
+   * resolvable, and return the module namespace (or `{ [export]: definition }`).
+   * The library's source is not the caller's own code, so evaluate it
+   * confined (§ 4.6.3), as `evaluateSourceConfined` from
+   * `@deltarobotics/uhd/library/confined` does. The kit has no TypeScript
+   * loader of its own; without this the source check stops at the lint.
+   */
+  evaluateSource?: (source: { files: { path: string; text: string }[]; entry: string; export: string; requires: { uhd: string; typescript: string } }) => Promise<Record<string, unknown>>;
 }
 
 export type CheckStatus = "pass" | "fail" | "warn" | "skip";
@@ -525,6 +536,45 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
         p.expect(head.bytes.length === 0, "HEAD returned a body");
       }
       p.note = `${picked.length - withheld} file(s) verified${withheld ? `, ${withheld} withheld as not redistributable` : ""}`;
+    },
+    noSample ?? (envelope ? undefined : "no envelope"),
+  );
+
+  // ---- definition source (§ 4.6)
+  await run(
+    "revision.source",
+    "Definition source: files by SHA-256, the lint, and (with evaluateSource) the definition digest",
+    async (p) => {
+      // the examined revision first, then the others search found, until one ships source
+      let env: PartRevisionEnvelope | undefined = hasDefinitionSource(envelope!.source) ? envelope : undefined;
+      for (const s of all) {
+        if (env || s.partId === samplePartId) continue;
+        if (!hasCapability("source")) break;
+        const rev = s.recommendedRevision ?? s.latestRevision;
+        const r = await get(`/parts/${enc(s.partId)}/revisions/${rev}`);
+        if (r.status === 200 && hasDefinitionSource((r.json as PartRevisionEnvelope).source)) env = r.json as PartRevisionEnvelope;
+        break;
+      }
+      if (!env) {
+        // source is optional per revision (§ 4.6.1): nothing to check is not a failure
+        if (!hasCapability("source")) p.skip("capability source not declared and the examined revision ships no source");
+        p.note = "no examined revision ships source";
+        return;
+      }
+      const src = env.source!;
+      const { files, problems } = await verifySourceFiles(src.files!, async (f) => {
+        const r = await get(`/blobs/${f.sha256}`);
+        if (r.status !== 200) throw new Error(`source file ${f.path} (blob ${f.sha256}): status ${r.status}`);
+        return r.bytes;
+      });
+      for (const x of problems) p.problems.push(`${env.partId}@${env.revision}: ${x.message}`);
+      for (const x of lintSource(files, src.entry!)) p.problems.push(`${env.partId}@${env.revision}: ${x.code}${x.path ? ` ${x.path}${x.line ? `:${x.line}` : ""}` : ""}: ${x.message}`);
+      if (options.evaluateSource && !p.problems.length) {
+        const ns = await options.evaluateSource({ files, entry: src.entry!, export: src.export!, requires: src.requires! });
+        const digest = await evaluatedDefinitionDigest(ns, src.export!);
+        p.expect(digest === env.definitionDigest, `${env.partId}@${env.revision}: the source evaluates to ${digest}, the envelope's definitionDigest is ${env.definitionDigest}`);
+      }
+      p.note = `${env.partId}@${env.revision}: ${files.length} source file(s)${options.evaluateSource ? ", evaluated to definitionDigest" : ", not evaluated (no evaluateSource)"}`;
     },
     noSample ?? (envelope ? undefined : "no envelope"),
   );

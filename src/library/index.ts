@@ -6,6 +6,7 @@
  */
 export * from "./types.js";
 export * from "./envelope.js";
+export * from "./source.js";
 export { LIBRARY_SCHEMA, LIBRARY_SCHEMA_ID, type LibrarySchemaDef } from "./schema.js";
 export { validateAgainst, validateShape, type ShapeProblem } from "./json-schema.js";
 export { runConformance, formatConformance, type CheckStatus, type ConformanceCheck, type ConformanceOptions, type ConformanceReport, type FetchLike, type ResponseLike } from "./conformance.js";

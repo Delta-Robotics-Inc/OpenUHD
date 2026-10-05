@@ -4,8 +4,10 @@
  * conformance kit against an in-process library, clean and with one fault at
  * a time.
  */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   LIBRARY_SCHEMA,
@@ -25,9 +27,36 @@ import {
   underTaxonomyPath,
   uhdSchemaInRange,
   validateShape,
+  evaluatedDefinitionDigest,
+  isVersionRange,
+  lintSource,
+  minVersion,
+  resolveSourceImport,
+  satisfiesRange,
+  sourceImports,
+  sourceProblems,
   type PartRevisionEnvelope,
 } from "../src/library/index.js";
-import { fakeLibrary, type Fault } from "./fixtures/fake-library.js";
+import { evaluateSourceConfined } from "../src/library/confined.js";
+import ts from "typescript";
+import { fakeLibrary, gimbalSource, type Fault } from "./fixtures/fake-library.js";
+
+/** Evaluate a source closure the way a TypeScript consumer does: lay it out in a directory and import the entry. */
+const evaluate = async (source: { files: { path: string; text: string }[]; entry: string }): Promise<Record<string, unknown>> => {
+  const dir = mkdtempSync(join(tmpdir(), "uhd-source-"));
+  try {
+    for (const f of source.files) {
+      mkdirSync(dirname(join(dir, f.path)), { recursive: true });
+      writeFileSync(join(dir, f.path), f.text);
+    }
+    return (await import(/* @vite-ignore */ pathToFileURL(join(dir, source.entry)).href)) as Record<string, unknown>;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+/** Types erased by TypeScript, as § 4.6.3 step 3 says. */
+const tsTranspile = (text: string) => ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
 
 const statusOf = (r: Awaited<ReturnType<typeof runConformance>>) => Object.fromEntries(r.checks.map((c) => [c.id, c.status]));
 
@@ -178,9 +207,10 @@ describe("conformance kit", () => {
       "revision.definition",
       "revision.closure",
       "blobs",
+      "revision.source",
       "errors",
     ]);
-    expect(formatConformance(report)).toMatch(/^uhd-library\/v1 conformance of https:\/\/library\.test: ok \(17 pass, 0 fail, 0 warn, 0 skip\)/);
+    expect(formatConformance(report)).toMatch(/^uhd-library\/v1 conformance of https:\/\/library\.test: ok \(18 pass, 0 fail, 0 warn, 0 skip\)/);
   });
 
   it("examines a named part in depth", async () => {
@@ -220,6 +250,7 @@ describe("conformance kit", () => {
     ["taxonomy-string-prefix", "search.taxonomy", /paths match by whole segments/],
     ["closure-order", "revision.closure", /is listed after/],
     ["mutable-envelope", "revision.envelope", /different bytes/],
+    ["source-forbidden", "revision.source", /SOURCE_FORBIDDEN acme\/common\.ts:3: uses process/],
   ];
   for (const [fault, check, message] of cases) {
     it(`catches ${fault}`, async () => {
@@ -236,9 +267,181 @@ describe("conformance kit", () => {
     });
   }
 
+  it("evaluates definition source with evaluateSource, and catches source that drifted from the definition", async () => {
+    const lib = await fakeLibrary();
+    // as a consumer does: confined, apart from this process (§ 4.6.3)
+    const confined = async (src: { files: { path: string; text: string }[]; entry: string; export: string }) => {
+      const [r] = await evaluateSourceConfined([{ key: "x", ...src }], { transpile: tsTranspile });
+      if ("error" in r) throw new Error(r.error);
+      return { [src.export]: r.definition };
+    };
+    const report = await runConformance(lib.url, { fetch: lib.fetch, evaluateSource: confined });
+    expect(report.checks.find((c) => c.id === "revision.source"), formatConformance(report)).toMatchObject({ status: "pass", message: "acme-gimbal@2: 2 source file(s), evaluated to definitionDigest" });
+    const drift = await fakeLibrary({ faults: ["source-drift"] });
+    // without an evaluator the drift is invisible: the lint passes
+    expect(statusOf(await runConformance(drift.url, { fetch: drift.fetch }))["revision.source"]).toBe("pass");
+    const caught = await runConformance(drift.url, { fetch: drift.fetch, evaluateSource: confined });
+    expect(caught.checks.find((c) => c.id === "revision.source")).toMatchObject({ status: "fail", message: expect.stringMatching(/the source evaluates to sha256:\w+, the envelope's definitionDigest is/) });
+  });
+
   it("never throws when the library is unreachable", async () => {
     const report = await runConformance("http://127.0.0.1:9", { fetch: () => Promise.reject(new Error("connection refused")) });
     expect(report.ok).toBe(false);
     expect(report.checks[0]).toMatchObject({ id: "discovery", status: "fail", message: "connection refused" });
   });
+});
+
+describe("definition source (§ 4.6)", () => {
+  it("version ranges: npm's caret, tilde, comparators, x-ranges, hyphens and alternatives", () => {
+    const yes: [string, string][] = [["0.2.0", "^0.2.0"], ["0.2.9", "^0.2.0"], ["5.9.3", "^5.9.0"], ["5.10.0", "~5"], ["7.0.2", ">=5.9 <8"], ["1.2.3", "1.2.x"], ["2.0.0", "1.x || 2.x"], ["1.5.0", "1.0.0 - 2.0.0"], ["3.1.4", "*"]];
+    const no: [string, string][] = [["0.3.0", "^0.2.0"], ["0.1.9", "^0.2.0"], ["6.0.0", "^5.9.0"], ["5.10.0", "~5.9.0"], ["8.0.0", ">=5.9 <8"], ["0.2.0", "banana"], ["x", "^0.2.0"]];
+    for (const [v, r] of yes) expect(satisfiesRange(v, r), `${v} in ${r}`).toBe(true);
+    for (const [v, r] of no) expect(satisfiesRange(v, r), `${v} in ${r}`).toBe(false);
+    expect(isVersionRange("^0.2.0")).toBe(true);
+    expect(isVersionRange("")).toBe(false);
+    expect(minVersion("^0.2.0")).toBe("0.2.0");
+    expect(minVersion(">=5.9 <8 || ^7.0.2")).toBe("5.9.0");
+  });
+
+  it("imports: static specifiers with their offsets; relative ones resolve inside the closure", () => {
+    const text = `import type { A } from "@deltarobotics/uhd";\nimport { b } from "./b.js";\nexport * from "../c";\nimport "./side.js";\nconst x = { from: "not an import" };\n`;
+    const imports = sourceImports(text);
+    expect(imports.map((i) => i.specifier)).toEqual(["@deltarobotics/uhd", "./b.js", "../c", "./side.js"]);
+    expect(text.slice(imports[1].start, imports[1].end)).toBe('"./b.js"');
+    const paths = ["p/a.ts", "p/b.ts", "c/index.ts", "p/side.ts"];
+    expect(resolveSourceImport("p/a.ts", "./b.js", paths)).toBe("p/b.ts");
+    expect(resolveSourceImport("p/a.ts", "../c", paths)).toBe("c/index.ts");
+    expect(resolveSourceImport("p/a.ts", "../../outside.js", paths)).toBeUndefined();
+    expect(resolveSourceImport("p/a.ts", "@deltarobotics/uhd", paths)).toBeUndefined();
+  });
+
+  const lint = (helper: string, extra: Record<string, string> = {}) => {
+    const files = { ...gimbalSource(), "acme/common.ts": helper, ...extra };
+    return lintSource(Object.entries(files).map(([path, text]) => ({ path, text })), "acme-gimbal.uhd.ts").map((p) => `${p.code} ${p.path ?? ""}${p.line ? `:${p.line}` : ""} ${p.message}`);
+  };
+  const helper = gimbalSource()["acme/common.ts"];
+
+  it("the lint passes declarative definition code", () => {
+    expect(lint(helper)).toEqual([]);
+    // property names, object keys, strings, comments and template text are not the globals
+    expect(lint(`${helper}\n// process.exit()\nexport const t = { process: "x", fetch: 1 };\nexport const s = "eval(require('fs'))";\nexport const u = \`fetch \${t.process}\`;\nexport const r = /process/g.test("x") ? t.fetch : 2;\n`)).toEqual([]);
+  });
+
+  it("the lint refuses host access, other packages, dynamic code and stray files", () => {
+    expect(lint(`import { readFileSync } from "node:fs";\n${helper}`)).toEqual([`SOURCE_IMPORT_FORBIDDEN acme/common.ts:1 imports "node:fs"; library source imports only @deltarobotics/uhd and its own closure`]);
+    expect(lint(`${helper}export const e = process.env.HOME;\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses process"]);
+    expect(lint(`${helper}export const e = \`\${globalThis.fetch}\`;\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses globalThis"]);
+    expect(lint(`${helper}export const m = import("./x.js");\n`)).toEqual(['SOURCE_DYNAMIC_IMPORT acme/common.ts:4 dynamic import("./x.js")']);
+    expect(lint(`${helper}export const u = import.meta.url;\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses import.meta"]);
+    expect(lint(`${helper}export const f = [].map.constructor("return 1");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses constructor"]);
+    expect(lint(`${helper}export const k = eval("1");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses eval"]);
+    expect(lint(`import { x } from "./missing.js";\n${helper}`)).toEqual(['SOURCE_IMPORT_UNRESOLVED acme/common.ts:1 "./missing.js" names no file of the source closure']);
+    expect(lint(helper, { "stray.ts": "export const a = 1;\n" })).toEqual(["SOURCE_UNREACHABLE stray.ts stray.ts is not imported from acme-gimbal.uhd.ts, directly or through other files"]);
+    expect(lint(`export const s = "unterminated;\n`)[0]).toMatch(/^SOURCE_SYNTAX acme\/common.ts/);
+  });
+
+  it("the lint refuses the reflective ways to Function: string keys, prototype walks, Reflect, this", () => {
+    expect(lint(`${helper}const F = (() => 0)["constructor"];\nexport const pid = F("return this.process.pid")();\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "constructor"']);
+    expect(lint(`${helper}export const f = ({})["constr\\u0075ctor"];\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "constructor"']);
+    expect(lint(`${helper}export const f = ({})[\`__proto__\`];\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "__proto__"']);
+    expect(lint(`${helper}export const f = Reflect.get(Object.getPrototypeOf(() => 0), "x");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses Reflect", "SOURCE_FORBIDDEN acme/common.ts:4 uses getPrototypeOf"]);
+    expect(lint(`${helper}export const d = Object.getOwnPropertyDescriptor(Array, "from");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses getOwnPropertyDescriptor"]);
+    expect(lint(`${helper}export const p = new Proxy({}, {});\nexport const q = Array.prototype;\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses Proxy", "SOURCE_FORBIDDEN acme/common.ts:5 uses prototype"]);
+    // \`this\` in a class is the instance; an object key named class opens no class
+    expect(lint(`${helper}export class C { n = 1; get m() { return this.n; } }\nexport const o = { class: { a: 1 } };\n`)).toEqual([]);
+    expect(lint(`${helper}export const o = { class: { a: () => this } };\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses this outside a class"]);
+    // a key computed at run time is beyond a lexical rule: confined evaluation holds that (below)
+    expect(lint(`${helper}export const f = (() => 0)["constr" + "uctor"];\n`)).toEqual([]);
+  });
+
+  it("the record: entry among the files, paths apart from the revision's files, requirements that admit uhdSchema", async () => {
+    const env = (await fakeLibrary()).envelopes.find((e) => e.partId === "acme-gimbal" && e.revision === 2)!;
+    expect(validateShape("envelope", env)).toEqual([]);
+    expect(sourceProblems(env)).toEqual([]);
+    expect(await envelopeProblems(env)).toEqual([]);
+    const src = env.source!;
+    const codes = (source: typeof src) => sourceProblems({ ...env, source }).map((p) => p.code);
+    expect(codes({ ...src, entry: "nope.uhd.ts" })).toEqual(["SOURCE_ENTRY_MISSING"]);
+    expect(codes({ ...src, files: [...src.files!, { ...src.files![0], path: "parts/acme-gimbal/body.glb" }] })).toEqual(["SOURCE_PATH_DUPLICATE"]);
+    expect(codes({ ...src, requires: { uhd: "^0.3.0", typescript: "^5.9.0" } })).toEqual(["SOURCE_REQUIRES"]);
+    expect(codes({ repository: "x", entry: "a.ts" })).toEqual(["SOURCE_INCOMPLETE"]);
+    // outside the digest: a revision without source and with it are the same revision
+    expect(await envelopeDigest({ ...env, source: undefined })).toBe(env.digest);
+    expect(validateShape("envelope", { ...env, source: { ...src, files: [{ ...src.files![0], path: "a.js" }] } })[0]).toMatchObject({ at: "/source/files/0/path" });
+  });
+
+  it("source evaluates to the definition digest; an edit that changes the definition does not", async () => {
+    const env = (await fakeLibrary()).envelopes.find((e) => e.partId === "acme-gimbal" && e.revision === 2)!;
+    const files = (o?: { drift?: boolean }) => Object.entries(gimbalSource(o)).map(([path, text]) => ({ path, text }));
+    expect(await evaluatedDefinitionDigest(await evaluate({ files: files(), entry: "acme-gimbal.uhd.ts" }), "ACME_GIMBAL")).toBe(env.definitionDigest);
+    expect(await evaluatedDefinitionDigest(await evaluate({ files: files({ drift: true }), entry: "acme-gimbal.uhd.ts" }), "ACME_GIMBAL")).not.toBe(env.definitionDigest);
+    await expect(evaluatedDefinitionDigest({}, "ACME_GIMBAL")).rejects.toThrow(/no export ACME_GIMBAL/);
+  });
+});
+
+describe("confined evaluation (§ 4.6.3)", () => {
+  const transpile = tsTranspile;
+  const gimbal = (o?: { drift?: boolean }) => Object.entries(gimbalSource(o)).map(([path, text]) => ({ path, text }));
+  /** A one-file closure whose definition carries `value`, after `pre`. Lint-clean or not, it is evaluated as given. */
+  const probe = (key: string, value: string, pre = "") => ({
+    key,
+    files: [{ path: "p.uhd.ts", text: `import type { ModuleDef } from "@deltarobotics/uhd";\n${pre}\nexport const P = { id: "p", interfaces: [], v: ${value} } as unknown as ModuleDef;\n` }],
+    entry: "p.uhd.ts",
+    export: "P",
+  });
+  const g = "(globalThis as any).process";
+
+  it("gives the definition digest, apart from the caller's process", async () => {
+    const env = (await fakeLibrary()).envelopes.find((e) => e.partId === "acme-gimbal" && e.revision === 2)!;
+    const [ok, drift] = await evaluateSourceConfined(
+      [
+        { key: "ok", files: gimbal(), entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL" },
+        { key: "drift", files: gimbal({ drift: true }), entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL" },
+      ],
+      { transpile },
+    );
+    expect(ok).toMatchObject({ key: "ok", digest: env.definitionDigest });
+    expect(drift).toMatchObject({ key: "drift" });
+    expect("digest" in drift && drift.digest).not.toBe(env.definitionDigest);
+  });
+
+  it("source that gets past the lint reaches nothing: no code from strings, files, processes or environment", async () => {
+    process.env.UHD_CONFINED_SECRET = "s3cret";
+    const dir = mkdtempSync(join(tmpdir(), "uhd-confined-test-"));
+    const outside = join(dir, "written");
+    writeFileSync(join(dir, "secret.txt"), "s3cret");
+    try {
+      const results = await evaluateSourceConfined(
+        [
+          probe("fn", `F("return this.process.pid")()`, `const F = (() => 0)["constr" + "uctor"];`),
+          probe("reflect", `F("return 1")()`, `const F = Reflect.get(Object.getPrototypeOf(() => 0), "construct" + "or");`),
+          probe("env", `${g}.env.UHD_CONFINED_SECRET ?? "none"`),
+          probe("read", `${g}.getBuiltinModule("node:fs").readFileSync(${JSON.stringify(join(dir, "secret.txt"))}, "utf8")`),
+          probe("write", `${g}.getBuiltinModule("node:fs").writeFileSync(${JSON.stringify(outside)}, "x")`),
+          probe("spawn", `${g}.getBuiltinModule("node:child_process").execSync("id").toString()`),
+          probe("uhd", `${g}.getBuiltinModule("node:fs").readFileSync(${JSON.stringify(join(process.cwd(), "src", "index.ts"))}, "utf8")`),
+          probe("loop", `(() => { for (;;); })()`),
+          probe("exit", `${g}.exit(3)`),
+          probe("after", `2`),
+        ],
+        { transpile, timeoutMs: 4000 },
+      );
+      const by = Object.fromEntries(results.map((r) => [r.key, "error" in r ? `error: ${r.error}` : r.definition.v]));
+      expect(by.fn).toMatch(/Code generation from strings disallowed/);
+      expect(by.reflect).toMatch(/Code generation from strings disallowed/);
+      expect(by.env).toBe("none");
+      expect(by.read).toMatch(/--allow-fs-read/);
+      expect(by.uhd).toMatch(/--allow-fs-read/);
+      expect(by.write).toMatch(/--allow-fs-write/);
+      expect(by.spawn).toMatch(/--allow-child-process/);
+      expect(by.loop).toMatch(/took longer than 4000 ms/);
+      expect(by.exit).toMatch(/stopped: exit code 3/);
+      // one closure that hangs or exits fails alone
+      expect(by.after).toBe(2);
+      expect(existsSync(outside)).toBe(false);
+    } finally {
+      delete process.env.UHD_CONFINED_SECRET;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
 });

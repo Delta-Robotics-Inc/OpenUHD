@@ -25,6 +25,10 @@
       "types": "./dist/library/index.d.ts",
       "import": "./dist/library/index.js"
     },
+    "./library/confined": {
+      "types": "./dist/library/confined.d.ts",
+      "import": "./dist/library/confined.js"
+    },
     "./schemas/uhd-library-v1.schema.json": "./schemas/uhd-library-v1.schema.json"
   },
   "files": [

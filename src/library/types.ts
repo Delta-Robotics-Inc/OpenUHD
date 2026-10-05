@@ -17,7 +17,7 @@ export interface UhdSchemaRange {
 }
 
 /** Optional features a library declares in `capabilities`. */
-export type LibraryCapability = "facets" | "taxonomy" | "definition" | (string & {});
+export type LibraryCapability = "facets" | "taxonomy" | "definition" | "source" | (string & {});
 
 /** `GET {library}/.well-known/uhd-library` and `GET {api root}`. */
 export interface DiscoveryDocument {
@@ -202,11 +202,40 @@ export interface EvidenceRef {
   terms?: FileTerms;
 }
 
+/** A file of the definition source (§ 4.6), served as a blob like any other file. */
+export interface SourceFile extends BlobRef {
+  /** Path in the source closure, relative to the revision's artifact base; `.ts`. */
+  path: string;
+}
+
+/** What the definition source needs to evaluate (§ 4.6.1): version ranges in npm syntax. */
+export interface SourceRequirements {
+  /** `@deltarobotics/uhd` versions the source is written against, like a peerDependency (`^0.2.0`). */
+  uhd: string;
+  /** TypeScript versions the source is written for (`^5.9.0`). */
+  typescript: string;
+}
+
+/**
+ * Where the definition was authored (outside the digest), and, when the
+ * library ships it, the definition source: the TypeScript module the
+ * definition is evaluated from and every library module it imports
+ * (§ 4.6). The source is checked by evaluation, not by the envelope
+ * digest: it must evaluate to `definitionDigest`.
+ */
 export interface RevisionSource {
   repository: string;
   commit?: string;
+  /** The definition's file in `repository`. */
   path?: string;
   dirty?: boolean;
+  /** The module the definition is evaluated from: one of `files`. */
+  entry?: string;
+  /** The entry's export holding the definition (`default` for the default export). */
+  export?: string;
+  /** The source closure: the entry and every module it imports, apart from UHD itself. */
+  files?: SourceFile[];
+  requires?: SourceRequirements;
 }
 
 /**

@@ -49,6 +49,17 @@ export const <CONST_NAME>: ModuleDef = defineModule({ ... });
   and any files that describe the hardware (format, role, units,
   provenance). An artifact is a reference, not proof that the file agrees
   with the model.
+- A part meant for a library is shipped as source (library protocol § 4.6),
+  so keep the file declarative: import only from `@deltarobotics/uhd` and
+  the library's own helper modules, with static imports; no file system,
+  network, `process`, timers, `eval`/`Function` or dynamic `import()`, no
+  reflection (`Reflect`, `Proxy`, `prototype`, `getPrototypeOf`,
+  `defineProperty`, a string such as `"constructor"`), and `this` only in a
+  class. Libraries lint this with `lintSource` from
+  `@deltarobotics/uhd/library`, and the source must evaluate to the
+  published definition's digest; consumers evaluate it confined
+  (`@deltarobotics/uhd/library/confined`), so it can read nothing but its
+  own files and UHD.
 
 ## Interfaces
 
