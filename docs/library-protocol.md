@@ -437,7 +437,7 @@ before evaluating it:
   as TypeScript resolves it; `./x` names `x.ts` or `x/index.ts`). No other
   package, no `node:` module, no URL.
 - No dynamic `import()`, `import.meta`, `require`, import attributes, `with`
-  or `debugger`.
+  or `debugger`, and no `this` outside a class body.
 - None of these names as a variable (they may appear as property names and
   object keys, and in strings and comments): `process`, `require`, `module`,
   `exports`, `__dirname`, `__filename`, `eval`, `Function`,
@@ -447,15 +447,23 @@ before evaluating it:
   `WebAssembly`, `SharedArrayBuffer`, `Atomics`, `setTimeout`,
   `setInterval`, `setImmediate`, `queueMicrotask`, `clearTimeout`,
   `clearInterval`, `localStorage`, `sessionStorage`, `indexedDB`, `caches`,
-  `document`, `crypto`, `performance`; and none of `constructor`,
-  `__proto__`, `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`,
-  `__lookupSetter__` at all.
+  `document`, `crypto`, `performance`, `Reflect`, `Proxy`.
+- None of these names at all, as a variable, a property, an object key or
+  the whole value of a string or template text (escapes decoded), since a
+  computed member access (`f["constructor"]`) reaches a property by its
+  string: `constructor`, `prototype`, `__proto__`, `__defineGetter__`,
+  `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`,
+  `getPrototypeOf`, `setPrototypeOf`, `getOwnPropertyDescriptor`,
+  `getOwnPropertyDescriptors`, `defineProperty`, `defineProperties`.
 - The closure is exact: every file is reached from `entry` through these
   imports.
 
 These are lexical rules, judged from the text (`lintSource` in
-`@deltarobotics/uhd/library` applies them). They are a gate, not a sandbox:
-a consumer that evaluates the source runs it with its own privileges.
+`@deltarobotics/uhd/library` applies them). They keep library source to
+declarative definition code, but they are a gate, not a sandbox: a key
+computed at run time (`f["constr" + "uctor"]`) is beyond any lexical rule.
+So a consumer MUST NOT evaluate source it did not write in its own process.
+It evaluates it **confined** (4.6.3).
 
 #### 4.6.3 Source evaluates to the definition digest
 
@@ -479,6 +487,34 @@ source: source that no longer evaluates to the digest (edited, or evaluated
 with a UHD whose builders changed) is no longer that revision, and the
 client says so rather than treating it as the library's part. A library
 MUST check this for every revision whose source it publishes.
+
+Evaluation of source the evaluator did not write (a library checking what
+a publisher submits, a client vendoring or loading a library's source, a
+conformance run) is **confined**: the source runs apart from the
+evaluator's own process, and
+
+- can read only the closure's files and the UHD package's modules, and
+  write no file;
+- cannot start processes or threads, load native code or attach a
+  debugger;
+- cannot generate code from strings (`eval` and the `Function`
+  constructor fail, however they are reached);
+- sees none of the evaluator's environment (variables, credentials);
+- is stopped after a time and memory limit, and one closure that fails or
+  hangs fails alone.
+
+What a confined evaluation returns is data: the export's JSON. Its digest
+is compared with `definitionDigest`, so source that tampers with its own
+result can only fail to match.
+
+`evaluateSourceConfined` in `@deltarobotics/uhd/library/confined` is such
+an evaluator for Node.js: a child process under Node's permission model,
+with code generation from strings disabled, an empty environment and time
+and heap limits. The caller passes the transpiler that erases the types
+(step 3); the child imports plain ES modules. Node's permission model does
+not cover the network: the child has no credentials to send and no file
+outside the closure and UHD to read, and the lint keeps `fetch`,
+`globalThis` and `process` out of reach of the source.
 
 `evaluatedDefinition` and `evaluatedDefinitionDigest` in
 `@deltarobotics/uhd/library` do steps 4 and 5 for a module namespace;

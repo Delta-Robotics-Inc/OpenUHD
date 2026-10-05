@@ -46,7 +46,10 @@ export interface ConformanceOptions {
   /**
    * Evaluates a revision's definition source (§ 4.6.3): import `entry` from
    * `files` laid out under one directory, with `@deltarobotics/uhd`
-   * resolvable, and return the module namespace. The kit has no TypeScript
+   * resolvable, and return the module namespace (or `{ [export]: definition }`).
+   * The library's source is not the caller's own code, so evaluate it
+   * confined (§ 4.6.3), as `evaluateSourceConfined` from
+   * `@deltarobotics/uhd/library/confined` does. The kit has no TypeScript
    * loader of its own; without this the source check stops at the lint.
    */
   evaluateSource?: (source: { files: { path: string; text: string }[]; entry: string; export: string; requires: { uhd: string; typescript: string } }) => Promise<Record<string, unknown>>;

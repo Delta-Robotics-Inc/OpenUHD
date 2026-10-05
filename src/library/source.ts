@@ -361,10 +361,30 @@ export const SOURCE_FORBIDDEN_NAMES = [
   "Worker", "SharedWorker", "WebAssembly", "SharedArrayBuffer", "Atomics",
   "setTimeout", "setInterval", "setImmediate", "queueMicrotask", "clearTimeout", "clearInterval",
   "localStorage", "sessionStorage", "indexedDB", "caches", "document", "crypto", "performance",
+  "Reflect", "Proxy",
 ] as const;
 
-/** Names forbidden even as a property: the escape hatches to `Function` through any object. */
-export const SOURCE_FORBIDDEN_PROPERTIES = ["constructor", "__proto__", "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__"] as const;
+/**
+ * Names forbidden even as a property, and as the whole of a string: the
+ * escape hatches to `Function` through any object, and the reflection that
+ * walks prototypes to reach it.
+ */
+export const SOURCE_FORBIDDEN_PROPERTIES = [
+  "constructor", "prototype", "__proto__", "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__",
+  "getPrototypeOf", "setPrototypeOf", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "defineProperty", "defineProperties",
+] as const;
+
+/** A string literal's value with its escapes decoded (`\u0063` → `c`), so a spelled-out name cannot hide. */
+function stringValue(raw: string): string {
+  return raw.replace(/\\(u\{([0-9A-Fa-f]+)\}|u([0-9A-Fa-f]{4})|x([0-9A-Fa-f]{2})|([\s\S]))/g, (_, _all, cp: string | undefined, u: string | undefined, x: string | undefined, c: string | undefined) => {
+    const hex = cp ?? u ?? x;
+    if (hex) {
+      const n = parseInt(hex, 16);
+      return n <= 0x10ffff ? String.fromCodePoint(n) : "";
+    }
+    return c === "\n" ? "" : c!;
+  });
+}
 
 export interface SourceProblem {
   code: string;
@@ -381,12 +401,15 @@ const lineAt = (text: string, offset: number) => text.slice(0, offset).split("\n
  * module whose imports are static and name either `@deltarobotics/uhd`
  * (`packages`) or another file of the closure; it uses none of
  * SOURCE_FORBIDDEN_NAMES as a variable and none of
- * SOURCE_FORBIDDEN_PROPERTIES at all, nor `import.meta`, dynamic `import()`,
- * `with`, or `debugger`; and every file is reached from `entry`.
+ * SOURCE_FORBIDDEN_PROPERTIES at all (nor as the whole of a string, which a
+ * computed member access would reach), nor `import.meta`, dynamic
+ * `import()`, `with`, `debugger`, or `this` outside a class; and every file
+ * is reached from `entry`.
  *
  * This keeps library source to declarative definition code. It is a gate,
- * not a sandbox: the source still runs with the consumer's privileges when
- * evaluated, as any package code does.
+ * not a sandbox: a key computed at run time is beyond a lexical rule, so
+ * source a consumer did not write is evaluated confined
+ * (`evaluateSourceConfined` in `@deltarobotics/uhd/library/confined`).
  */
 export function lintSource(files: { path: string; text: string }[], entry: string, options: { packages?: string[] } = {}): SourceProblem[] {
   const packages = options.packages ?? [SOURCE_PACKAGE];
@@ -421,12 +444,39 @@ export function lintSource(files: { path: string; text: string }[], entry: strin
       else add("SOURCE_IMPORT_FORBIDDEN", `imports "${imp.specifier}"; library source imports only ${packages.join(", ")} and its own closure`, imp.start);
     }
     edges.set(f.path, next);
+    /** Brace depths that open a class body: `this` is allowed only inside one. */
+    const classBodies: number[] = [];
+    let depth = 0;
+    let classPending = false;
     for (let k = 0; k < tokens.length; k++) {
       const t = tokens[k];
+      if (t.type === "punct") {
+        if (t.value === "{") {
+          depth++;
+          if (classPending) classBodies.push(depth);
+          classPending = false;
+        } else if (t.value === "}") {
+          if (classBodies.at(-1) === depth) classBodies.pop();
+          depth--;
+        }
+        continue;
+      }
+      if (t.type === "string" || t.type === "template") {
+        // a computed key or a reflective lookup spells the name as a string: `f["constructor"]`
+        const text = t.type === "string" ? t.value : t.value.replace(/^[`}]/, "").replace(/(`|\$\{)$/, "");
+        const value = stringValue(text);
+        if (forbiddenProps.has(value)) add("SOURCE_FORBIDDEN", `uses the string "${value}"`, t.start);
+        continue;
+      }
       if (t.type !== "ident") continue;
       const prev = tokens[k - 1];
       const after = tokens[k + 1];
       const member = prev?.type === "punct" && (prev.value === "." || prev.value === "?.");
+      if (t.value === "class" && !member && !(after?.type === "punct" && (after.value === ":" || after.value === "?"))) classPending = true;
+      if (t.value === "this" && !member && !classBodies.length) {
+        add("SOURCE_FORBIDDEN", "uses this outside a class", t.start);
+        continue;
+      }
       if (forbiddenProps.has(t.value)) {
         add("SOURCE_FORBIDDEN", `uses ${t.value}`, t.start);
         continue;

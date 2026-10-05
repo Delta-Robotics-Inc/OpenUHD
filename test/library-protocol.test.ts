@@ -4,7 +4,7 @@
  * conformance kit against an in-process library, clean and with one fault at
  * a time.
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -37,6 +37,8 @@ import {
   sourceProblems,
   type PartRevisionEnvelope,
 } from "../src/library/index.js";
+import { evaluateSourceConfined } from "../src/library/confined.js";
+import ts from "typescript";
 import { fakeLibrary, gimbalSource, type Fault } from "./fixtures/fake-library.js";
 
 /** Evaluate a source closure the way a TypeScript consumer does: lay it out in a directory and import the entry. */
@@ -52,6 +54,9 @@ const evaluate = async (source: { files: { path: string; text: string }[]; entry
     rmSync(dir, { recursive: true, force: true });
   }
 };
+
+/** Types erased by TypeScript, as § 4.6.3 step 3 says. */
+const tsTranspile = (text: string) => ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
 
 const statusOf = (r: Awaited<ReturnType<typeof runConformance>>) => Object.fromEntries(r.checks.map((c) => [c.id, c.status]));
 
@@ -264,12 +269,18 @@ describe("conformance kit", () => {
 
   it("evaluates definition source with evaluateSource, and catches source that drifted from the definition", async () => {
     const lib = await fakeLibrary();
-    const report = await runConformance(lib.url, { fetch: lib.fetch, evaluateSource: evaluate });
+    // as a consumer does: confined, apart from this process (§ 4.6.3)
+    const confined = async (src: { files: { path: string; text: string }[]; entry: string; export: string }) => {
+      const [r] = await evaluateSourceConfined([{ key: "x", ...src }], { transpile: tsTranspile });
+      if ("error" in r) throw new Error(r.error);
+      return { [src.export]: r.definition };
+    };
+    const report = await runConformance(lib.url, { fetch: lib.fetch, evaluateSource: confined });
     expect(report.checks.find((c) => c.id === "revision.source"), formatConformance(report)).toMatchObject({ status: "pass", message: "acme-gimbal@2: 2 source file(s), evaluated to definitionDigest" });
     const drift = await fakeLibrary({ faults: ["source-drift"] });
     // without an evaluator the drift is invisible: the lint passes
     expect(statusOf(await runConformance(drift.url, { fetch: drift.fetch }))["revision.source"]).toBe("pass");
-    const caught = await runConformance(drift.url, { fetch: drift.fetch, evaluateSource: evaluate });
+    const caught = await runConformance(drift.url, { fetch: drift.fetch, evaluateSource: confined });
     expect(caught.checks.find((c) => c.id === "revision.source")).toMatchObject({ status: "fail", message: expect.stringMatching(/the source evaluates to sha256:\w+, the envelope's definitionDigest is/) });
   });
 
@@ -329,6 +340,20 @@ describe("definition source (§ 4.6)", () => {
     expect(lint(`export const s = "unterminated;\n`)[0]).toMatch(/^SOURCE_SYNTAX acme\/common.ts/);
   });
 
+  it("the lint refuses the reflective ways to Function: string keys, prototype walks, Reflect, this", () => {
+    expect(lint(`${helper}const F = (() => 0)["constructor"];\nexport const pid = F("return this.process.pid")();\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "constructor"']);
+    expect(lint(`${helper}export const f = ({})["constr\\u0075ctor"];\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "constructor"']);
+    expect(lint(`${helper}export const f = ({})[\`__proto__\`];\n`)).toEqual(['SOURCE_FORBIDDEN acme/common.ts:4 uses the string "__proto__"']);
+    expect(lint(`${helper}export const f = Reflect.get(Object.getPrototypeOf(() => 0), "x");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses Reflect", "SOURCE_FORBIDDEN acme/common.ts:4 uses getPrototypeOf"]);
+    expect(lint(`${helper}export const d = Object.getOwnPropertyDescriptor(Array, "from");\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses getOwnPropertyDescriptor"]);
+    expect(lint(`${helper}export const p = new Proxy({}, {});\nexport const q = Array.prototype;\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses Proxy", "SOURCE_FORBIDDEN acme/common.ts:5 uses prototype"]);
+    // \`this\` in a class is the instance; an object key named class opens no class
+    expect(lint(`${helper}export class C { n = 1; get m() { return this.n; } }\nexport const o = { class: { a: 1 } };\n`)).toEqual([]);
+    expect(lint(`${helper}export const o = { class: { a: () => this } };\n`)).toEqual(["SOURCE_FORBIDDEN acme/common.ts:4 uses this outside a class"]);
+    // a key computed at run time is beyond a lexical rule: confined evaluation holds that (below)
+    expect(lint(`${helper}export const f = (() => 0)["constr" + "uctor"];\n`)).toEqual([]);
+  });
+
   it("the record: entry among the files, paths apart from the revision's files, requirements that admit uhdSchema", async () => {
     const env = (await fakeLibrary()).envelopes.find((e) => e.partId === "acme-gimbal" && e.revision === 2)!;
     expect(validateShape("envelope", env)).toEqual([]);
@@ -352,4 +377,71 @@ describe("definition source (§ 4.6)", () => {
     expect(await evaluatedDefinitionDigest(await evaluate({ files: files({ drift: true }), entry: "acme-gimbal.uhd.ts" }), "ACME_GIMBAL")).not.toBe(env.definitionDigest);
     await expect(evaluatedDefinitionDigest({}, "ACME_GIMBAL")).rejects.toThrow(/no export ACME_GIMBAL/);
   });
+});
+
+describe("confined evaluation (§ 4.6.3)", () => {
+  const transpile = tsTranspile;
+  const gimbal = (o?: { drift?: boolean }) => Object.entries(gimbalSource(o)).map(([path, text]) => ({ path, text }));
+  /** A one-file closure whose definition carries `value`, after `pre`. Lint-clean or not, it is evaluated as given. */
+  const probe = (key: string, value: string, pre = "") => ({
+    key,
+    files: [{ path: "p.uhd.ts", text: `import type { ModuleDef } from "@deltarobotics/uhd";\n${pre}\nexport const P = { id: "p", interfaces: [], v: ${value} } as unknown as ModuleDef;\n` }],
+    entry: "p.uhd.ts",
+    export: "P",
+  });
+  const g = "(globalThis as any).process";
+
+  it("gives the definition digest, apart from the caller's process", async () => {
+    const env = (await fakeLibrary()).envelopes.find((e) => e.partId === "acme-gimbal" && e.revision === 2)!;
+    const [ok, drift] = await evaluateSourceConfined(
+      [
+        { key: "ok", files: gimbal(), entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL" },
+        { key: "drift", files: gimbal({ drift: true }), entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL" },
+      ],
+      { transpile },
+    );
+    expect(ok).toMatchObject({ key: "ok", digest: env.definitionDigest });
+    expect(drift).toMatchObject({ key: "drift" });
+    expect("digest" in drift && drift.digest).not.toBe(env.definitionDigest);
+  });
+
+  it("source that gets past the lint reaches nothing: no code from strings, files, processes or environment", async () => {
+    process.env.UHD_CONFINED_SECRET = "s3cret";
+    const dir = mkdtempSync(join(tmpdir(), "uhd-confined-test-"));
+    const outside = join(dir, "written");
+    writeFileSync(join(dir, "secret.txt"), "s3cret");
+    try {
+      const results = await evaluateSourceConfined(
+        [
+          probe("fn", `F("return this.process.pid")()`, `const F = (() => 0)["constr" + "uctor"];`),
+          probe("reflect", `F("return 1")()`, `const F = Reflect.get(Object.getPrototypeOf(() => 0), "construct" + "or");`),
+          probe("env", `${g}.env.UHD_CONFINED_SECRET ?? "none"`),
+          probe("read", `${g}.getBuiltinModule("node:fs").readFileSync(${JSON.stringify(join(dir, "secret.txt"))}, "utf8")`),
+          probe("write", `${g}.getBuiltinModule("node:fs").writeFileSync(${JSON.stringify(outside)}, "x")`),
+          probe("spawn", `${g}.getBuiltinModule("node:child_process").execSync("id").toString()`),
+          probe("uhd", `${g}.getBuiltinModule("node:fs").readFileSync(${JSON.stringify(join(process.cwd(), "src", "index.ts"))}, "utf8")`),
+          probe("loop", `(() => { for (;;); })()`),
+          probe("exit", `${g}.exit(3)`),
+          probe("after", `2`),
+        ],
+        { transpile, timeoutMs: 4000 },
+      );
+      const by = Object.fromEntries(results.map((r) => [r.key, "error" in r ? `error: ${r.error}` : r.definition.v]));
+      expect(by.fn).toMatch(/Code generation from strings disallowed/);
+      expect(by.reflect).toMatch(/Code generation from strings disallowed/);
+      expect(by.env).toBe("none");
+      expect(by.read).toMatch(/--allow-fs-read/);
+      expect(by.uhd).toMatch(/--allow-fs-read/);
+      expect(by.write).toMatch(/--allow-fs-write/);
+      expect(by.spawn).toMatch(/--allow-child-process/);
+      expect(by.loop).toMatch(/took longer than 4000 ms/);
+      expect(by.exit).toMatch(/stopped: exit code 3/);
+      // one closure that hangs or exits fails alone
+      expect(by.after).toBe(2);
+      expect(existsSync(outside)).toBe(false);
+    } finally {
+      delete process.env.UHD_CONFINED_SECRET;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
 });
