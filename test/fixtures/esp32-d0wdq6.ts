@@ -993,7 +993,7 @@ export const ESP32D0WDQ6: ModuleDef = defineModule({
   ],
 
   traits: [
-    { type: "lifecycle_status", params: { status: "not_recommended_for_new_designs", source_definition: "ProtoPart esp32-d0wdq6" } },
+    { type: "lifecycle_status", params: { status: "not_recommended_for_new_designs", source_definition: "esp32-d0wdq6 fixture" } },
     { type: "requires_external_flash", params: { interfaceId: "qspi_flash", defaultProfile: "spi0_flash_default" } },
     { type: "wireless_soc", params: { radios: ["wifi_radio", "bluetooth_radio"], rfFeed: "lna_in" } },
   ],
@@ -1028,14 +1028,6 @@ export const ESP32D0WDQ6: ModuleDef = defineModule({
       name: "Ultra Librarian CAD Models",
       type: "cad",
       url: "https://app.ultralibrarian.com/details/A7AAB95B-922A-11EA-B5D0-0AEBB021A1EA/Espressif-Systems/ESP32-D0WDQ6?ref=digikey",
-    },
-    {
-      id: "art_chip_image",
-      name: "ESP32-D0WDQ6 Product Photo",
-      type: "custom",
-      filePath: "../ProtoPart/protoparts/esp32-d0wdq6/artifacts/images/ESP32-D0WDQ6_tilted.png",
-      mimeType: "image/png",
-      tags: ["image", "product-photo"],
     },
   ],
 

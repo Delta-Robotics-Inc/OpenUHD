@@ -46,3 +46,22 @@ export { generateVisualization } from "./visualize/cli.js";
 
 // DRC
 export * from "./drc/index.js";
+
+// Systems: canonical paths, exports, stored interface links
+export * from "./system/index.js";
+export * from "./system/checks.js";
+export * from "./system/connectors.js";
+export * from "./system/derive.js";
+export * from "./system/nets.js";
+export * from "./system/wiring.js";
+export * from "./system/geometry.js";
+export * from "./authoring/cad.js";
+export * from "./system/fasteners.js";
+export * from "./system/mass.js";
+export * from "./system/propulsion.js";
+export * from "./system/rotation.js";
+export * from "./system/tools.js";
+export * from "./system/bundle.js";
+
+// Category taxonomy (docs/taxonomy.md)
+export * from "./taxonomy/index.js";

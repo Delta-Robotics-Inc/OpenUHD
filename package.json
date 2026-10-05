@@ -1,6 +1,6 @@
 {
   "name": "@deltarobotics/uhd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Universal Hardware Description — an open, composable description language for multidisciplinary hardware engineering. Module / Interface / Harness primitives.",
   "type": "module",
   "main": "dist/index.js",
@@ -13,24 +13,40 @@
     "./drc": {
       "types": "./dist/drc/index.d.ts",
       "import": "./dist/drc/index.js"
-    }
+    },
+    "./taxonomy": {
+      "types": "./dist/taxonomy/index.d.ts",
+      "import": "./dist/taxonomy/index.js"
+    },
+    "./taxonomy/uhd-taxonomy.json": "./src/taxonomy/uhd-taxonomy.json",
+    "./taxonomy/uhd-taxonomy.schema.json": "./src/taxonomy/uhd-taxonomy.schema.json",
+    "./taxonomy/taxonomy-extension.schema.json": "./src/taxonomy/taxonomy-extension.schema.json",
+    "./library": {
+      "types": "./dist/library/index.d.ts",
+      "import": "./dist/library/index.js"
+    },
+    "./schemas/uhd-library-v1.schema.json": "./schemas/uhd-library-v1.schema.json"
   },
   "files": [
     "dist",
     "src",
-    "library",
+    "schemas",
+    "skills",
     "docs/**/*.md",
+    "!docs/PR-*.md",
     "LICENSE",
     "NOTICE",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "build:library": "tsx scripts/build-library.ts",
-    "prepack": "npm run build && npm run build:library",
+    "build:library": "node -e \"console.log('UHD has no part library: parts come from libraries served over the open library protocol (docs/library-protocol.md).')\"",
+    "build:taxonomy": "tsx scripts/build-taxonomy.ts",
+    "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "build:schemas": "tsx scripts/write-schemas.ts"
   },
   "keywords": [
     "hardware",
@@ -43,7 +59,8 @@
     "eda",
     "schematic",
     "interchange",
-    "open-standard"
+    "open-standard",
+    "taxonomy"
   ],
   "author": "Delta Robotics, Inc.",
   "license": "Apache-2.0",

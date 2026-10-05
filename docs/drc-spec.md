@@ -280,4 +280,3 @@ The DRC is a composer, not a reimplementation. It calls existing functions:
 4. **Partial composition:** if composition is incomplete (some slots resolved, some not), is it `CONFIGURATION_NEEDED` or partially `VALID`?
 5. **Bus topology sub-links:** for a bus harness with 3+ endpoints, evaluate pairwise or as a full bus (all must agree)?
 6. **OR harness behavior:** DRC should validate only the selected branch. Inactive alternatives produce no diagnostics.
-7. **Linear PB-342:** once Linear MCP is authenticated, read PB-342 and incorporate any DRC ideas from the current system that are missing from this spec.

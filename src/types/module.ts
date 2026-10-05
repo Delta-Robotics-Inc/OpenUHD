@@ -1,3 +1,4 @@
+import type { FastenerStackItem } from "./geometry.js";
 import type { InterfaceDef } from "./interface.js";
 import type { HarnessDef } from "./harness.js";
 import type { ArtifactDef } from "./artifact.js";
@@ -8,8 +9,132 @@ import type { TraitDef } from "./trait.js";
 export interface ChildModuleRef {
   id: string;
   moduleDefId: string;
+  /** Instance label, e.g. "Front-left motor". Defaults to the definition name. */
+  name?: string;
+  /**
+   * Identical units represented by this one child (e.g. 4 screws). Defaults
+   * to 1. Use separate children when units connect differently.
+   */
+  quantity?: number;
+  /**
+   * @deprecated Never read by the engine. Use `ModuleDef.exports` to surface
+   * child interfaces on the parent boundary.
+   */
   exposedInterfaces?: string[];
   overrides?: Record<string, unknown>;
+  /**
+   * Rotation sense of this instance, viewed from the output end of
+   * the shaft, i.e. from above on a multirotor. On a motor: the direction it
+   * is configured to turn. On a handed part (a propeller with a `handedness`
+   * trait): the variant fitted, a "cw" prop being the one made to turn
+   * clockwise. On a group or assembly (an arm): applies to every descendant
+   * that does not set its own. Checked by the prop_handedness system rule.
+   */
+  spin?: SpinDirection;
+  /**
+   * Interfaces of this instance left unconnected on purpose, each with why:
+   * a DC jack unused because the product runs from USB, a motor
+   * supply terminal waiting for a battery that is not chosen yet. Like a
+   * no-connect flag on a schematic: the system checks do not report a
+   * marked power input as unpowered (they say it is marked instead), and
+   * tools that plan bring-up do not power it. A link to a marked interface
+   * is a warning (the `unconnected` rule).
+   */
+  unconnected?: UnconnectedInterface[];
+}
+
+/** One interface of an instance that is intentionally left without a link. */
+export interface UnconnectedInterface {
+  /** The interface on the child's definition (a leaf, a composite or an export). */
+  interfaceId: string;
+  /** Why it stays open ("powered from USB; the DC jack is not used"). */
+  reason: string;
+}
+
+/** Clockwise or counter-clockwise, viewed from the shaft's output end. */
+export type SpinDirection = "cw" | "ccw";
+
+/**
+ * What a module definition represents (viewer design D2, D8).
+ * - "module": a part or assembly with its own interfaces (default).
+ * - "group": an organisational module with no interfaces of its own; by
+ *   default it exports every child interface not linked internally.
+ * - "harness": a physical carrier of interface links between modules
+ *   (cable, bus backbone, splice, switch).
+ */
+export type ModuleKind = "module" | "group" | "harness";
+
+/**
+ * One end of an interface link: an interface on the module itself (`self`)
+ * or on one of its children. Replaces the implicit "no childModuleId means
+ * the parent" rule used by harness endpoints.
+ */
+export type EndpointTarget =
+  | { self: true; interfaceId: string }
+  | { child: string; interfaceId: string; profileInstanceId?: string; compose?: LinkComposition };
+
+/**
+ * Link-scoped composition: the end is an ad-hoc connector made on
+ * the child for this link only, because the child has no interface grouping
+ * these pads (solder pads, flying leads). `interfaceId` names it; it must not
+ * be an existing interface of the child.
+ *
+ * Keys are slot ids of the connector at the other end of the link (`p1`,
+ * `p2`, …). Values are interfaces on the child's boundary (`"rail_4v5"`) or
+ * canonical paths below the child (`"fc:uart1_tx"`).
+ */
+export type LinkComposition = Record<string, string>;
+
+/** A child interface surfaced on this module's boundary. */
+export interface InterfaceExport {
+  /** Boundary interface id, unique among this module's interfaces and exports. */
+  id: string;
+  name?: string;
+  from: { child: string; interfaceId: string; profileInstanceId?: string };
+}
+
+/**
+ * A stored mapping between child interfaces (slots or leaves) under a
+ * composed link, e.g. SDA↔SDA or a deliberate phase swap B↔C. Stored child
+ * links take precedence over the ones DRC derives.
+ */
+export interface ChildLink {
+  /** Slot id (or leaf interface id) on the `a` side. */
+  a: string;
+  /** Slot id (or leaf interface id) on the `b` side. */
+  b: string;
+  /** Set by a user to pin a mapping DRC would derive differently. */
+  locked?: boolean;
+}
+
+/**
+ * A direct 1:1 connection between two interfaces (viewer design D1). No
+ * harness is needed; `harness` names the harness module carrying it when
+ * there is one.
+ */
+export interface InterfaceLink {
+  id: string;
+  name?: string;
+  a: EndpointTarget;
+  b: EndpointTarget;
+  childLinks?: ChildLink[];
+  /** Child id of the harness module carrying this link, if any. */
+  harness?: string;
+  /**
+   * How the two interfaces' geometry frames meet in an assembly: `gapMm`
+   * along A's normal (spacers, standoffs, washers), `rotationDeg` about it
+   * (within the frames' symmetry). Absent: faces touch, x-axes aligned.
+   */
+  mate?: { gapMm?: number; rotationDeg?: number };
+}
+
+/** Optional presentation hints. Per-project layout lives outside UHD. */
+export interface DisplayHints {
+  /** Icon name (Lucide), e.g. "cpu", "battery-full". */
+  icon?: string;
+  shape?: "rectangle" | "rounded_rectangle" | "circle";
+  /** Interfaces shown on the outline by default; others are grouped by type. */
+  visibleInterfaces?: string[];
 }
 
 export interface InterfaceGroup {
@@ -39,18 +164,41 @@ export interface NodeGeometry {
 export interface ModuleDef {
   id: string;
   name: string;
+  /** Defaults to "module". */
+  kind?: ModuleKind;
+  /** For kind "harness": how the carried links are arranged. */
+  topology?: "wire" | "bus" | "split" | "or";
+  /**
+   * Fastener harnesses: where each child part sits on the joint the harness
+   * carries (see FastenerStackItem). Lets an assembly place hardware from the
+   * model instead of by hand.
+   */
+  fastenerStack?: FastenerStackItem[];
   description?: string;
   version?: string;
 
   manufacturer?: string;
   part_number?: string;
+  /** Free-form keywords (vendor names, package codes, use cases). Not validated. */
   tags?: string[];
+  /**
+   * Category paths from the UHD taxonomy (docs/taxonomy.md): dotted node ids
+   * such as `sensor.distance` or `actuator.motor.servo`, at any depth, as many
+   * as apply. List the most specific paths; ancestors are implied
+   * (`categoryAncestors`). A library's own nodes sit under `x-<library>`.
+   * Unknown paths are reported as warnings (`validateCategories`, the
+   * `unknown_category` system rule).
+   */
   categories?: string[];
 
   interfaces: InterfaceDef[];
 
   children?: ChildModuleRef[];
   harnesses?: HarnessDef[];
+  /** Child interfaces surfaced on this module's boundary. */
+  exports?: InterfaceExport[];
+  /** Direct interface links between this module and/or its children. */
+  links?: InterfaceLink[];
 
   artifacts?: ArtifactDef[];
 
@@ -65,4 +213,6 @@ export interface ModuleDef {
   traits?: TraitDef[];
 
   geometry?: NodeGeometry;
+
+  display?: DisplayHints;
 }

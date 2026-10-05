@@ -79,6 +79,7 @@ For the full design, read [docs/architecture.md](docs/architecture.md).
 - **Bind leaf interfaces to slots** automatically via capability matching, or manually with explicit overrides.
 - **Express typed parameters** with units, ranges, and tolerances on every interface and module.
 - **Run Design Rule Checks** with tiered validation (protocol → compositional → inferred → manual) — see [docs/drc-spec.md](docs/drc-spec.md).
+- **Categorise modules** with a standard, versioned taxonomy of hardware categories that libraries can extend under their own namespace: see [docs/taxonomy.md](docs/taxonomy.md).
 - **Render visualizations** — built-in ASCII rendering and support for web-based applications.
 - **Interchange between tools** — the same UHD definition feeds visualizers, validators, simulators, and downstream EDA / CAD tooling.
 
@@ -163,6 +164,20 @@ We are actively interested in:
 
 - [docs/architecture.md](docs/architecture.md) — full design rationale, the four primitives, composition model, parameters, traits, and intra- vs. inter-module matching.
 - [docs/drc-spec.md](docs/drc-spec.md) — Design Rule Check tier model and connection-state semantics.
+- [docs/connectors-and-harnesses.md](docs/connectors-and-harnesses.md) — connector composites, link-scoped composition, physical harness wiring and derived links; the part-authoring rule for connectors.
+- [docs/boards-and-nets.md](docs/boards-and-nets.md) — a custom PCB as a module: nets, passives, the board edge, the board checks; package facts and pin designators on components; what stays out of UHD.
+- [docs/library-protocol.md](docs/library-protocol.md) — `uhd-library/v1`, the open HTTP protocol for libraries of parts: discovery, search with facets and taxonomy filters, exact immutable revisions (the `uhd.part-revision/v1` envelope and its digests), dependency closures, content-addressed files, errors, caching and optional bearer auth. The JSON Schema is [schemas/uhd-library-v1.schema.json](schemas/uhd-library-v1.schema.json); `@deltarobotics/uhd/library` has the types, digest helpers and a conformance kit (`runConformance`) any library can run against itself.
+- [skills/uhd-authoring](skills/uhd-authoring/SKILL.md) — an agent skill and reference for writing UHD definitions by hand: interfaces, pin tables, buses, connectors, parameters, traits, package facts, geometry frames and refs.
+
+### What is not in this repository
+
+UHD holds the schema, pure helpers and the test fixtures its own tests use
+(`test/fixtures/`: invented parts and systems, a few small public-part
+examples, and synthetic chips for the board tests). It has no part library:
+libraries are served by their hosts over the open
+[library protocol](docs/library-protocol.md), and any tool can read them.
+Tools that run on UHD (CAD generators, document generators, part research
+and verification workflows) live with the tools built on it.
 
 ---
 

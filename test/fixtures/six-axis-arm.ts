@@ -105,7 +105,7 @@ export const SixAxisArm: ModuleDef = {
   name: "6-Axis Robotic Arm",
   version: "1.0.0",
   tags: ["robot", "arm", "6-axis", "l298n"],
-  categories: ["project.robotics"],
+  categories: ["robotics.educational"],
 
   interfaces: [
     // The arm exposes a power input to the outside

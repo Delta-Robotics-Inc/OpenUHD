@@ -1,3 +1,4 @@
+import type { InterfaceGeometry } from "./geometry.js";
 import type { DomainKind } from "./domain.js";
 import type { Parameter } from "./parameter.js";
 import type { TraitDef } from "./trait.js";
@@ -69,4 +70,7 @@ export interface InterfaceDef {
 
   /** Signal flow: IDs of other interfaces on the same module this bridges to */
   bridgesTo?: string[];
+
+  /** Where the interface is in the module's CAD, and how to find its geometry. */
+  geometry?: InterfaceGeometry;
 }

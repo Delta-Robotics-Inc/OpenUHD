@@ -344,8 +344,8 @@ interface ModuleDef {
   // Metadata
   manufacturer?: string;
   part_number?: string;
-  tags?: string[];
-  categories?: string[];
+  tags?: string[];           // free-form keywords
+  categories?: string[];     // taxonomy paths, e.g. "sensor.distance" (docs/taxonomy.md)
 
   // === The module's own interfaces ===
   // These are the module's "ports" — what it exposes to its parent module
@@ -884,6 +884,10 @@ proto-core/                    # New standalone TypeScript package
 ├── tsconfig.json
 └── vitest.config.ts
 ```
+
+> This was the original layout. UHD keeps no part library: `src/protocols` holds
+> the interface builders, and parts live in a library served over the open
+> library protocol ([library-protocol.md](library-protocol.md)).
 
 TypeScript-first authoring enables:
 - **Inheritance/composition** — `mcu-base.ts` exports base interfaces, specific MCUs spread + extend

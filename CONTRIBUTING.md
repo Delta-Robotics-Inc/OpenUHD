@@ -43,6 +43,10 @@ All tests live under `test/` and are organized by validation phase (protocol mat
 6. Open a PR. Fill in the PR template; link any related issue.
 7. A maintainer will review. Schema-affecting PRs may need iteration before merge.
 
+## Releases and registries
+
+`package.json` names no registry. Maintainers publish releases of `@deltarobotics/uhd` to npmjs. A tool that needs an unreleased build in a registry of its own (a private mirror, a local test registry) packs the package (`npm pack`; `prepack` builds `dist/`) and publishes the tarball with an explicit `npm publish <tarball> --registry <url>`, so nothing in this repository points at it.
+
 ## Schema changes
 
 UHD is heading toward a stable 1.0. Until then, the data model may evolve, but each change should:

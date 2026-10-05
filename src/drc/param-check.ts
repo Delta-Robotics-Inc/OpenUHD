@@ -6,13 +6,24 @@ import type { Diagnostic } from "./types.js";
  * Parameters whose semantics are aggregation (sum of draws vs. a limit), not
  * range overlap — comparing a supply's max_current to a sink's draw as ranges
  * produces false errors. These are evaluated by the capacity engine (Phase 6,
- * scoped rule packs), so the pairwise overlap check skips them.
+ * scoped rule packs) or by a directional pair check in joint-check.ts
+ * (`supply_current_rating`, `linear_motion_capacity`), so the pairwise
+ * overlap check skips them.
  */
 export const CAPACITY_PARAM_IDS = new Set([
   "max_current",
+  "burst_current",
+  "drive_current",
   "current_draw",
+  "min_supply_power",
+  "min_supply_current",
+  "stroke",
+  "force",
+  "linear_speed",
   "max_flow",
   "flow_rate",
+  "load_rating",
+  "coil_current",
 ]);
 
 /** SI-prefix normalization so 40 mA and 0.04 A compare in the same base unit. */
@@ -81,7 +92,7 @@ export function checkPairParameters(
       diagnostics.push({
         severity: "error",
         code: "param_range_disjoint",
-        message: `${pA.id}: ${fmt(nA.range)} ∩ ${fmt(nB.range)} = ∅ ${nA.base}`,
+        message: `${pA.id}: ${fmtParam(pA)} vs ${fmtParam(pB)} (ranges do not overlap)`,
         refs: [pA.id],
       });
     }
@@ -90,6 +101,10 @@ export function checkPairParameters(
   return diagnostics;
 }
 
-function fmt(range: [number, number]): string {
-  return range[0] === range[1] ? `${range[0]}` : `${range[0]}–${range[1]}`;
+/** A parameter in its own unit, e.g. "30.5 mm" or "18–25.2 V". */
+function fmtParam(param: Parameter): string {
+  const range = getEffectiveRange(param);
+  const unit = param.unit === "dimensionless" ? "" : ` ${param.unit}`;
+  if (!range) return `?${unit}`;
+  return range[0] === range[1] ? `${range[0]}${unit}` : `${range[0]}–${range[1]}${unit}`;
 }

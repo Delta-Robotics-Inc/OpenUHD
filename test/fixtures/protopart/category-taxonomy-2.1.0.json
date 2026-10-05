@@ -1,0 +1,392 @@
+{
+  "version": "2.1.0",
+  "description": "Hierarchical category taxonomy for ProtoPart library. Parts declare explicit taxonomy paths in their metadata.taxonomy field. Nodes may carry optional documentation metadata (docs_url, links, agent_notes) and kit nodes carry a kit block that points at a manifest in contribution/kits/. Schema: category-taxonomy.schema.json.",
+  "delimiter": ".",
+  "categories": {
+    "microcontroller": {
+      "name": "Microcontrollers",
+      "description": "Microcontroller development boards and MCU modules",
+      "children": {
+        "arduino": {
+          "name": "Arduino",
+          "description": "Arduino-branded and compatible boards",
+          "docs_url": "https://docs.arduino.cc/",
+          "agent_notes": "5 V logic on classic AVR boards (Uno, Mega, Nano); 3.3 V on R4 Minima/WiFi, Due and Nano 33 families. Check board voltage before pairing with 3.3 V-only sensors."
+        },
+        "raspberry_pi": {
+          "name": "Raspberry Pi",
+          "description": "Raspberry Pi single-board computers and Pico",
+          "docs_url": "https://www.raspberrypi.com/documentation/",
+          "agent_notes": "All Raspberry Pi GPIO is 3.3 V and not 5 V tolerant. Pico exposes 3.3 V GPIO with 3 ADC channels."
+        },
+        "esp32": {
+          "name": "ESP32",
+          "description": "Espressif ESP32 and ESP8266 boards",
+          "docs_url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/",
+          "links": [
+            {
+              "label": "Arduino-ESP32 core",
+              "url": "https://docs.espressif.com/projects/arduino-esp32/en/latest/"
+            }
+          ],
+          "agent_notes": "3.3 V logic, not 5 V tolerant. On classic ESP32, GPIO34-39 are input-only with no pull-ups; GPIO0/2/12/15 are strapping pins; ADC2 is unavailable while Wi-Fi is active."
+        },
+        "teensy": {
+          "name": "Teensy",
+          "description": "PJRC Teensy development boards",
+          "docs_url": "https://www.pjrc.com/teensy/"
+        },
+        "adafruit_mcu": {
+          "name": "Adafruit MCU",
+          "description": "Adafruit Feather, Metro, and other MCU boards",
+          "docs_url": "https://learn.adafruit.com/"
+        },
+        "seeed_mcu": {
+          "name": "Seeed Studio MCU",
+          "description": "Seeed Studio XIAO and other MCU boards",
+          "docs_url": "https://wiki.seeedstudio.com/"
+        },
+        "development_board": {
+          "name": "Development Boards",
+          "description": "Generic development boards not brand-specific"
+        }
+      }
+    },
+    "sensor": {
+      "name": "Sensors",
+      "description": "Sensors and sensor modules",
+      "children": {
+        "environmental": {
+          "name": "Environmental",
+          "description": "Temperature, humidity, pressure, and air quality sensors"
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "Ultrasonic, LiDAR, and time-of-flight distance sensors"
+        },
+        "motion": {
+          "name": "Motion",
+          "description": "IMU, accelerometer, gyroscope, and motion detection sensors"
+        },
+        "gas": {
+          "name": "Gas",
+          "description": "Gas detection and air quality sensors"
+        },
+        "biometric": {
+          "name": "Biometric",
+          "description": "Heart rate, SpO2, and biometric sensors"
+        },
+        "thermal": {
+          "name": "Thermal/IR",
+          "description": "Thermal imaging and infrared sensors"
+        },
+        "touch": {
+          "name": "Touch",
+          "description": "Touch and capacitive sensors"
+        },
+        "encoder": {
+          "name": "Encoders",
+          "description": "Rotary and linear position encoders"
+        },
+        "color": {
+          "name": "Color & Light",
+          "description": "Color sensors and ambient light sensors"
+        },
+        "camera": {
+          "name": "Cameras",
+          "description": "Camera modules and vision sensors (CSI/DVP/FPC camera modules, smart cameras)"
+        }
+      }
+    },
+    "actuator": {
+      "name": "Actuators",
+      "description": "Motors, motor controllers, and actuator systems",
+      "children": {
+        "motor": {
+          "name": "Motors",
+          "description": "Electric motors of all types",
+          "children": {
+            "dc_motor": {
+              "name": "DC Motors",
+              "description": "Brushed DC motors and gearmotors"
+            },
+            "stepper": {
+              "name": "Stepper Motors",
+              "description": "Stepper motors and hybrid steppers"
+            },
+            "servo": {
+              "name": "Servo Motors",
+              "description": "Servo motors for position control"
+            },
+            "brushless": {
+              "name": "Brushless Motors",
+              "description": "Brushless DC motors (BLDC)"
+            }
+          }
+        },
+        "motor_controller": {
+          "name": "Motor Controllers",
+          "description": "Motor drivers and controllers"
+        },
+        "servo_controller": {
+          "name": "Servo Controllers",
+          "description": "PWM servo controllers and drivers"
+        },
+        "linear_actuator": {
+          "name": "Linear Actuators",
+          "description": "Linear motion actuators"
+        }
+      }
+    },
+    "power": {
+      "name": "Power",
+      "description": "Power supplies, batteries, and power management",
+      "children": {
+        "battery": {
+          "name": "Batteries",
+          "description": "Batteries and battery packs"
+        },
+        "regulator": {
+          "name": "Voltage Regulators",
+          "description": "Linear and switching voltage regulators"
+        },
+        "charger": {
+          "name": "Battery Chargers",
+          "description": "Battery charging circuits and chargers"
+        },
+        "pmic": {
+          "name": "Power Management IC",
+          "description": "Power management integrated circuits"
+        },
+        "power_supply": {
+          "name": "Power Supplies",
+          "description": "AC-DC and DC power supplies"
+        }
+      }
+    },
+    "connectivity": {
+      "name": "Connectivity",
+      "description": "Communication modules and network equipment",
+      "children": {
+        "wireless": {
+          "name": "Wireless",
+          "description": "WiFi, Bluetooth, and RF modules",
+          "children": {
+            "antenna": {
+              "name": "Antennas",
+              "description": "RF antennas (WiFi, Bluetooth, video TX, ELRS, GPS, etc.)"
+            }
+          }
+        },
+        "wired": {
+          "name": "Wired",
+          "description": "Ethernet, CAN, RS-485 interfaces"
+        },
+        "networking": {
+          "name": "Networking Equipment",
+          "description": "Switches, routers, media converters"
+        }
+      }
+    },
+    "robotics": {
+      "name": "Robotics",
+      "description": "Robotics competition and educational platforms",
+      "children": {
+        "frc": {
+          "name": "FRC",
+          "description": "FIRST Robotics Competition parts",
+          "docs_url": "https://docs.wpilib.org/"
+        },
+        "ftc": {
+          "name": "FTC",
+          "description": "FIRST Tech Challenge parts",
+          "docs_url": "https://ftc-docs.firstinspires.org/"
+        },
+        "educational": {
+          "name": "Educational",
+          "description": "Educational robotics platforms"
+        },
+        "rc": {
+          "name": "RC Hobby",
+          "description": "RC hobby servos, receivers, and ESCs"
+        }
+      }
+    },
+    "mechanical": {
+      "name": "Mechanical",
+      "description": "Mechanical components and fittings",
+      "children": {
+        "pneumatic": {
+          "name": "Pneumatic",
+          "description": "Pneumatic fittings, valves, and tubing"
+        },
+        "mounting": {
+          "name": "Mounting",
+          "description": "Brackets, standoffs, and mounting hardware"
+        },
+        "adapter": {
+          "name": "Adapters",
+          "description": "Mechanical adapters and couplers"
+        },
+        "structure": {
+          "name": "Structural",
+          "description": "Load-bearing structural members and chassis",
+          "children": {
+            "airframe": {
+              "name": "Airframe",
+              "description": "Drone / aircraft frames and chassis (Mark4-class FPV frames, etc.)"
+            }
+          }
+        },
+        "propeller": {
+          "name": "Propellers",
+          "description": "Propellers for drones, RC aircraft, and marine applications"
+        },
+        "fastener": {
+          "name": "Fasteners",
+          "description": "Screws, nuts, bolts, and fastener assortments",
+          "children": {
+            "kit": {
+              "name": "Fastener Kits",
+              "description": "Pre-assorted hardware kits (e.g. M3 nylon kit for drones)"
+            }
+          }
+        }
+      }
+    },
+    "connector": {
+      "name": "Connectors",
+      "description": "Electrical connectors and cables",
+      "children": {
+        "power_connector": {
+          "name": "Power Connectors",
+          "description": "Power connectors like XT30, XT60, Anderson"
+        },
+        "signal_connector": {
+          "name": "Signal Connectors",
+          "description": "JST, Dupont, and signal connectors"
+        },
+        "cable": {
+          "name": "Cables",
+          "description": "Pre-made cables and cable assemblies"
+        }
+      }
+    },
+    "expansion": {
+      "name": "Expansion Boards",
+      "description": "Shields, HATs, and expansion modules",
+      "children": {
+        "arduino_shield": {
+          "name": "Arduino Shields",
+          "description": "Arduino-compatible shields",
+          "docs_url": "https://docs.arduino.cc/learn/"
+        },
+        "pi_hat": {
+          "name": "Raspberry Pi HATs",
+          "description": "Raspberry Pi HATs and add-ons",
+          "docs_url": "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio-and-the-40-pin-header"
+        },
+        "breakout": {
+          "name": "Breakout Boards",
+          "description": "IC breakout and adapter boards"
+        }
+      }
+    },
+    "component": {
+      "name": "Components",
+      "description": "Discrete and generic electronic components: passives, LEDs, diodes, transistors, switches, bare ICs, displays and audio transducers",
+      "agent_notes": "Generic parts carry class-representative ratings. Pair LEDs with a series resistor; drive relays, motors and buzzers above ~20 mA through a transistor with a flyback diode where inductive.",
+      "children": {
+        "passive": {
+          "name": "Passives",
+          "description": "Resistors, capacitors, inductors and potentiometers",
+          "children": {
+            "resistor": {
+              "name": "Resistors",
+              "description": "Fixed resistors"
+            },
+            "capacitor": {
+              "name": "Capacitors",
+              "description": "Ceramic, electrolytic and film capacitors"
+            },
+            "inductor": {
+              "name": "Inductors",
+              "description": "Inductors and chokes"
+            },
+            "potentiometer": {
+              "name": "Potentiometers",
+              "description": "Rotary and slide potentiometers and trimmers"
+            }
+          }
+        },
+        "led": {
+          "name": "LEDs",
+          "description": "Single-color and RGB LEDs and addressable LED pixels"
+        },
+        "discrete": {
+          "name": "Discrete Semiconductors",
+          "description": "Diodes, transistors, MOSFETs and thyristors",
+          "children": {
+            "diode": {
+              "name": "Diodes",
+              "description": "Rectifier, switching, Schottky and Zener diodes"
+            },
+            "transistor": {
+              "name": "Transistors",
+              "description": "BJTs and small-signal MOSFETs"
+            }
+          }
+        },
+        "switch": {
+          "name": "Switches",
+          "description": "Tactile buttons, slide and toggle switches, tilt and vibration switches, matrix keypads"
+        },
+        "ic": {
+          "name": "Integrated Circuits",
+          "description": "Bare logic, driver and interface ICs (shift registers, H-bridges, port expanders)"
+        },
+        "display": {
+          "name": "Displays",
+          "description": "7-segment, LED bar graph, LED matrix and character LCD displays"
+        },
+        "audio": {
+          "name": "Audio",
+          "description": "Buzzers, speakers, microphones and audio amplifier modules"
+        }
+      }
+    },
+    "kit": {
+      "name": "Kits",
+      "description": "Kits of curated hardware. Select a kit to see the parts included inside it, along with how many of each the kit comes with.",
+      "agent_notes": "When a board is restricted to a kit, search the library with taxonomyPath set to the kit path, stay within the manifest quantities, and cite the kit tutorial for the chosen circuit.",
+      "children": {
+        "freenove_fnk0082": {
+          "name": "Freenove Ultimate Starter Kit for ESP32-S3 (FNK0082)",
+          "description": "Freenove ESP32-S3-WROOM starter kit with breadboard, GPIO extension board, camera, sensors, displays, motors and discretes. Used in intro electrical engineering design classes.",
+          "docs_url": "https://docs.freenove.com/projects/fnk0082/en/latest/",
+          "links": [
+            {
+              "label": "C / Arduino tutorial index",
+              "url": "https://docs.freenove.com/projects/fnk0082/en/latest/fnk0082/codes/C.html"
+            },
+            {
+              "label": "GitHub: code, datasheets, part list",
+              "url": "https://github.com/Freenove/Freenove_Ultimate_Starter_Kit_for_ESP32_S3"
+            },
+            {
+              "label": "Freenove store",
+              "url": "https://store.freenove.com/products/fnk0082"
+            }
+          ],
+          "agent_notes": "This is the Freenove kit to use when a user asks for 'the Freenove kit' / 'Freenove ESP32 kit'. Controller is the Freenove ESP32-S3-WROOM board (ESP32-S3-WROOM-1 N8R8, 3.3 V logic, no DAC; GPIO35-37 are taken by octal PSRAM; the camera connector and microSD slot share some GPIOs), mounted on the GPIO extension board over an 830-point breadboard. Audio output uses PWM or the I2S audio module, not a DAC. The 7-segment displays, LED matrix and RGB LED are common anode. No Wi-Fi/BLE parts are needed beyond the board itself.",
+          "kit": {
+            "sku": "FNK0082",
+            "vendor": "freenove",
+            "controller_part_id": "freenove-esp32-s3-wroom-dev-board",
+            "manifest": "kits/freenove-fnk0082.json"
+          }
+        }
+      }
+    }
+  }
+}

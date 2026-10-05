@@ -19,3 +19,8 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# local Python environments (UHD itself needs none)
+.venv/
+.venv-*/
+__pycache__/
