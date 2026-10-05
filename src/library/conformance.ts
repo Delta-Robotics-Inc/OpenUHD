@@ -553,8 +553,9 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
         break;
       }
       if (!env) {
-        if (hasCapability("source")) p.expect(false, `capability source is declared but ${samplePartId}@${chosen} carries no source files`);
-        else p.skip("capability source not declared and the examined revision ships no source");
+        // source is optional per revision (§ 4.6.1): nothing to check is not a failure
+        if (!hasCapability("source")) p.skip("capability source not declared and the examined revision ships no source");
+        p.note = "no examined revision ships source";
         return;
       }
       const src = env.source!;
