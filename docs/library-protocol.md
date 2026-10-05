@@ -407,6 +407,11 @@ authored:
 | `requires.uhd` | The `@deltarobotics/uhd` versions the source is written against, like an npm `peerDependency`: a version range that MUST admit the envelope's `uhdSchema`. |
 | `requires.typescript` | The TypeScript versions the source is written for, a version range. |
 
+Source files have no `terms` of their own: they go with the definition, so
+a revision that may be given out (4.5) is given out with its source, and a
+library that serves a redistributable view serves the source of the
+revisions in it.
+
 Version ranges use npm's syntax: `^`, `~`, the comparators `<`, `<=`, `>`,
 `>=`, `=`, `x`-ranges, hyphen ranges and `||`. `files`, `entry`, `export`
 and `requires` come together or not at all.
