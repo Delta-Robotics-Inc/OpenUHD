@@ -43,17 +43,24 @@ type Comparator = { op: "<" | "<=" | ">" | ">=" | "="; v: Version };
 
 /** A partial version (`1`, `1.2`, `1.2.x`, `*`) as [major, minor, patch] with undefined for wildcards. */
 function partial(s: string): (number | undefined)[] | undefined {
-  if (s === "*" || s === "x" || s === "X" || s === "") return [undefined, undefined, undefined];
+  if (s === "*" || s === "x" || s === "X") return [undefined, undefined, undefined];
   const m = /^v?(\d+|[xX*])(?:\.(\d+|[xX*]))?(?:\.(\d+|[xX*]))?$/.exec(s);
   if (!m) return undefined;
   const n = (x: string | undefined) => (x === undefined || /^[xX*]$/.test(x) ? undefined : Number(x));
   return [n(m[1]), n(m[2]), n(m[3])];
 }
 
-/** One space-separated set of comparators; undefined when it does not parse. */
+/**
+ * One space-separated set of comparators; undefined when it does not parse.
+ * An empty set (an empty alternative of `||`) and an operator without a
+ * version (`>=`) do not parse: read as "any version", they would admit
+ * everything where the author wrote a mistake.
+ */
 function comparators(set: string): Comparator[] | undefined {
   const out: Comparator[] = [];
-  const s = set.trim();
+  // npm allows space between an operator and its version: `>= 1.2.3`
+  const s = set.trim().replace(/(\^|~|>=|<=|>|<|=)\s+/g, "$1");
+  if (s === "") return undefined;
   // hyphen range: 1.2.3 - 2.3.4
   const hy = /^(\S+)\s+-\s+(\S+)$/.exec(s);
   if (hy) {

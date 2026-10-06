@@ -413,8 +413,10 @@ library that serves a redistributable view serves the source of the
 revisions in it.
 
 Version ranges use npm's syntax: `^`, `~`, the comparators `<`, `<=`, `>`,
-`>=`, `=`, `x`-ranges, hyphen ranges and `||`. `files`, `entry`, `export`
-and `requires` come together or not at all.
+`>=`, `=`, `x`-ranges, hyphen ranges and `||`. A range says what it admits:
+an empty range, an empty alternative of `||` and an operator without a
+version (`>=`) are not ranges; `*` admits every version. `files`, `entry`,
+`export` and `requires` come together or not at all.
 
 The record is outside the envelope digest, so a library MAY add definition
 source to a revision it published without it; once added, it never changes.

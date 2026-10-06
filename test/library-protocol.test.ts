@@ -311,6 +311,15 @@ describe("definition source (§ 4.6)", () => {
     for (const [v, r] of no) expect(satisfiesRange(v, r), `${v} in ${r}`).toBe(false);
     expect(isVersionRange("^0.2.0")).toBe(true);
     expect(isVersionRange("")).toBe(false);
+    // an operator without a version and an empty alternative are mistakes, not "any version"
+    for (const r of [">=", "^", "~", "=", "<", "||", "1.x ||", "|| 1.x", ">=1.2.3 <", " "]) {
+      expect(isVersionRange(r), r).toBe(false);
+      expect(satisfiesRange("9.9.9", r), r).toBe(false);
+    }
+    // space after an operator, as npm reads it
+    expect(satisfiesRange("9.9.9", ">= 1.2.3")).toBe(true);
+    expect(satisfiesRange("1.0.0", ">= 1.2.3 < 2")).toBe(false);
+    expect(satisfiesRange("9.9.9", ">=*")).toBe(true);
     expect(minVersion("^0.2.0")).toBe("0.2.0");
     expect(minVersion(">=5.9 <8 || ^7.0.2")).toBe("5.9.0");
   });
@@ -376,6 +385,8 @@ describe("definition source (§ 4.6)", () => {
     expect(codes({ ...src, entry: "nope.uhd.ts" })).toEqual(["SOURCE_ENTRY_MISSING"]);
     expect(codes({ ...src, files: [...src.files!, { ...src.files![0], path: "parts/acme-gimbal/body.glb" }] })).toEqual(["SOURCE_PATH_DUPLICATE"]);
     expect(codes({ ...src, requires: { uhd: "^0.3.0", typescript: "^5.9.0" } })).toEqual(["SOURCE_REQUIRES"]);
+    expect(codes({ ...src, requires: { uhd: ">=", typescript: "^5.9.0" } })).toEqual(["SOURCE_REQUIRES"]);
+    expect(codes({ ...src, requires: { uhd: "^0.2.0", typescript: "||" } })).toEqual(["SOURCE_REQUIRES"]);
     expect(codes({ repository: "x", entry: "a.ts" })).toEqual(["SOURCE_INCOMPLETE"]);
     // a source file is TypeScript, by its media type as by its path
     const octets = { ...src, files: src.files!.map((f, i) => (i ? f : { ...f, mediaType: "application/octet-stream" })) };
