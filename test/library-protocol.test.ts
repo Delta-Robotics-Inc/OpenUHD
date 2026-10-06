@@ -284,6 +284,18 @@ describe("conformance kit", () => {
     expect(caught.checks.find((c) => c.id === "revision.source")).toMatchObject({ status: "fail", message: expect.stringMatching(/the source evaluates to sha256:\w+, the envelope's definitionDigest is/) });
   });
 
+  it("looks past revisions without source for one that ships it, up to maxSourceParts", async () => {
+    // the examined part and the next one search finds have no source; the third does
+    const lib = await fakeLibrary({ sourceOn: "acme-m2-screw" });
+    const found = await runConformance(lib.url, { fetch: lib.fetch, partId: "acme-gimbal" });
+    expect(found.checks.find((c) => c.id === "revision.source"), formatConformance(found)).toMatchObject({ status: "pass", message: "acme-m2-screw@1: 2 source file(s), not evaluated (no evaluateSource)" });
+    const bad = await fakeLibrary({ sourceOn: "acme-m2-screw", faults: ["source-forbidden"] });
+    const caught = await runConformance(bad.url, { fetch: bad.fetch, partId: "acme-gimbal" });
+    expect(caught.checks.find((c) => c.id === "revision.source"), formatConformance(caught)).toMatchObject({ status: "fail", message: expect.stringMatching(/acme-m2-screw@1: SOURCE_FORBIDDEN/) });
+    const bounded = await runConformance(bad.url, { fetch: bad.fetch, partId: "acme-gimbal", maxSourceParts: 1 });
+    expect(bounded.checks.find((c) => c.id === "revision.source")).toMatchObject({ status: "pass", message: "none of the 2 revision(s) examined ships source" });
+  });
+
   it("never throws when the library is unreachable", async () => {
     const report = await runConformance("http://127.0.0.1:9", { fetch: () => Promise.reject(new Error("connection refused")) });
     expect(report.ok).toBe(false);

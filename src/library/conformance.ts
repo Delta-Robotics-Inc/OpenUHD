@@ -43,6 +43,8 @@ export interface ConformanceOptions {
   maxFiles?: number;
   /** Most further parts whose closures are checked, looking for dependencies. Default 8. */
   maxClosures?: number;
+  /** Most further parts whose revisions are fetched, looking for one that ships definition source. Default 25. */
+  maxSourceParts?: number;
   /**
    * Evaluates a revision's definition source (§ 4.6.3): import `entry` from
    * `files` laid out under one directory, with `@deltarobotics/uhd`
@@ -126,6 +128,7 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
   const maxPages = options.maxPages ?? 25;
   const maxFiles = options.maxFiles ?? 6;
   const maxClosures = options.maxClosures ?? 8;
+  const maxSourceParts = options.maxSourceParts ?? 25;
   const library = libraryUrl.replace(/\/+$/, "");
   const checks: ConformanceCheck[] = [];
   let api = "";
@@ -547,18 +550,18 @@ export async function runConformance(libraryUrl: string, options: ConformanceOpt
     async (p) => {
       // the examined revision first, then the others search found, until one ships source
       let env: PartRevisionEnvelope | undefined = hasDefinitionSource(envelope!.source) ? envelope : undefined;
+      let examined = 1;
       for (const s of all) {
-        if (env || s.partId === samplePartId) continue;
-        if (!hasCapability("source")) break;
-        const rev = s.recommendedRevision ?? s.latestRevision;
-        const r = await get(`/parts/${enc(s.partId)}/revisions/${rev}`);
+        if (env || !hasCapability("source") || examined > maxSourceParts) break;
+        if (s.partId === samplePartId) continue;
+        examined++;
+        const r = await get(`/parts/${enc(s.partId)}/revisions/${s.recommendedRevision ?? s.latestRevision}`);
         if (r.status === 200 && hasDefinitionSource((r.json as PartRevisionEnvelope).source)) env = r.json as PartRevisionEnvelope;
-        break;
       }
       if (!env) {
         // source is optional per revision (§ 4.6.1): nothing to check is not a failure
         if (!hasCapability("source")) p.skip("capability source not declared and the examined revision ships no source");
-        p.note = "no examined revision ships source";
+        p.note = `none of the ${examined} revision(s) examined ships source`;
         return;
       }
       const src = env.source!;

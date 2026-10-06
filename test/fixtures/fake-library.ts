@@ -28,6 +28,8 @@ export interface FakeLibraryOptions {
   token?: string;
   /** Refuse files whose terms are not redistributable (`403 NOT_DISTRIBUTABLE`, § 4.5), as a public view would. */
   withhold?: boolean;
+  /** The part whose latest revision carries the definition source. Default `acme-gimbal`, whose definition the source evaluates to. */
+  sourceOn?: string;
 }
 
 interface Revision {
@@ -115,7 +117,8 @@ export async function fakeLibrary(options: FakeLibraryOptions = {}): Promise<{ u
     sourceBlobs.add(sha256);
     sourceFiles.push({ path, sha256, size: bytes.length, mediaType: "text/typescript" });
   }
-  gimbal2.source = { repository: "acme parts", commit: "0123abc", path: "parts/acme-gimbal.ts", entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL", files: sourceFiles, requires: { uhd: "^0.2.0", typescript: "^5.9.0" } };
+  const withSource = options.sourceOn && options.sourceOn !== "acme-gimbal" ? parts.get(options.sourceOn)!.at(-1)!.env : gimbal2;
+  withSource.source = { repository: "acme parts", commit: "0123abc", path: "parts/acme-gimbal.ts", entry: "acme-gimbal.uhd.ts", export: "ACME_GIMBAL", files: sourceFiles, requires: { uhd: "^0.2.0", typescript: "^5.9.0" } };
   add({ env: gimbal2 });
   add({ env: await seal(oldDef, 1), deprecated: { reason: "end of life", at: "2026-09-20T00:00:00.000Z" } });
   const partDeprecated = new Set(["acme-old-sensor"]);
