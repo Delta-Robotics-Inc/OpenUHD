@@ -500,17 +500,21 @@ evaluator's own process, and
 - cannot generate code from strings (`eval` and the `Function`
   constructor fail, however they are reached);
 - sees none of the evaluator's environment (variables, credentials);
-- is stopped after a time and memory limit, and one closure that fails or
-  hangs fails alone.
+- is stopped after a time limit, a memory limit and a limit on the output
+  it writes, which the evaluator does not keep past that limit;
+- runs apart from every other closure the evaluator evaluates: nothing it
+  does (to shared objects, or to the channel results come back on) changes
+  another closure's result, and one closure that fails or hangs fails
+  alone.
 
 What a confined evaluation returns is data: the export's JSON. Its digest
 is compared with `definitionDigest`, so source that tampers with its own
 result can only fail to match.
 
 `evaluateSourceConfined` in `@deltarobotics/uhd/library/confined` is such
-an evaluator for Node.js: a child process under Node's permission model,
-with code generation from strings disabled, an empty environment and time
-and heap limits. The caller passes the transpiler that erases the types
+an evaluator for Node.js: a child process for each closure, under Node's
+permission model, with code generation from strings disabled, an empty
+environment and time, heap and output limits. The caller passes the transpiler that erases the types
 (step 3); the child imports plain ES modules. Node's permission model does
 not cover the network: the child has no credentials to send and no file
 outside the closure and UHD to read, and the lint keeps `fetch`,

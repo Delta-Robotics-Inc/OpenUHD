@@ -444,4 +444,34 @@ describe("confined evaluation (§ 4.6.3)", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 30_000);
+
+  it("a closure reaches no other closure's result: not by writing one in its name, not through shared globals", async () => {
+    const forged = { id: "forged", interfaces: [], v: "forged" };
+    // the record the runner writes, with another closure's key, then a clean exit before the runner writes its own
+    const record = "\n@@uhd-confined-result@@" + JSON.stringify({ key: "victim", value: forged });
+    const results = await evaluateSourceConfined(
+      [
+        probe("forger", `1`, `console.log(${JSON.stringify(record)});\n${g}.exit(0);`),
+        probe("polluter", `1`, `(Object as any)["proto" + "type"].toJSON = () => ({ ...${JSON.stringify(forged)}, toJSON: undefined });`),
+        probe("victim", `"real"`),
+        // the victim's module, beside its own in the work folder
+        probe("reader", `${g}.getBuiltinModule("node:fs").readFileSync(${g}.argv[2].replace(/s\\d+([\\\\/]p\\.uhd\\.js)$/, "s2$1"), "utf8")`),
+      ],
+      { transpile, concurrency: 1 },
+    );
+    expect(results.map((r) => r.key)).toEqual(["forger", "polluter", "victim", "reader"]);
+    expect(results[3]).toMatchObject({ key: "reader", error: expect.stringMatching(/--allow-fs-read/) });
+    expect(results[2]).toMatchObject({ key: "victim", definition: { id: "p", v: "real" } });
+    // what a closure does to its own result is its own: the digest comparison judges it
+    expect(results[0]).toMatchObject({ key: "forger", definition: forged });
+  }, 30_000);
+
+  it("stops a closure that writes more output than the limit, and keeps none of it", async () => {
+    // 4 MiB each, on stdout and on stderr
+    const write = (to: string) => `for (let i = 0; i < 64; i++) console.${to}("x".repeat(1 << 16));`;
+    const [flooded, errors, quiet] = await evaluateSourceConfined([probe("flood", `1`, write("log")), probe("errors", `1`, write("error")), probe("quiet", `2`, `console.log("a note");`)], { transpile, maxOutputBytes: 1 << 20 });
+    expect(errors).toEqual({ key: "errors", error: "its evaluation wrote more than 1048576 bytes of output" });
+    expect(flooded).toEqual({ key: "flood", error: "its evaluation wrote more than 1048576 bytes of output" });
+    expect(quiet).toMatchObject({ key: "quiet", definition: { v: 2 } });
+  }, 30_000);
 });
