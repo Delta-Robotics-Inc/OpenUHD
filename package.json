@@ -1,6 +1,6 @@
 {
   "name": "@deltarobotics/uhd",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Universal Hardware Description — an open, composable description language for multidisciplinary hardware engineering. Module / Interface / Harness primitives.",
   "type": "module",
   "main": "dist/index.js",

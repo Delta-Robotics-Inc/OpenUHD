@@ -4,7 +4,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/badge/npm-%40deltarobotics%2Fuhd-cb3837.svg)](https://www.npmjs.com/package/@deltarobotics/uhd)
-[![Status: 0.1.0](https://img.shields.io/badge/status-0.1.0%20early-orange.svg)](#project-status)
+[![Status: 0.3.0](https://img.shields.io/badge/status-0.3.0%20early-orange.svg)](#project-status)
 
 ---
 
@@ -150,7 +150,7 @@ If you build on UHD, please open an issue or a discussion so we can link to your
 
 ## Project status
 
-UHD is **early (`0.1.0`)**. The core four-primitive model is stable in shape, but specific schemas may evolve before `1.0`. If you build on UHD today, **pin a specific version**. Schema-affecting changes will be called out in [CHANGELOG.md](CHANGELOG.md) with migration notes.
+UHD is **early (`0.3.0`)**. The core four-primitive model is stable in shape, but specific schemas may evolve before `1.0`. If you build on UHD today, **pin a specific version**. Schema-affecting changes will be called out in [CHANGELOG.md](CHANGELOG.md) with migration notes.
 
 We are actively interested in:
 
