@@ -1,0 +1,128 @@
+# Publishes a release of @deltarobotics/uhd. It runs when a tag v<version> is
+# pushed, and it is the only way a plain version number reaches npmjs:
+# nobody runs `npm publish` from a branch (CONTRIBUTING.md, "Releasing").
+#
+# Publishing works in either of two setups, with no edit here:
+#   - npm trusted publishing: on npmjs, the package names this repository and
+#     this workflow file (release.yml) as its trusted publisher. No secret.
+#   - a repository secret NPM_TOKEN (an npm granular access token that may
+#     publish the package). Used only when it is set.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the GitHub release
+  id-token: write # npm trusted publishing and provenance (OIDC)
+
+# One release at a time per tag, and a release that started is never cancelled.
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Check, publish to npm, GitHub release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the ancestry check below needs history
+
+      # A release is a commit of main. The one exception is a maintenance
+      # branch release/* (a patch of an older release, branched from its tag).
+      - name: The tagged commit is in main or a release/* branch
+        run: |
+          git fetch --no-tags --prune origin '+refs/heads/main:refs/remotes/origin/main' '+refs/heads/release/*:refs/remotes/origin/release/*'
+          if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "$GITHUB_REF_NAME ($GITHUB_SHA) is in main."
+            exit 0
+          fi
+          maintenance="$(git branch --remotes --contains "$GITHUB_SHA" --list 'origin/release/*')"
+          if [ -n "$maintenance" ]; then
+            echo "$GITHUB_REF_NAME ($GITHUB_SHA) is not in main; it is in:"
+            echo "$maintenance"
+            exit 0
+          fi
+          echo "::error::$GITHUB_REF_NAME ($GITHUB_SHA) is neither in main nor in a release/* branch. Merge first, then tag the merged commit."
+          exit 1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted publishing needs npm 11.5.1 or later; Node 22 ships npm 10.
+      - name: npm new enough for trusted publishing
+        run: |
+          npm install --global npm@^11.5.1
+          npm --version
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run type-check
+      - run: npm test
+      - run: npm run build
+
+      - name: The tag, package.json and the changelog agree
+        run: node scripts/check-release.mjs
+
+      # `latest` for the newest release, `next` for a prerelease, and
+      # `release-<major>.<minor>` for a patch of an older line, which must not
+      # take `latest` away from the newest release.
+      - name: Choose the npm dist-tag
+        id: plan
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          # Read npmjs without the token file setup-node wrote: these are public reads.
+          latest="$(npm view --userconfig /dev/null "$name" dist-tags.latest 2>/dev/null || true)"
+          dist_tag="$(node scripts/check-release.mjs --dist-tag "$version" --latest "$latest")"
+          published="$(npm view --userconfig /dev/null "$name@$version" version 2>/dev/null || true)"
+          echo "$name@$version: dist-tag $dist_tag. On npmjs now: latest=${latest:-none}, this version published=${published:+yes}${published:-no}."
+          {
+            echo "name=$name"
+            echo "version=$version"
+            echo "dist_tag=$dist_tag"
+            echo "published=$published"
+          } >> "$GITHUB_OUTPUT"
+
+      # Skipped when the version is already on npmjs, so a failed run can be
+      # re-run to finish the GitHub release.
+      - name: Publish to npm
+        if: steps.plan.outputs.published != steps.plan.outputs.version
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DIST_TAG: ${{ steps.plan.outputs.dist_tag }}
+        run: |
+          # Only a secret that is set becomes the token. An empty
+          # NODE_AUTH_TOKEN would stand in for the identity that trusted
+          # publishing gets from OIDC, so it is never exported empty.
+          if [ -n "$NPM_TOKEN" ]; then
+            export NODE_AUTH_TOKEN="$NPM_TOKEN"
+            echo "Publishing with the NPM_TOKEN secret."
+          else
+            echo "No NPM_TOKEN secret: publishing with npm trusted publishing (OIDC)."
+          fi
+          npm publish --access public --provenance --tag "$DIST_TAG"
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIST_TAG: ${{ steps.plan.outputs.dist_tag }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "The GitHub release $GITHUB_REF_NAME exists; nothing to create (a re-run of this workflow)."
+            exit 0
+          fi
+          node scripts/check-release.mjs --notes "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
+          # GitHub's "Latest" follows npm's `latest`; a prerelease is marked as one.
+          case "$DIST_TAG" in
+            latest) flags=(--latest) ;;
+            next) flags=(--prerelease) ;;
+            *) flags=(--latest=false) ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md" "${flags[@]}"
