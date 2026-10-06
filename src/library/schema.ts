@@ -7,6 +7,7 @@
  * Only the keywords `validateShape` (json-schema.ts) implements are used, so
  * the conformance kit checks responses against this very schema.
  */
+import { SOURCE_MEDIA_TYPE } from "./source.js";
 import { ARTIFACT_ROLES, DISTRIBUTION_CLASSES, ENVELOPE_SCHEMA, ERROR_CODES, EVIDENCE_KINDS, LIBRARY_PROTOCOL } from "./types.js";
 
 const str = { type: "string" } as const;
@@ -190,7 +191,7 @@ export const LIBRARY_SCHEMA = {
     sourceFile: {
       type: "object",
       required: ["path", "sha256", "size", "mediaType"],
-      properties: { path: { type: "string", pattern: "\\.ts$" }, sha256, size: count, mediaType: nonEmpty },
+      properties: { path: { type: "string", pattern: "\\.ts$" }, sha256, size: count, mediaType: { const: SOURCE_MEDIA_TYPE } },
       additionalProperties: false,
     },
     sourceRequirements: {

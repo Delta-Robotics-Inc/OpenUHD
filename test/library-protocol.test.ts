@@ -377,6 +377,11 @@ describe("definition source (§ 4.6)", () => {
     expect(codes({ ...src, files: [...src.files!, { ...src.files![0], path: "parts/acme-gimbal/body.glb" }] })).toEqual(["SOURCE_PATH_DUPLICATE"]);
     expect(codes({ ...src, requires: { uhd: "^0.3.0", typescript: "^5.9.0" } })).toEqual(["SOURCE_REQUIRES"]);
     expect(codes({ repository: "x", entry: "a.ts" })).toEqual(["SOURCE_INCOMPLETE"]);
+    // a source file is TypeScript, by its media type as by its path
+    const octets = { ...src, files: src.files!.map((f, i) => (i ? f : { ...f, mediaType: "application/octet-stream" })) };
+    expect(codes(octets)).toEqual(["SOURCE_FILE"]);
+    expect(validateShape("envelope", { ...env, source: octets })[0]).toMatchObject({ at: "/source/files/0/mediaType" });
+    expect((await envelopeProblems({ ...env, source: octets })).map((p) => p.code)).toEqual(["SOURCE_FILE"]);
     // outside the digest: a revision without source and with it are the same revision
     expect(await envelopeDigest({ ...env, source: undefined })).toBe(env.digest);
     expect(validateShape("envelope", { ...env, source: { ...src, files: [{ ...src.files![0], path: "a.js" }] } })[0]).toMatchObject({ at: "/source/files/0/path" });

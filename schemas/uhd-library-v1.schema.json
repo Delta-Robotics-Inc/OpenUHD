@@ -666,8 +666,7 @@
           "minimum": 0
         },
         "mediaType": {
-          "type": "string",
-          "minLength": 1
+          "const": "text/typescript"
         }
       },
       "additionalProperties": false

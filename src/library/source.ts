@@ -528,7 +528,8 @@ export const hasDefinitionSource = (source: RevisionSource | undefined): source 
 /**
  * The rules of § 4.6.1 that the JSON Schema cannot state, for an envelope
  * whose `source` carries files: the entry among them, paths normalised,
- * unique and apart from the revision's other files, requirements that parse
+ * unique and apart from the revision's other files, each file a TypeScript
+ * blob (`text/typescript`), requirements that parse
  * and admit the envelope's `uhdSchema`. The lint needs the bytes
  * (`lintSource`); evaluating needs a TypeScript loader.
  */
@@ -552,6 +553,7 @@ export function sourceProblems(env: Pick<PartRevisionEnvelope, "uhdSchema" | "ar
     seen.add(f.path);
     if (!HEX64.test(f.sha256 ?? "")) add("SOURCE_FILE", `${f.path}: sha256 must be 64 lower-case hex digits`);
     if (!Number.isInteger(f.size) || f.size < 0) add("SOURCE_FILE", `${f.path}: size must be a non-negative integer`);
+    if (f.mediaType !== SOURCE_MEDIA_TYPE) add("SOURCE_FILE", `${f.path}: mediaType must be ${SOURCE_MEDIA_TYPE}`);
   }
   if (typeof s.entry === "string" && !seen.has(s.entry)) add("SOURCE_ENTRY_MISSING", `source.entry ${s.entry} is not among source.files`);
   const req = s.requires;
