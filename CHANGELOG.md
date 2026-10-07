@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.3.0] — 2026-10-06
+## [0.2.1] — 2026-10-06
 
-0.2.0 was tagged but never published to npmjs, so 0.3.0 is the first release on npmjs after 0.1.0.
+0.2.0 was tagged but never published to npmjs, so 0.2.1 is the first release on npmjs after 0.1.0. It is numbered as a patch because libraries already hold definitions written against 0.2.0 with this code, and their `^0.2.0` requirement must keep admitting it; it adds far more than a patch usually does.
 
 ### Added
 
