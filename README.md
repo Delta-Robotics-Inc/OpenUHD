@@ -4,7 +4,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/badge/npm-%40deltarobotics%2Fuhd-cb3837.svg)](https://www.npmjs.com/package/@deltarobotics/uhd)
-[![Status: 0.1.0](https://img.shields.io/badge/status-0.1.0%20early-orange.svg)](#project-status)
+[![Status: 0.2.1](https://img.shields.io/badge/status-0.2.1%20early-orange.svg)](#project-status)
 
 ---
 
@@ -150,7 +150,7 @@ If you build on UHD, please open an issue or a discussion so we can link to your
 
 ## Project status
 
-UHD is **early (`0.1.0`)**. The core four-primitive model is stable in shape, but specific schemas may evolve before `1.0`. If you build on UHD today, **pin a specific version**. Schema-affecting changes will be called out in [CHANGELOG.md](CHANGELOG.md) with migration notes.
+UHD is **early (`0.2.1`)**. The core four-primitive model is stable in shape, but specific schemas may evolve before `1.0`. If you build on UHD today, **pin a specific version**. Schema-affecting changes will be called out in [CHANGELOG.md](CHANGELOG.md) with migration notes.
 
 We are actively interested in:
 
@@ -166,7 +166,7 @@ We are actively interested in:
 - [docs/drc-spec.md](docs/drc-spec.md) — Design Rule Check tier model and connection-state semantics.
 - [docs/connectors-and-harnesses.md](docs/connectors-and-harnesses.md) — connector composites, link-scoped composition, physical harness wiring and derived links; the part-authoring rule for connectors.
 - [docs/boards-and-nets.md](docs/boards-and-nets.md) — a custom PCB as a module: nets, passives, the board edge, the board checks; package facts and pin designators on components; what stays out of UHD.
-- [docs/library-protocol.md](docs/library-protocol.md) — `uhd-library/v1`, the open HTTP protocol for libraries of parts: discovery, search with facets and taxonomy filters, exact immutable revisions (the `uhd.part-revision/v1` envelope and its digests), dependency closures, content-addressed files, errors, caching and optional bearer auth. The JSON Schema is [schemas/uhd-library-v1.schema.json](schemas/uhd-library-v1.schema.json); `@deltarobotics/uhd/library` has the types, digest helpers and a conformance kit (`runConformance`) any library can run against itself.
+- [docs/library-protocol.md](docs/library-protocol.md) — `uhd-library/v1`, the open HTTP protocol for libraries of parts: discovery, search with facets and taxonomy filters, exact immutable revisions (the `uhd.part-revision/v1` envelope and its digests), dependency closures, content-addressed files, definition source (the `.uhd.ts` a part is written in, checked by evaluating to its definition digest), errors, caching and optional bearer auth. The JSON Schema is [schemas/uhd-library-v1.schema.json](schemas/uhd-library-v1.schema.json); `@deltarobotics/uhd/library` has the types, digest helpers and a conformance kit (`runConformance`) any library can run against itself, and `@deltarobotics/uhd/library/confined` evaluates definition source in a confined child process (`evaluateSourceConfined`).
 - [skills/uhd-authoring](skills/uhd-authoring/SKILL.md) — an agent skill and reference for writing UHD definitions by hand: interfaces, pin tables, buses, connectors, parameters, traits, package facts, geometry frames and refs.
 
 ### What is not in this repository

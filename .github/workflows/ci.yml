@@ -1,10 +1,12 @@
-# Tests, type-check and build for UHD on its own.
+# Tests, type-check and build for UHD on its own, and the checks that keep
+# every commit releasable: the version agrees with the changelog, and the
+# package packs. Publishing is release.yml's, from a tag.
 name: CI
 
 on:
   pull_request:
   push:
-    branches: ["mark/**"]
+    branches: [main, "release/**", "mark/**"]
   workflow_dispatch:
 
 permissions:
@@ -24,6 +26,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the release check reads the release tags
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -32,3 +36,7 @@ jobs:
       - run: npm run type-check
       - run: npm test
       - run: npm run build
+      - name: The version agrees with the changelog
+        run: node scripts/check-release.mjs --pr
+      - name: The package packs
+        run: npm pack --dry-run

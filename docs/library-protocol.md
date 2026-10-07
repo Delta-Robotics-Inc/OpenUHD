@@ -1,6 +1,7 @@
 # UHD library protocol: `uhd-library/v1`
 
-Status: draft 2, 2026-10-03 (draft 2 adds file terms, section 4.5). Types,
+Status: draft 3, 2026-10-05 (draft 2 added file terms, section 4.5; draft 3
+adds definition source, section 4.6). Types,
 the JSON Schema and a conformance kit: `src/library/` (`@deltarobotics/uhd/library`), `schemas/uhd-library-v1.schema.json`.
 Tests: `test/library-protocol.test.ts`.
 
@@ -67,7 +68,7 @@ credentials.
   "envelopeSchemas": ["uhd.part-revision/v1"],   // required: envelope `schema` values this library serves
   "uhdSchema": { "min": "0.2.0", "below": "0.3.0" },  // required: UHD versions the definitions are written against
   "taxonomy": { "version": "2.1.0", "namespaces": ["acme"] },  // or null when parts carry no taxonomy paths
-  "capabilities": ["facets", "taxonomy", "definition"],
+  "capabilities": ["facets", "taxonomy", "definition", "source"],
   "auth": { "read": "none" },                // or { "read": "bearer", "realm": "…", "documentation": "https://…" }
   "limits": { "defaultPageSize": 50, "maxPageSize": 200 }
 }
@@ -258,7 +259,16 @@ The JSON Schema is `#/$defs/envelope` in `schemas/uhd-library-v1.schema.json`.
   ],
   "derivedFrom": { "partId": "acme-gimbal", "revision": 1 },   // null only for a first revision made from scratch
   "digest": "sha256:…",                    // 4.2
-  "source": { "repository": "…", "commit": "…", "path": "…", "dirty": false },   // optional, outside the digest
+  "source": {                              // optional, outside the digest
+    "repository": "…", "commit": "…", "path": "library/parts/acme-gimbal.ts", "dirty": false,
+    "entry": "acme-gimbal.uhd.ts",         // definition source (4.6): the module the definition is evaluated from
+    "export": "ACME_GIMBAL",
+    "files": [
+      { "path": "acme-gimbal.uhd.ts", "sha256": "…", "size": 2210, "mediaType": "text/typescript" },
+      { "path": "cad/artifacts.ts", "sha256": "…", "size": 7034, "mediaType": "text/typescript" }
+    ],
+    "requires": { "uhd": "^0.2.0", "typescript": "^5.9.0" }
+  },
   "publisher": { "name": "acme" },         // optional, outside the digest
   "createdAt": "2026-09-30T12:00:00Z"      // outside the digest
 }
@@ -291,7 +301,8 @@ The JSON Schema is `#/$defs/envelope` in `schemas/uhd-library-v1.schema.json`.
   variant). Every revision after the first names one; a part's own revision
   it derives from is lower than this one.
 - **`source`**, **`publisher`**, **`createdAt`** record the publish, not the
-  content (4.2).
+  content (4.2). `source` names where the definition was authored and, when
+  the library ships it, carries the **definition source** (4.6).
 
 No other top-level members are allowed: an envelope with an unknown member is
 invalid.
@@ -374,6 +385,148 @@ Rules:
 `isRedistributable(file)` and `revisionDistribution(envelope)` in
 `@deltarobotics/uhd/library` apply these rules.
 
+### 4.6 Definition source
+
+A library MAY ship the source a definition is written in, the way an npm
+package ships its code: a TypeScript module that evaluates to the
+definition, with every library module it imports. A consumer can then keep
+the source in its project, read it, and build on it, while the definition
+(and its `definitionDigest`) stays the contract: consumers that do not run
+TypeScript, and other libraries, use the definition as before.
+
+#### 4.6.1 The record
+
+Definition source is carried in `source`, beside where the definition was
+authored:
+
+| Member | Meaning |
+| --- | --- |
+| `files` | The **source closure**: the entry and every module it imports, apart from UHD itself. Each is a file like any other of the revision (`path`, `sha256`, `size`, `mediaType` `text/typescript`), served from `/blobs/{sha256}`. Paths are normalised (4.1), end in `.ts`, and are unique across `artifacts`, `evidence` and `files`, so a consumer can lay every file of the revision out under one directory. |
+| `entry` | The `path` of the module the definition is evaluated from; one of `files`. A library SHOULD name it `<partId>.uhd.ts`. |
+| `export` | The entry's export that holds the definition (`default` for the default export). |
+| `requires.uhd` | The `@deltarobotics/uhd` versions the source is written against, like an npm `peerDependency`: a version range that MUST admit the envelope's `uhdSchema`. |
+| `requires.typescript` | The TypeScript versions the source is written for, a version range. |
+
+Source files have no `terms` of their own: they go with the definition, so
+a revision that may be given out (4.5) is given out with its source, and a
+library that serves a redistributable view serves the source of the
+revisions in it.
+
+Version ranges use npm's syntax: `^`, `~`, the comparators `<`, `<=`, `>`,
+`>=`, `=`, `x`-ranges, hyphen ranges and `||`. A range says what it admits:
+an empty range, an empty alternative of `||` and an operator without a
+version (`>=`) are not ranges; `*` admits every version. `files`, `entry`,
+`export` and `requires` come together or not at all.
+
+The record is outside the envelope digest, so a library MAY add definition
+source to a revision it published without it; once added, it never changes.
+Revisions keep their digests, and pinned consumers are unaffected. A client
+MUST NOT depend on a revision having source; without it, it uses the
+definition.
+
+#### 4.6.2 What source may do
+
+Library source is code that runs in the consumer's project, the same risk as
+a package's code. This protocol limits it to declarative definition code,
+and a library MUST NOT publish source that breaks these rules; a client
+SHOULD check them before writing source into a project, and MUST check them
+before evaluating it:
+
+- Every file is a TypeScript ES module (`.ts`, not a declaration file).
+- Imports are static `import … from` and `export … from` declarations (and
+  `import "…"`). A specifier is either `@deltarobotics/uhd` or a relative path
+  that names another file of the closure (`./series.js` names `series.ts`,
+  as TypeScript resolves it; `./x` names `x.ts` or `x/index.ts`). No other
+  package, no `node:` module, no URL.
+- No dynamic `import()`, `import.meta`, `require`, import attributes, `with`
+  or `debugger`, and no `this` outside a class body.
+- None of these names as a variable (they may appear as property names and
+  object keys, and in strings and comments): `process`, `require`, `module`,
+  `exports`, `__dirname`, `__filename`, `eval`, `Function`,
+  `AsyncFunction`, `GeneratorFunction`, `globalThis`, `global`, `window`,
+  `self`, `Deno`, `Bun`, `fetch`, `XMLHttpRequest`, `WebSocket`,
+  `EventSource`, `navigator`, `importScripts`, `Worker`, `SharedWorker`,
+  `WebAssembly`, `SharedArrayBuffer`, `Atomics`, `setTimeout`,
+  `setInterval`, `setImmediate`, `queueMicrotask`, `clearTimeout`,
+  `clearInterval`, `localStorage`, `sessionStorage`, `indexedDB`, `caches`,
+  `document`, `crypto`, `performance`, `Reflect`, `Proxy`.
+- None of these names at all, as a variable, a property, an object key or
+  the whole value of a string or template text (escapes decoded), since a
+  computed member access (`f["constructor"]`) reaches a property by its
+  string: `constructor`, `prototype`, `__proto__`, `__defineGetter__`,
+  `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`,
+  `getPrototypeOf`, `setPrototypeOf`, `getOwnPropertyDescriptor`,
+  `getOwnPropertyDescriptors`, `defineProperty`, `defineProperties`.
+- The closure is exact: every file is reached from `entry` through these
+  imports.
+
+These are lexical rules, judged from the text (`lintSource` in
+`@deltarobotics/uhd/library` applies them). They keep library source to
+declarative definition code, but they are a gate, not a sandbox: a key
+computed at run time (`f["constr" + "uctor"]`) is beyond any lexical rule.
+So a consumer MUST NOT evaluate source it did not write in its own process.
+It evaluates it **confined** (4.6.3).
+
+#### 4.6.3 Source evaluates to the definition digest
+
+The source **evaluates to the definition digest** when:
+
+1. every file of `files` is laid out at its `path` under one directory, its
+   bytes checked against `sha256` and `size`, and the lint of 4.6.2 passes;
+2. `@deltarobotics/uhd` resolves to a version that `requires.uhd` admits;
+3. `entry` is imported as an ES module, with its types erased (by a
+   TypeScript that `requires.typescript` admits, or a loader that strips
+   types the same way);
+4. the value of its export `export` is converted to JSON as
+   `JSON.stringify` converts it (functions and `undefined` members dropped);
+5. the SHA-256 of that JSON's definition file form (4.2) is
+   `definitionDigest`.
+
+Only source that evaluates to the definition digest is the revision's
+source. A client that keeps source in a project records the revision's
+`definitionDigest` with it and checks this again whenever it loads the
+source: source that no longer evaluates to the digest (edited, or evaluated
+with a UHD whose builders changed) is no longer that revision, and the
+client says so rather than treating it as the library's part. A library
+MUST check this for every revision whose source it publishes.
+
+Evaluation of source the evaluator did not write (a library checking what
+a publisher submits, a client vendoring or loading a library's source, a
+conformance run) is **confined**: the source runs apart from the
+evaluator's own process, and
+
+- can read only the closure's files and the UHD package's modules, and
+  write no file;
+- cannot start processes or threads, load native code or attach a
+  debugger;
+- cannot generate code from strings (`eval` and the `Function`
+  constructor fail, however they are reached);
+- sees none of the evaluator's environment (variables, credentials);
+- is stopped after a time limit, a memory limit and a limit on the output
+  it writes, which the evaluator does not keep past that limit;
+- runs apart from every other closure the evaluator evaluates: nothing it
+  does (to shared objects, or to the channel results come back on) changes
+  another closure's result, and one closure that fails or hangs fails
+  alone.
+
+What a confined evaluation returns is data: the export's JSON. Its digest
+is compared with `definitionDigest`, so source that tampers with its own
+result can only fail to match.
+
+`evaluateSourceConfined` in `@deltarobotics/uhd/library/confined` is such
+an evaluator for Node.js: a child process for each closure, under Node's
+permission model, with code generation from strings disabled, an empty
+environment and time, heap and output limits. The caller passes the transpiler that erases the types
+(step 3); the child imports plain ES modules. Node's permission model does
+not cover the network: the child has no credentials to send and no file
+outside the closure and UHD to read, and the lint keeps `fetch`,
+`globalThis` and `process` out of reach of the source.
+
+`evaluatedDefinition` and `evaluatedDefinitionDigest` in
+`@deltarobotics/uhd/library` do steps 4 and 5 for a module namespace;
+`sourceProblems` checks the record, `lintSource` the files, and
+`satisfiesRange` the requirements.
+
 ## 5. Errors
 
 Every error response has a JSON body:
@@ -447,7 +600,11 @@ protocol's checks against a running library: discovery, the shapes of every
 response against the JSON Schema, search filters, pagination with cursors,
 facets, part detail and revision lists, envelope digests and `ETag`,
 closures, blob addresses and HEAD (a file refused with `403
-NOT_DISTRIBUTABLE` is accepted when its terms are not `redistributable`), error shapes and codes, and bearer
+NOT_DISTRIBUTABLE` is accepted when its terms are not `redistributable`),
+definition source (the record, each file by SHA-256, and the lint of 4.6.2;
+with the `evaluateSource` option, which imports the closure with the
+caller's TypeScript loader, also that it evaluates to the definition
+digest), error shapes and codes, and bearer
 authentication when the library asks for it. It reads only; it never
 publishes. It reports each check as pass, fail, warn (a SHOULD not met) or
 skip (an optional capability the library does not declare), and `ok` when
