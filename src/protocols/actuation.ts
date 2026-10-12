@@ -4,6 +4,8 @@ import { linkSlots, type LinkSignal } from "./link.js";
 import {
   coilCurrentA,
   coilResistanceOhm,
+  driveFrequencyHz,
+  driveVoltageVpp,
   irCarrierKHz,
   lineFrequencyHz,
   maxCurrentA,
@@ -15,7 +17,8 @@ import {
 import type { SignalRef } from "./signal.js";
 
 /**
- * Infrared remote links, AC mains power, and switched inductive loads.
+ * Infrared remote links, AC mains power, switched inductive loads, and
+ * piezo loads.
  */
 
 const volts = (v: number | [number, number]): Parameter => (Array.isArray(v) ? voltageRangeV(v[0], v[1]) : voltageV(v));
@@ -299,6 +302,164 @@ export function InductiveDrive(config: InductiveDriveConfig): InterfaceDef[] {
       parameters: [volts(config.voltageV), maxCurrentA(config.maxCurrentA)],
       ...(slots.length ? { slots: slots as SlotDef[], profiles: [{ id: `${id}_default`, label: "+ / -", default_active: true, bindings }] } : {}),
       traits: [{ type: "inductive_drive", params }],
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Piezo loads
+// ---------------------------------------------------------------------------
+
+/** What the piezo element does. */
+export type PiezoKind = "atomizer" | "pump" | "buzzer" | "ultrasonic_transducer" | "actuator" | "other";
+
+/** The two terminals of one piezo element, or of one driver output. */
+export interface PiezoTerminals {
+  plus: CoilTerminal;
+  minus: CoilTerminal;
+}
+
+const terminalSets = (id: string, builder: string, terminals: PiezoTerminals | PiezoTerminals[] | undefined, count: number | undefined, what: string): { sets: PiezoTerminals[]; count: number } => {
+  const sets = terminals === undefined ? [] : Array.isArray(terminals) ? terminals : [terminals];
+  const n = count ?? (sets.length || 1);
+  if (!Number.isInteger(n) || n < 1) throw new Error(`${builder} ${id}: ${what} is a whole number, 1 or more`);
+  if (sets.length && sets.length !== n) throw new Error(`${builder} ${id}: ${sets.length} terminal pair(s) for ${n} ${what}`);
+  return { sets, count: n };
+};
+
+export interface PiezoLoadConfig {
+  /** Interface id. Defaults to "piezo". */
+  id?: string;
+  name?: string;
+  kind: PiezoKind;
+  /**
+   * The terminals of each element, where they are modelled: pins, or leads
+   * with no designator (`{ id, name }`). One pair for a disc or a buzzer; a
+   * list, in the order the elements are driven, for a part with several (a
+   * two-chamber pump).
+   */
+  terminals?: PiezoTerminals | PiezoTerminals[];
+  /** Number of elements driven separately. Defaults to the number of terminal pairs, or 1. */
+  elements?: number;
+  /** Frequency it is driven at, in Hz: a resonant transducer's resonance band, a pump's operating range. Left out when the source states none (then not compared). */
+  frequencyHz?: number | [number, number];
+  /** Peak-to-peak drive voltage: the most the element takes, or the range it is driven in (its top is the rating). */
+  driveVoltageVpp: number | [number, number];
+  /** Rated drive power in W, as the source states it. */
+  powerW?: number;
+  /** Static capacitance of one element in nF. */
+  capacitanceNf?: number;
+  /** Impedance at resonance in Ω, as the source states it (often a maximum). */
+  impedanceOhm?: number;
+  /** The element must not be reversed (a pump actuator with a positive and a negative lead). */
+  polarized?: boolean;
+  note?: string;
+  exposed?: boolean;
+  defaultActive?: boolean;
+}
+
+/**
+ * A piezo element driven with an alternating or pulsed voltage (an
+ * ultrasonic mesh atomiser disc, an ultrasonic transducer, a buzzer disc, a
+ * piezo micropump's actuators): protocol `piezo_drive`, role `load`, with
+ * `drive_frequency` (Hz) and `drive_voltage` (V peak to peak), slots
+ * `element_plus` and `element_minus` (`element1_plus`, … when it has
+ * several elements). It pairs with a `PiezoDrive` output; the frequency
+ * bands are compared as parameters, and the pair check `piezo_drive`
+ * compares the driver's voltage with the element's rating and the number
+ * of outputs with the number of elements.
+ */
+export function PiezoLoad(config: PiezoLoadConfig): InterfaceDef[] {
+  const id = config.id ?? "piezo";
+  const { sets, count } = terminalSets(id, "PiezoLoad", config.terminals, config.elements, "element(s)");
+  const leaf: ProtocolDef[] = [{ type: "piezo_terminal", roles: ["terminal"] }];
+  const signals: LinkSignal[] = [];
+  const generated: InterfaceDef[] = [];
+  sets.forEach((t, i) => {
+    const n = count > 1 ? `${i + 1}` : "";
+    const plus = terminalRef(t.plus, `${id}_element${n}_plus`, `Element ${n ? `${n} ` : ""}+`, "piezo_plus", leaf, generated);
+    const minus = terminalRef(t.minus, `${id}_element${n}_minus`, `Element ${n ? `${n} ` : ""}-`, "piezo_minus", leaf, generated);
+    signals.push({ slot: `element${n}_plus`, label: `${n}+`, ref: plus, leaf, capability: "piezo_plus", role: "element_plus", required: true });
+    signals.push({ slot: `element${n}_minus`, label: `${n}-`, ref: minus, leaf, capability: "piezo_minus", role: "element_minus", required: true });
+  });
+  const { slots, bindings } = linkSlots(id, "piezo_drive", signals, generated);
+  const parameters: Parameter[] = [];
+  if (config.frequencyHz !== undefined) parameters.push(driveFrequencyHz(config.frequencyHz));
+  parameters.push(driveVoltageVpp(config.driveVoltageVpp));
+  const params = clean({ kind: config.kind, elements: count, power_w: config.powerW, capacitance_nf: config.capacitanceNf, impedance_ohm: config.impedanceOhm, polarized: config.polarized, note: config.note });
+  return [
+    ...generated,
+    {
+      id,
+      name: config.name ?? `Piezo ${config.kind.replace(/_/g, " ")}`,
+      domain: "electrical",
+      exposed: config.exposed ?? true,
+      default_active: config.defaultActive ?? true,
+      protocols: [{ type: "piezo_drive", roles: ["load"] }],
+      capabilities: ["piezo_load", `piezo_${config.kind}`],
+      parameters,
+      ...(slots.length ? { slots: slots as SlotDef[], profiles: [{ id: `${id}_default`, label: "+ / -", default_active: true, bindings }] } : {}),
+      traits: [{ type: "piezo_load", params }],
+    },
+  ];
+}
+
+export interface PiezoDriveConfig {
+  /** Interface id. Defaults to "piezo_drive". */
+  id?: string;
+  name?: string;
+  /** The terminals of each output, where the pinout is modelled: one pair, or a list in output order (output 1 drives element 1). */
+  terminals?: PiezoTerminals | PiezoTerminals[];
+  /** Number of outputs, each driving one element. Defaults to the number of terminal pairs, or 1. */
+  outputs?: number;
+  /** Output frequency in Hz: fixed, or the range it can be set to or tracks. */
+  frequencyHz: number | [number, number];
+  /** Peak-to-peak output voltage: fixed, or the range it can be set to. */
+  driveVoltageVpp: number | [number, number];
+  /** Most power it delivers to the load in W, as the source states it. */
+  powerW?: number;
+  /** Output waveform. */
+  waveform?: "sine" | "square" | "arbitrary";
+  note?: string;
+  exposed?: boolean;
+  defaultActive?: boolean;
+}
+
+/**
+ * An output that drives a piezo element (an atomiser driver board's
+ * transducer socket, a piezo pump driver's actuator outputs, a buzzer
+ * driver): protocol `piezo_drive`, role `driver`, with `drive_frequency`
+ * and `drive_voltage`, slots `to_plus` and `to_minus` (`to1_plus`, … when
+ * it has several outputs).
+ */
+export function PiezoDrive(config: PiezoDriveConfig): InterfaceDef[] {
+  const id = config.id ?? "piezo_drive";
+  const { sets, count } = terminalSets(id, "PiezoDrive", config.terminals, config.outputs, "output(s)");
+  const leaf: ProtocolDef[] = [{ type: "piezo_terminal", roles: ["terminal"] }];
+  const signals: LinkSignal[] = [];
+  const generated: InterfaceDef[] = [];
+  sets.forEach((t, i) => {
+    const n = count > 1 ? `${i + 1}` : "";
+    const plus = terminalRef(t.plus, `${id}_to${n}_plus`, `Output ${n ? `${n} ` : ""}+`, "piezo_drive_plus", leaf, generated);
+    const minus = terminalRef(t.minus, `${id}_to${n}_minus`, `Output ${n ? `${n} ` : ""}-`, "piezo_drive_minus", leaf, generated);
+    signals.push({ slot: `to${n}_plus`, label: `${n}+`, ref: plus, leaf, capability: "piezo_drive_plus", role: "drive_plus", required: true });
+    signals.push({ slot: `to${n}_minus`, label: `${n}-`, ref: minus, leaf, capability: "piezo_drive_minus", role: "drive_minus", required: true });
+  });
+  const { slots, bindings } = linkSlots(id, "piezo_drive", signals, generated);
+  const params = clean({ outputs: count, power_w: config.powerW, waveform: config.waveform, note: config.note });
+  return [
+    ...generated,
+    {
+      id,
+      name: config.name ?? "Piezo driver output",
+      domain: "electrical",
+      exposed: config.exposed ?? true,
+      default_active: config.defaultActive ?? true,
+      protocols: [{ type: "piezo_drive", roles: ["driver"] }],
+      capabilities: ["piezo_drive"],
+      parameters: [driveFrequencyHz(config.frequencyHz), driveVoltageVpp(config.driveVoltageVpp)],
+      ...(slots.length ? { slots: slots as SlotDef[], profiles: [{ id: `${id}_default`, label: "+ / -", default_active: true, bindings }] } : {}),
+      traits: [{ type: "piezo_drive", params }],
     },
   ];
 }

@@ -3,8 +3,9 @@ import type { Diagnostic } from "./types.js";
 import { getEffectiveRange } from "../parameters/range.js";
 
 /**
- * Pair checks for serial links, IR remotes, AC mains and coils
- * (`protocols/serial.ts`, `protocols/actuation.ts`):
+ * Pair checks for serial links, IR remotes, AC mains, coils, piezo loads
+ * and battery charge ports (`protocols/serial.ts`,
+ * `protocols/actuation.ts`, `protocols/battery.ts`):
  *
  * - `rs485_duplex` (error): a half-duplex port against a full-duplex one.
  * - `rs232_null_modem` (warning): two DTEs or two DCEs: the link needs a
@@ -22,15 +23,25 @@ import { getEffectiveRange } from "../parameters/range.js";
  *   (error); nothing that clamps the turn-off spike (warning, or info when
  *   the channel does not say); a polarised coil on a channel that reverses
  *   (warning).
+ * - `piezo_drive`: a driver whose lowest output voltage is above what the
+ *   element takes (error), or that can be set above it (warning); an element
+ *   count the driver has too few outputs for (error).
+ * - `battery_charge`: no chemistry in common (error); a charge voltage above
+ *   the battery's (error), one that can be set above it (warning) or one
+ *   below it (warning: the battery is not filled); a charge current above
+ *   what the battery accepts (error), or one that can be set above it
+ *   (warning).
  */
 export function checkPairSignals(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
-  return [...rs485(a, b), ...rs232(a, b), ...ppm(a, b), ...irLink(a, b), ...acPower(a, b), ...inductive(a, b)];
+  return [...rs485(a, b), ...rs232(a, b), ...ppm(a, b), ...irLink(a, b), ...acPower(a, b), ...inductive(a, b), ...piezo(a, b), ...batteryCharge(a, b)];
 }
 
 const SIGNAL_CHECKED: Record<string, string[]> = {
   ppm: ["channel_count"],
   ir_remote: ["ir_carrier", "wavelength"],
   inductive_load: ["coil_current", "coil_resistance"],
+  piezo_drive: ["drive_voltage"],
+  battery_charge: ["charge_voltage", "charge_current"],
 };
 
 /** Parameters `checkPairSignals` compares itself for this pair, which the overlap check skips. */
@@ -161,5 +172,50 @@ function inductive(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
   if (!loadClamps && tl.suppression === "none" && td.flyback === "none") out.push(diag("warning", "inductive_load", "neither the coil nor the channel has a flyback diode or clamp: add one across the coil", drv, load));
   else if (!loadClamps && td.flyback === undefined && td.switching !== "relay") out.push(diag("info", "inductive_load", "the channel does not say whether it clamps the coil's turn-off spike", drv, load));
   if (tl.polarized === true && td.switching === "h_bridge") out.push(diag("warning", "inductive_load", "the channel can reverse the coil, whose suppression is polarised: drive it one way only", drv, load));
+  return out;
+}
+
+const EPS = 1e-9;
+
+function piezo(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
+  if (!speaks(a, "piezo_drive") || !speaks(b, "piezo_drive")) return [];
+  const p = pick(a, b, "piezo_drive", "driver");
+  if (!p || !rolesOf(p[1], "piezo_drive").has("load")) return [];
+  const [drv, load] = p;
+  const out: Diagnostic[] = [];
+  const [vd, vl] = [range(drv, "drive_voltage"), range(load, "drive_voltage")];
+  if (vd && vl) {
+    if (vd[0] > vl[1] + EPS) out.push(diag("error", "piezo_drive", `the driver puts out ${fmtR(vd)} V peak to peak; the element takes ${fmt(vl[1])}`, drv, load));
+    else if (vd[1] > vl[1] + EPS) out.push(diag("warning", "piezo_drive", `the driver can put out ${fmt(vd[1])} V peak to peak; the element takes ${fmt(vl[1])}: set the amplitude no higher`, drv, load));
+  }
+  const [outputs, elements] = [trait(drv, "piezo_drive").outputs, trait(load, "piezo_load").elements];
+  if (typeof outputs === "number" && typeof elements === "number" && elements > outputs) {
+    out.push(diag("error", "piezo_drive", `the load has ${elements} elements driven separately; the driver has ${outputs} output${outputs === 1 ? "" : "s"}`, drv, load));
+  }
+  return out;
+}
+
+function batteryCharge(a: InterfaceDef, b: InterfaceDef): Diagnostic[] {
+  if (!speaks(a, "battery_charge") || !speaks(b, "battery_charge")) return [];
+  const p = pick(a, b, "battery_charge", "charger");
+  if (!p || !rolesOf(p[1], "battery_charge").has("battery")) return [];
+  const [chg, bat] = p;
+  const out: Diagnostic[] = [];
+  const [cc, cb] = [trait(chg, "battery_charge").chemistry, trait(bat, "battery_charge").chemistry];
+  if (Array.isArray(cc) && Array.isArray(cb) && cc.length && cb.length) {
+    const norm = (s: unknown) => String(s).replace(/[\s_-]/g, "").toLowerCase();
+    if (!cb.some((x) => cc.map(norm).includes(norm(x)))) out.push(diag("error", "battery_charge", `the charger charges ${cc.join(", ")}; the battery is ${cb.join(", ")}`, chg, bat));
+  }
+  const [vc, vb] = [range(chg, "charge_voltage"), range(bat, "charge_voltage")];
+  if (vc && vb) {
+    if (vc[0] > vb[1] + EPS) out.push(diag("error", "battery_charge", `the charger charges to ${fmtR(vc)} V; the battery's charge voltage is ${fmtR(vb)} V`, chg, bat));
+    else if (vc[1] > vb[1] + EPS) out.push(diag("warning", "battery_charge", `the charger can be set to ${fmt(vc[1])} V; the battery's charge voltage is ${fmtR(vb)} V: set it no higher`, chg, bat));
+    else if (vc[1] < vb[0] - EPS) out.push(diag("warning", "battery_charge", `the charger charges to ${fmtR(vc)} V; the battery's charge voltage is ${fmtR(vb)} V, so it is not charged fully`, chg, bat));
+  }
+  const [ic, ib] = [range(chg, "charge_current"), range(bat, "charge_current")];
+  if (ic && ib) {
+    if (ic[0] > ib[1] + EPS) out.push(diag("error", "battery_charge", `the charger charges at ${fmtR(ic)} A; the battery accepts ${fmt(ib[1])} A`, chg, bat));
+    else if (ic[1] > ib[1] + EPS) out.push(diag("warning", "battery_charge", `the charger can charge at ${fmt(ic[1])} A; the battery accepts ${fmt(ib[1])} A: set the charge current no higher`, chg, bat));
+  }
   return out;
 }

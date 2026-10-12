@@ -388,3 +388,90 @@ is rated for (error); a coil without suppression on a channel without a
 flyback clamp (warning), or a channel that does not say (info); a polarised
 coil (its diode or LED) on an H-bridge channel that can reverse it
 (warning). The voltage is compared as a parameter.
+
+## Piezo loads
+
+`PiezoLoad({ kind, terminals, elements, frequencyHz, driveVoltageVpp,
+powerW, capacitanceNf, impedanceOhm, polarized })`
+(`src/protocols/actuation.ts`): a piezo element driven with an alternating
+or pulsed voltage: an ultrasonic mesh atomiser disc, an ultrasonic
+transducer, a buzzer disc, the actuators of a piezo micropump (`kind`
+`atomizer`, `ultrasonic_transducer`, `buzzer`, `pump`, `actuator`,
+`other`). Protocol `piezo_drive`, role `load`. Parameters `drive_frequency`
+(Hz: a resonant transducer states its resonance band, a pump its operating
+range; left out when the source states none) and `drive_voltage` (V peak to
+peak, unit `Vpp`: the most the element takes; of a range, the top is the
+rating). The trait `piezo_load` has `kind`, `elements`, `power_w`,
+`capacitance_nf`, `impedance_ohm` and `polarized`.
+
+`PiezoDrive({ terminals, outputs, frequencyHz, driveVoltageVpp, powerW,
+waveform })`: the output that drives it (an atomiser driver board's
+transducer socket, a pump driver's actuator outputs), role `driver`, with
+the frequency and the peak-to-peak voltage it puts out, each fixed or the
+range it can be set to. The trait `piezo_drive` has `outputs`, `power_w`
+and `waveform` (`sine`, `square`, `arbitrary`).
+
+A terminal is a pin, the id of a leaf declared already, or a lead the
+source does not number (`{ id, name }`), as for coils. One pair of terminals
+gives the slots `element_plus` and `element_minus` on a load and `to_plus`
+and `to_minus` on a driver. A part with several elements driven separately
+(a two-chamber pump, a driver with two outputs) gives a list of pairs, and
+the slots are numbered (`element1_plus`, `to1_plus`, …): output 1 drives
+element 1. A port without terminals states `elements` or `outputs` and
+pairs as a whole. Generated leaves speak `piezo_terminal`, which pairs with
+nothing by itself.
+
+The frequencies are compared as parameters: a driver whose output lies
+outside the element's band is `param_range_disjoint`, which is also what
+keeps a pump driver from an atomiser disc. The pair check `piezo_drive`: a
+driver whose lowest output voltage is above what the element takes
+(error), or that can be set above it (warning: set the amplitude no
+higher); a load with more elements than the driver has outputs (error).
+Power, capacitance and impedance are stated, not compared.
+
+```ts
+// an atomiser disc on two leads, and the board that drives it
+PiezoLoad({ kind: "atomizer", terminals: { plus: { id: "lead_a" }, minus: { id: "lead_b" } }, frequencyHz: [100e3, 116e3], driveVoltageVpp: 70, powerW: 2 })
+PiezoDrive({ id: "transducer", terminals: { plus: { pin: "J2-1" }, minus: { pin: "J2-2" } }, frequencyHz: 108e3, driveVoltageVpp: 60 })
+```
+
+## Battery charge ports
+
+`ChargePort({ role, plus, minus, chemistry, cells, chargeVoltageV,
+chargeCurrentA, capacitymAh })` (`src/protocols/battery.ts`): the terminals
+a charger charges a battery through (role `charger`), and a cell or pack on
+the terminals it is charged through (role `battery`). Protocol
+`battery_charge`, separate from DC `power`: there a battery's terminal and
+a charger's battery pin are both supply outputs, which never pair. A part
+keeps its `PowerOut` for the loads it supplies and adds the charge port on
+the same leaves (`plus` and `minus` name them, or declare pins inline: a
+`power` output and a ground).
+
+Parameters: `cell_count` (cells in series: a battery's count, the count or
+range a charger takes), `charge_voltage` (V, for the whole pack: what a
+charger charges to, or the range it can be set to; a battery's charge
+voltage), `charge_current` (A: what a charger charges at, or the range it
+can be set to; the most a battery accepts; left out when the source states
+none) and, on a battery, `capacity` (mAh). The trait `battery_charge` has
+`chemistry`: one for a battery, every one a charger charges (`li_ion`,
+`li_polymer`, `lifepo4`, `nimh`, `nicd`, `lead_acid`, or another as the
+source names it).
+
+Cell counts are compared as parameters. The pair check `battery_charge`:
+no chemistry in common (error); a charge voltage above the battery's
+(error), one that can be set above it (warning: set it no higher), or one
+below it (warning: the battery is not charged fully); a charge current
+above what the battery accepts (error), or one that can be set above it
+(warning). A regulation tolerance is not a settable range: state the
+nominal charge voltage.
+
+On a board where a cell shares a net with its charger, the cell's positive
+terminal is declared as a `power` leaf with both roles, `input` and
+`output` ([boards and nets](boards-and-nets.md): a storage terminal is not
+a second driver of the rail), and the charge port binds that leaf.
+
+```ts
+// a charger's BAT pin and ground, and a cell on its two leads
+ChargePort({ role: "charger", plus: "bat", minus: "gnd", chemistry: ["li_ion", "li_polymer"], cells: 1, chargeVoltageV: 4.2, chargeCurrentA: [0.1, 1] })
+ChargePort({ role: "battery", plus: "cell_pos", minus: "cell_neg", chemistry: "li_polymer", cells: 1, chargeVoltageV: 4.2, chargeCurrentA: 1, capacitymAh: 2000 })
+```
