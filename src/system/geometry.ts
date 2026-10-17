@@ -258,9 +258,10 @@ export function resolveLeafEndpoint(
     if (own) return { path, def: owner, iface: own };
     const ex = resolveExports(owner, lookup).find((e) => e.id === interfaceId);
     if (!ex) return undefined;
+    interfaceId = ex.from.interfaceId;
+    if (!("child" in ex.from)) continue; // a net port: the net is on the same module
     path = [...path, ex.from.child];
     owner = ex.childDef;
-    interfaceId = ex.from.interfaceId;
   }
   return undefined;
 }

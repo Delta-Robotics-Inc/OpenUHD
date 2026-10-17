@@ -36,8 +36,19 @@
  * the wrong counterpart is `harness_wiring`, a required one wired elsewhere
  * or not at all is `bus_incomplete`.
  *
+ * Net ports: a child's net that the child exports as a net port, joined
+ * here to a net (or to a pin), is followed into the child, and through its
+ * own children's net ports at any depth. Every pin on the child's net is
+ * then on the conductor, so a supply or bus whose ends sit on both sides of
+ * the child's edge is derived once, here: a regulator on this module with
+ * the loads inside the child, a controller here with a sensor inside it. A
+ * pair whose conductor stays inside one child (two of its pins on its own
+ * net) is the child's own and is derived when the child is checked. Without
+ * net ports, derivation stops at each module's edge as before.
+ *
  * Scope: harnesses that are children of the linking module, and connector
- * links and nets stored on it. Parts may be nested (a pad on stack/fc).
+ * links and nets stored on it, and the nets of children behind net ports.
+ * Parts may be nested (a pad on stack/fc).
  */
 import type { InterfaceDef } from "../types/interface.js";
 import type { InterfaceLink, ModuleDef } from "../types/module.js";
@@ -56,6 +67,7 @@ import {
 import { positionPairs, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { isNet, NET_PROTOCOL } from "../protocols/net.js";
+import { membershipEnds, netPortReach, physicalPath } from "./nets.js";
 import { matchProtocols } from "../matching/protocol-match.js";
 import { getEffectiveRange } from "../parameters/range.js";
 
@@ -71,6 +83,8 @@ interface Edge {
   link?: string;
   harness?: string;
   net?: string;
+  /** A membership stored inside a child, reached through its net port. */
+  inner?: true;
 }
 
 const pathKey = (p: string[]) => p.join("/");
@@ -214,16 +228,45 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
 
   // 1b. net memberships: each pin is joined to its net's node
   const rails = new Set<string>();
-  for (const r of stored) {
-    if (r.protocol !== NET_PROTOCOL || r.state === "incompatible") continue;
-    const [net, member] = isNet(r.a.iface) ? [r.a, r.b] : [r.b, r.a];
-    if (isPower(member.iface) || net.iface.parameters?.some((p) => p.id === "voltage")) rails.add(net.iface.id);
-    const key = `${pathKey(member.ownerPath)}#${member.iface.id}`;
+  const hasVoltage = (iface: InterfaceDef) => Boolean(iface.parameters?.some((p) => p.id === "voltage"));
+  const terminalFor = (end: ResolvedEndpoint) => {
+    const key = `${pathKey(end.ownerPath)}#${end.iface.id}`;
     if (!terminals.has(key)) {
-      terminals.set(key, { key, owner: member.owner, ownerPath: member.ownerPath, leaf: member.iface });
+      terminals.set(key, { key, owner: end.owner, ownerPath: end.ownerPath, leaf: end.iface });
       order.push(key);
     }
-    addEdge(key, `net#${net.iface.id}`, { link: r.link.id, net: net.iface.id });
+    return key;
+  };
+  // a child's net behind its net port: one node, joined to every pin the port reaches inside the child
+  const nestedNets = new Map<string, InterfaceDef>();
+  const portNode = (port: ResolvedEndpoint) => {
+    const node = `net#${physicalPath(port)}`;
+    if (edges.has(node)) return node;
+    edges.set(node, []);
+    const reached = netPortReach(port, lookup);
+    for (const n of reached.nets) nestedNets.set(n.path, n.iface);
+    if (reached.nets.some((n) => hasVoltage(n.iface)) || reached.members.some((m) => isPower(m.end.iface))) for (const n of reached.nets) rails.add(n.path);
+    for (const m of reached.members) addEdge(node, terminalFor(m.end), { link: m.link, net: m.through![m.through!.length - 1], inner: true });
+    return node;
+  };
+  for (const r of stored) {
+    if (r.protocol !== NET_PROTOCOL || r.state === "incompatible") continue;
+    const ends = membershipEnds(r);
+    if ("port" in ends) {
+      // a pin linked straight to a child's net port
+      const node = portNode(ends.port);
+      if (isPower(ends.member.iface)) rails.add(physicalPath(ends.port));
+      addEdge(terminalFor(ends.member), node, { link: r.link.id, net: physicalPath(ends.port) });
+      continue;
+    }
+    const { net, member } = ends;
+    if (member.netPort) {
+      if (hasVoltage(net.iface)) rails.add(net.iface.id);
+      addEdge(`net#${net.iface.id}`, portNode(member), { link: r.link.id, net: net.iface.id });
+      continue;
+    }
+    if (isPower(member.iface) || hasVoltage(net.iface)) rails.add(net.iface.id);
+    addEdge(terminalFor(member), `net#${net.iface.id}`, { link: r.link.id, net: net.iface.id });
   }
 
   // 2. conductors inside harness children
@@ -253,14 +296,18 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
   }
   const pairs = new Map<string, Pair>();
   for (const start of order) {
-    const walk = (node: string, seen: Set<string>, links: Set<string>, harnesses: Set<string>, nets: Set<string>) => {
+    // `outside`: the conductor so far runs through something of this module, not only a child's own net
+    const walk = (node: string, seen: Set<string>, links: Set<string>, harnesses: Set<string>, nets: Set<string>, outside: boolean) => {
       for (const e of edges.get(node) ?? []) {
         if (seen.has(e.to)) continue;
         const nextLinks = e.link ? new Set([...links, e.link]) : links;
         const nextHarnesses = e.harness ? new Set([...harnesses, e.harness]) : harnesses;
         const nextNets = e.net ? new Set([...nets, e.net]) : nets;
+        const nextOutside = outside || !e.inner;
         const t = terminals.get(e.to);
         if (t) {
+          // two pins on a child's own net pair in the child's check, not here
+          if (!nextOutside) continue;
           let a = terminals.get(start)!;
           let b = t;
           if (pathKey(a.ownerPath) === pathKey(b.ownerPath)) {
@@ -275,10 +322,10 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
           if (!pairs.has(key)) pairs.set(key, { a, b, links: nextLinks, harnesses: nextHarnesses, nets: nextNets });
           continue;
         }
-        walk(e.to, new Set([...seen, e.to]), nextLinks, nextHarnesses, nextNets);
+        walk(e.to, new Set([...seen, e.to]), nextLinks, nextHarnesses, nextNets, nextOutside);
       }
     };
-    walk(start, new Set([start]), new Set(), new Set(), new Set());
+    walk(start, new Set([start]), new Set(), new Set(), new Set(), false);
   }
 
   // 4. group by module pair, lift pads to functional interfaces, validate
@@ -320,7 +367,7 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
         b: targetFor(b),
         ...(harnesses.length ? { harness: harnesses[0] } : {}),
       };
-      const result = { ...validateResolved(link, atRail(def, nets, a), atRail(def, nets, b)), a, b };
+      const result = { ...validateResolved(link, atRail(def, nets, a, nestedNets), atRail(def, nets, b, nestedNets)), a, b };
       const wired: LinkChildResult[] = wires
         .filter((w) => w.a.leaf.id !== fa.id || w.b.leaf.id !== fb.id)
         .map((w) => ({
@@ -357,13 +404,15 @@ const isPassive = (i: InterfaceDef) => i.protocols.length > 0 && i.protocols.eve
  * output's own range (outside it, the output keeps its range and the link
  * fails as it should). Used for validation only.
  */
-function atRail(def: ModuleDef, nets: string[], end: ResolvedEndpoint): ResolvedEndpoint {
+function atRail(def: ModuleDef, nets: string[], end: ResolvedEndpoint, nested: Map<string, InterfaceDef> = new Map()): ResolvedEndpoint {
   if (!isPowerOutput(end.iface)) return end;
   const own = end.iface.parameters?.find((p) => p.id === "voltage");
   const ownRange = own && getEffectiveRange(own);
   if (!own || !ownRange) return end;
-  for (const id of nets) {
-    const net = def.interfaces.find((i) => i.id === id && isNet(i));
+  // this module's own nets first, then the children's nets behind net ports
+  const ordered = [...nets.filter((id) => !nested.has(id)), ...nets.filter((id) => nested.has(id))];
+  for (const id of ordered) {
+    const net = def.interfaces.find((i) => i.id === id && isNet(i)) ?? nested.get(id);
     const v = net?.parameters?.find((p) => p.id === "voltage");
     const rail = v && getEffectiveRange(v);
     if (!rail || rail[0] < ownRange[0] || rail[1] > ownRange[1]) continue;

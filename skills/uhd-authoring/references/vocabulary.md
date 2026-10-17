@@ -65,6 +65,8 @@ peer.
 | `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
 | `Passive` | module with `passive: terminal` leaves | Resistors, capacitors, inductors, ferrite beads |
 | `Net` / `netLinks` | `net: node` on a board | Board nets (boards only, never on a part; see docs/boards-and-nets.md) |
+| Net port (`exports: [{ id: "vdd", from: { self: true, interfaceId: "vdd" } }]`) | the module's own `Net` on its edge | A sub-circuit's supply, ground or bus net that continues outside it; the parent joins the port to its own net like a pin, and its checks see the pins inside |
+| `kind: "board"` | (module kind) | A module that is one PCB: tools keep a child board whole and open up sub-circuits |
 
 ## Canonical parameter ids
 

@@ -30,6 +30,8 @@ import type { SuppliedFromTrait } from "../types/trait.js";
 import {
   boundaryInterfaces,
   formatPath,
+  isNetPort,
+  resolveEndpoint,
   type LinkResult,
   type ModuleLookup,
   type ResolvedEndpoint,
@@ -40,7 +42,7 @@ import { connectorTypes, slotBindings } from "./connectors.js";
 import { isConnector } from "../protocols/connector.js";
 import { i2cAddresses } from "../protocols/i2c.js";
 import { systemLinks } from "./derive.js";
-import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netRule, netVoltage, partWiringRule } from "./nets.js";
+import { busPullupRule, designEnvelopeRule, passiveOverrideRule, edgeFedPaths, isNetMembership, moduleNets, netPortReach, netRule, netVoltage, partWiringRule, physicalPath, type BoardNet } from "./nets.js";
 import { UHD_TAXONOMY, validateCategories, type Taxonomy } from "../taxonomy/index.js";
 
 export type SystemRule =
@@ -461,15 +463,17 @@ function unconnectedRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLook
 function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
   const linked = linkedPaths(links);
   // inputs on a board's edge are supplied by whatever the board plugs into
-  const fed = edgeFedPaths(def, lookup, moduleNets(def, links));
+  const nets = moduleNets(def, links, lookup);
+  const fed = edgeFedPaths(def, lookup, nets);
   const out: SystemDiagnostic[] = [];
   for (const ref of def.children ?? []) {
     const child = lookup(ref.moduleDefId);
     if (!child || child.kind === "harness") continue;
     // an export of a sub-module's interface is linked when the interface it exports is: a derived
     // link lifted to a composite of the exporting part carries the pad as `<child>/<part>:<pad>`
-    const exported = new Map((child.exports ?? []).map((e) => [e.id, `${ref.id}/${e.from.child}:${e.from.interfaceId}`]));
+    const exported = new Map((child.exports ?? []).flatMap((e) => ("child" in e.from ? [[e.id, `${ref.id}/${e.from.child}:${e.from.interfaceId}`] as const] : [])));
     const marks = unconnectedOf(ref);
+    out.push(...unpoweredNetPorts(def, ref, child, nets, fed, marks, lookup));
     for (const iface of boundaryInterfaces(child, lookup)) {
       if (!hasRole(iface, "power", "input")) continue;
       const path = `${ref.id}:${iface.id}`;
@@ -491,6 +495,55 @@ function unpoweredRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup
         refs: [path],
       });
     }
+  }
+  return out;
+}
+
+/**
+ * A child's net port that carries power inputs inside the child (a sensor
+ * module's VDD net) is the child's supply edge: the child's own check takes
+ * it as fed, so it is checked here, where it is joined. It is reported when
+ * nothing on the conductor supplies it: no power output, inside or out, and
+ * no pin this module's own edge feeds.
+ */
+function unpoweredNetPorts(
+  def: ModuleDef,
+  ref: { id: string; unconnected?: { interfaceId: string; reason: string }[] },
+  child: ModuleDef,
+  nets: BoardNet[],
+  fed: Set<string>,
+  marks: Map<string, string>,
+  lookup: ModuleLookup,
+): SystemDiagnostic[] {
+  const out: SystemDiagnostic[] = [];
+  for (const ex of child.exports ?? []) {
+    if (!isNetPort(ex)) continue;
+    const key = formatPath([ref.id], ex.from.interfaceId);
+    const host = nets.find((n) => n.ports?.some((p) => physicalPath(p.end) === key));
+    let members = host?.members;
+    if (!members) {
+      try {
+        members = netPortReach(resolveEndpoint(def, { child: ref.id, interfaceId: ex.id }, lookup), lookup).members;
+      } catch {
+        continue;
+      }
+    }
+    const inputs = members.filter((m) => hasRole(m.end.iface, "power", "input") && !hasRole(m.end.iface, "power", "output") && !hasRole(m.end.iface, "power", "ground"));
+    if (!inputs.length) continue;
+    if (members.some((m) => hasRole(m.end.iface, "power", "output") || fed.has(m.path))) continue;
+    const path = `${ref.id}:${ex.id}`;
+    const name = ex.name ?? child.interfaces.find((i) => i.id === ex.from.interfaceId)?.name ?? ex.id;
+    if (marks.has(ex.id)) {
+      out.push({ id: `unpowered:${path}`, rule: "unpowered", severity: "info", message: `${path} (${name}) is unconnected on purpose: ${marks.get(ex.id)}.`, refs: [path] });
+      continue;
+    }
+    out.push({
+      id: `unpowered:${path}`,
+      rule: "unpowered",
+      severity: "warning",
+      message: `${path} (${name}) is a net port feeding ${inputs.map((m) => m.path).join(", ")}, but no supply reaches it${host ? ` on net ${host.iface.id}` : ""}.`,
+      refs: [path, ...inputs.map((m) => m.path)],
+    });
   }
   return out;
 }
@@ -615,8 +668,8 @@ export function checkSystem(def: ModuleDef, lookup: ModuleLookup, options: Check
     ...harnessConnectorRule(def, links, lookup),
     ...propHandednessRule(def, lookup),
     ...fastenerTorqueRule(def, lookup),
-    ...netRule(def, links),
-    ...partWiringRule(def, links),
+    ...netRule(def, links, lookup),
+    ...partWiringRule(def, links, lookup),
     ...busPullupRule(def, links, lookup),
     ...designEnvelopeRule(def),
     ...passiveOverrideRule(def, lookup),

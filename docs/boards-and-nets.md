@@ -3,10 +3,12 @@
 Status: implemented. Code: `src/protocols/net.ts` (`Net`,
 `netLinks`, `isNet`), `src/protocols/passive.ts` (`Passive`),
 `src/protocols/package.ts` (`pinTable`, `partPackage`,
-`pinDesignatorIssues`), `src/system/nets.ts` (membership links and the net
-rules), `src/system/derive.ts` (functional links over nets). Tests:
-`test/boards.test.ts`, `test/packages.test.ts`; example board:
-`test/fixtures/imu-board.ts` (synthetic parts in `test/fixtures/parts/`).
+`pinDesignatorIssues`), `src/system/nets.ts` (membership links, net ports
+and the net rules), `src/system/derive.ts` (functional links over nets).
+Tests: `test/boards.test.ts`, `test/net-ports.test.ts`,
+`test/packages.test.ts`; example boards: `test/fixtures/imu-board.ts` and
+the same board drawn with a sub-circuit, `test/fixtures/nested-board.ts`
+(synthetic parts in `test/fixtures/parts/`).
 
 ## Why
 
@@ -94,21 +96,127 @@ export const IMU_BOARD = defineModule({
 ```
 
 Membership link ids are `<net>.<child>.<interface>` (`v3v3.u2.pin_7`).
-Members are leaf pins: a membership link to a composite (`u2:i2c`) is
-invalid (`net_member_composite`), and so are a net joined to another net
-(`net_to_net`) and a link to a child's own net (`net_not_own`).
+Members are leaf pins, or a child's net port (below): a membership link to a
+composite (`u2:i2c`) is invalid (`net_member_composite`), and so are a net
+joined to another net (`net_to_net`) and a link to a child's net that the
+child does not export as a net port (`net_not_own`).
 
 ### The board edge is exports
 
 What plugs into the board from outside is an export of a component's
-interface: the VIN pad, a connector composite, a debug port. Export ids share
-the board's namespace with its nets, so an export cannot reuse a net's id
+interface: the VIN pad, a connector composite, a debug port, or one of the
+board's own nets (a net port, below). Export ids share the board's namespace
+with its nets, so an export of a child's interface cannot reuse a net's id
 (`defineModule` rejects it).
 
 A system that contains the board links to its exports like any other
-module's. The board's nets stay inside it: derivation is per module, so check
-the board itself with `checkSystem(board, lookup)`, and the system with
+module's. The board's nets stay inside it, except those it exports as net
+ports: derivation is per module, so check the board itself with
+`checkSystem(board, lookup)`, and the system with
 `checkSystem(system, lookup)`.
+
+### Sub-circuits and net ports
+
+Engineers group a board's parts into sub-circuits (a power stage, a sensor
+with its pull-ups, an LED channel used four times) so that the design stays
+readable and a sub-circuit can be used more than once. A sub-circuit is an
+ordinary module with children and nets of its own. Its supply, ground and
+bus nets continue outside it, so it exports each such net as a **net port**:
+an export whose `from` is the module itself.
+
+```ts
+export const IMU_MODULE = defineModule({
+  id: "imu-module",
+  name: "IMU sub-circuit",
+  interfaces: [Net({ id: "vdd", voltageV: 3.3 }), Net({ id: "gnd" }), Net({ id: "sda" }), Net({ id: "scl" })],
+  children: [{ id: "u1", moduleDefId: "imu-lga12" }, { id: "r1", moduleDefId: "r-4k7" }, { id: "r2", moduleDefId: "r-4k7" }],
+  links: [
+    ...netLinks("vdd", ["u1:pin_7", "u1:pin_8", "r1:pin_1", "r2:pin_1"]),
+    ...netLinks("sda", ["u1:pin_1", "r1:pin_2"]),
+    // …
+  ],
+  exports: [
+    { id: "vdd", from: { self: true, interfaceId: "vdd" } },   // a net port: the net vdd on the edge
+    { id: "sda", from: { self: true, interfaceId: "sda" } },
+    // …
+  ],
+});
+
+// the board joins each port to one of its own nets, as it would a pin
+links: [...netLinks("v3v3", ["u3:pin_8", "u1:pin_1", "imu:vdd"]), ...netLinks("sda", ["u1:pin_2", "imu:sda"])]
+```
+
+The rules:
+
+- **Only a net.** `from: { self: true, interfaceId }` names a `Net` declared
+  on the module. Each net has at most one port.
+- **Naming.** A net port may take the id of the net it exports (`vdd`),
+  which is the usual form: the port and the net are one conductor, so
+  nothing is shadowed. Any other id must be free among the module's
+  interfaces and exports, as for every export. A parent reaches the net only
+  by the port's id: with a port named `vdd_in`, a link to `imu:vdd` is still
+  `net_not_own`.
+- **Linking.** A parent links a net port as it links a pin: a membership
+  link to one of the parent's own nets (the usual form), or a pin linked
+  straight to the port, which puts that pin on the child's net. Two net
+  ports are joined through a net of the parent, not to each other
+  (`net_to_net`); a port on two of the parent's nets joins them (`net`
+  rule, `net:short:<port>`).
+- **Resolution.** `resolveEndpoint` follows the port to the child's net and
+  marks the result `netPort`; `resolveExports` gives the net, with
+  `childDef` the module itself; `boundaryInterfaces` lists the port (as
+  `exposed`). A port can be re-exported by the parent like any child
+  interface (`{ id: "vdd", from: { child: "imu", interfaceId: "vdd" } }`),
+  and a `kind: "group"` exports a child's net port implicitly
+  (`<child>__<port>`), so ports nest to any depth.
+- **The sub-circuit alone.** Checked by itself, a module takes every pin on
+  a net it exports as a port as fed from outside (`unpowered` does not
+  report them), and a ported net with one pin is not dangling: its other end
+  is outside.
+
+**Derivation through net ports.** When a module is checked, each net port
+joined to it is followed into the child (and through the child's own net
+ports, at any depth): every pin on the child's net is on the conductor.
+`moduleNets(def, links, lookup)` lists a net's `ports`, the children's nets
+behind them (`nested`, by canonical path, `imu:vdd`) and the pins they
+reach as members, each with `through` (the nested nets, outermost first)
+and its path below the module (`imu/u1:pin_7`). `deriveLinks` walks the
+same conductors, so a supply or bus whose ends sit on both sides of a
+sub-circuit's edge is derived and checked once, at the module that joins
+them:
+
+| Across the edge | Checked at the parent |
+| --- | --- |
+| The board's regulator, the sub-circuit's loads | power links to each load, `supply_budget` counts them once, `unpowered` reports a ported supply net that nothing feeds (`unpowered:<child>:<port>`) |
+| The board's controller, the sub-circuit's I2C target | one I2C link, lifted to the two ports (`u1:i2c_0` ↔ `imu/u1:i2c`), `harness_wiring` if SDA and SCL are crossed at the ports, `bus_address` across sub-circuits, `bus_pullup` with the sub-circuit's pull-ups |
+| Voltage | one design voltage per conductor: the parent net's, else the shallowest nested net's. Every pin on the conductor is checked against it, and a nested net that states a voltage the conductor does not include is an error (`net:<net>:port_voltage:<nested>`) |
+| Ground, drivers, parts | ground joined to a supply, two supplies on one conductor, a passive with both ends on one conductor, an output tied to its own input, a strap on a signal |
+
+A derived link's `derived.nets` names nested nets by path (`imu:sda`), and
+`via` names membership links stored in a sub-circuit by its instance path
+(`imu/sda.u1.pin_1`). What lies wholly on one sub-circuit's own net (two of
+its pins on its net, a pin against its own net's stated voltage) is the
+sub-circuit's, and is reported when the sub-circuit is checked; the parent
+does not report it again. Two instances of one definition are two sets of
+parts and nets (`imu/u1`, `imu2/u1`; `imu:sda`, `imu2:sda`).
+
+Without net ports nothing changes: an exported pin is reached as before, and
+derivation stops at each module's edge (Limits). A pin bound into a bus port
+is not on its module's edge (`primaryInterfaces`), so before net ports a bus
+could cross only as a direct link between the two ports; a net port carries
+the bus's nets themselves.
+
+### One PCB: `kind: "board"`
+
+`kind: "board"` marks a module that is one printed circuit board, made as
+one piece: its children (directly, or inside sub-circuits) are the
+components on it, and its nets are its copper. It behaves as `"module"` in
+every check (`isBoard(def)` reads it). It is the signal a tool uses to tell
+a child that is a separate PCB, kept whole (a daughterboard, a carrier
+board's module), from a sub-circuit that it opens up and lays out on this
+board. A `design_envelope` still states what a board to be designed must
+fit, and is checked as before; a tool that reads older definitions may also
+take a `design_envelope` as marking a board.
 
 ### Passives
 
@@ -246,6 +354,8 @@ boards unchanged:
 | `net` | error | a passive (resistor, capacitor, inductor, ferrite bead) has every terminal on one net: it is shorted (`net:<net>:shorted:<part>`) |
 | `net` | error | a part's power output is on one net with a power input of the same part that feeds it: VOUT tied to VIN (`net:<net>:feedback:<part>`) |
 | `net` | error | a `strap` leaf, while its part runs an interface in the strap's `when`, is on a net with another pin's logic signal and no supply or ground pin (`net:<net>:strap:<pin>`) |
+| `net` | error | a sub-circuit's net, joined through a net port, states a voltage outside the conductor's (`net:<net>:port_voltage:<nested>`) |
+| `unpowered` | warning | a child's net port feeds power inputs inside the child and no supply reaches it (`unpowered:<child>:<port>`) |
 | `bus_pullup` | warning | an I2C link over nets with no resistor from the net to a supply net |
 | `design_envelope` | error | the stated size exceeds the envelope |
 
@@ -332,9 +442,12 @@ PWM block muxable onto any GPIO) is marked `geometry: { logical: true }`.
 
 ## Limits
 
-- Derivation does not cross a module boundary: a parent system does not see
-  through a child board's nets. Export the functional interfaces the edge
-  carries.
+- Derivation crosses a module boundary only through net ports: a parent
+  does not see through a child's nets that the child does not export as net
+  ports. Export the nets or the functional interfaces the edge carries.
+- `kind: "board"` is a marker only. The checks do not yet refuse copper
+  between two boards (a net port of a child board joined to the parent
+  board's net); a separate board joins through connectors.
 - A strap that changes a part's behaviour (SDO high selects I2C address 0x69)
   is not modelled: the part's interface states its default. A board with a
   strapped address needs an instance override, which UHD does not have yet.
