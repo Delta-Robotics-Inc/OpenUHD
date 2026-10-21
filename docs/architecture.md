@@ -1181,7 +1181,7 @@ Rather than building on faebryk, a `.ato` importer would let users pull existing
 - **OR harness** = selector between alternative device interfaces (e.g., removable USB cable). Modeled via `selectedEndpointId` on HarnessInstanceState.
 - **Domain metadata** = stays in `ModuleDef.domains[]` as metadata blobs.
 - **Authoring format** = TypeScript-first. Required for constraint functions and library inheritance.
-- **Board concept** = eliminated. Board is just a module. Module contains children + harnesses.
+- **Board concept** = eliminated. Board is just a module. Module contains children + harnesses. (`kind: "board"` later marks a module that is one PCB, so tools can keep a child board whole; it is still a module. See docs/boards-and-nets.md.)
 - **Constraint functions** = Typed `ConstraintExpr` system with parameter relationships (adopted from faebryk). Phase 1: validation. Phase 2: constraint solver. `CustomConstraint` escape hatch for TypeScript functions.
 - **Build on faebryk?** = No. Adopt best ideas (traits, parameters, constraints, can_bridge) into our TypeScript system. Potential .ato importer for v3+.
 - **Capability vs Protocol** = Both needed, different jobs. Protocols face outward (inter-module matching via type + role pairs). Capabilities face inward (intra-module slot binding validation, mapping a leaf interface to a slot). Every interface has `protocols[]`. Only leaf interfaces have `capabilities[]`.

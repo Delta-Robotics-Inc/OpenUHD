@@ -95,9 +95,9 @@ function boundClosure(def: ModuleDef, root: InterfaceDef): InterfaceDef[] {
 }
 
 export interface ResolvedExport extends InterfaceExport {
-  /** The child module the export comes from. */
+  /** The child module the export comes from (the module itself for a net port). */
   childDef: ModuleDef;
-  /** The child interface being exported. */
+  /** The child interface being exported (the net, for a net port). */
   iface: InterfaceDef;
   /** True when implied by `kind: "group"` rather than declared. */
   implicit: boolean;
@@ -111,15 +111,38 @@ function childDef(def: ModuleDef, childId: string, lookup: ModuleLookup): Module
   return resolved;
 }
 
+/** True for an export of the module's own net (`from: { self: true, interfaceId }`). */
+export function isNetPort(ex: InterfaceExport): ex is InterfaceExport & { from: { self: true; interfaceId: string } } {
+  return "self" in ex.from && ex.from.self === true;
+}
+
+/** The net port that exports net `netId` of `def`, if the module declares one. */
+export function netPortOf(def: ModuleDef, netId: string): InterfaceExport | undefined {
+  return (def.exports ?? []).find((ex) => isNetPort(ex) && ex.from.interfaceId === netId);
+}
+
+/** True for a module marked as one printed circuit board (`kind: "board"`). */
+export function isBoard(def: ModuleDef): boolean {
+  return def.kind === "board";
+}
+
 /**
  * Exports of a module: its declared `exports`, plus — for `kind: "group"` —
  * every primary interface of every child that no internal link consumes.
- * Implicit export ids are `<child>__<interface>`.
+ * Implicit export ids are `<child>__<interface>`. A net port resolves to the
+ * module's own net, with `childDef` the module itself.
  */
 export function resolveExports(def: ModuleDef, lookup: ModuleLookup): ResolvedExport[] {
   const out: ResolvedExport[] = [];
   const declared = new Set<string>();
   for (const ex of def.exports ?? []) {
+    if (!("child" in ex.from)) {
+      const netId = ex.from.interfaceId;
+      const net = def.interfaces.find((i) => i.id === netId);
+      if (!net || !isNet(net)) throw new Error(`Export "${ex.id}" of "${def.id}": "${netId}" is not a net of the module; only a net is exported from the module itself`);
+      out.push({ ...ex, childDef: def, iface: net, implicit: false });
+      continue;
+    }
     const child = childDef(def, ex.from.child, lookup);
     const iface = boundaryInterfaces(child, lookup).find((i) => i.id === ex.from.interfaceId);
     if (!iface) throw new Error(`Export "${ex.id}" of "${def.id}": child "${ex.from.child}" has no interface "${ex.from.interfaceId}"`);
@@ -160,6 +183,8 @@ export function boundaryInterfaces(def: ModuleDef, lookup: ModuleLookup): Interf
     ...ex.iface,
     id: ex.id,
     name: ex.name ?? ex.iface.name,
+    // a net port is on the edge, though the net it exports is not drawn on the outline
+    ...(isNetPort(ex) ? { exposed: true } : {}),
   }));
   return [...own, ...exported];
 }
@@ -178,23 +203,43 @@ export interface ResolvedEndpoint {
   ownerPath: string[];
   /** Link-scoped composition: each slot of the ad-hoc connector, resolved. */
   composed?: Record<string, ResolvedEndpoint>;
+  /**
+   * Set when the endpoint is a child's net reached through the net port the
+   * child exports (`iface` is that net, `owner` the module declaring it).
+   */
+  netPort?: true;
 }
 
-/** Follow an endpoint through exports down to the module that owns the interface. */
+/**
+ * Follow an endpoint through exports down to the module that owns the
+ * interface. A child's net is reached only through the net port the child
+ * exports for it (the port's id, or the net's own id when the port takes
+ * it); the result is then marked `netPort`. A child's net without a port
+ * resolves too, and the link to it is refused (`net_not_own`).
+ */
 export function resolveEndpoint(def: ModuleDef, end: EndpointTarget, lookup: ModuleLookup): ResolvedEndpoint {
   if ("child" in end && end.compose) return resolveComposition(def, end.child, end.interfaceId, end.compose, lookup);
   let owner = "child" in end ? childDef(def, end.child, lookup) : def;
   let interfaceId = end.interfaceId;
   const modules = "child" in end ? [end.child] : [];
   const ownerPath = [...modules];
+  let throughPort = false;
 
   for (let depth = 0; depth < 16; depth++) {
     const own = owner.interfaces.find((i) => i.id === interfaceId);
-    if (own) return { path: formatPath(modules, end.interfaceId), owner, iface: own, ownerPath };
+    if (own) {
+      const port = modules.length > 0 && isNet(own) && (throughPort || netPortOf(owner, own.id)?.id === own.id);
+      return { path: formatPath(modules, end.interfaceId), owner, iface: own, ownerPath, ...(port ? { netPort: true as const } : {}) };
+    }
     const ex = resolveExports(owner, lookup).find((e) => e.id === interfaceId);
     if (!ex) break;
-    owner = ex.childDef;
     interfaceId = ex.from.interfaceId;
+    if (!("child" in ex.from)) {
+      // a net port: the net is on the same module
+      throughPort = true;
+      continue;
+    }
+    owner = ex.childDef;
     ownerPath.push(ex.from.child);
   }
   throw new Error(`Link endpoint ${formatPath(modules, end.interfaceId)} not found on "${owner.id}"`);

@@ -61,8 +61,13 @@ export type SpinDirection = "cw" | "ccw";
  *   default it exports every child interface not linked internally.
  * - "harness": a physical carrier of interface links between modules
  *   (cable, bus backbone, splice, switch).
+ * - "board": one printed circuit board, made as one piece. Its children are
+ *   the components on it (directly, or inside sub-modules a tool opens up)
+ *   and its nets are its copper. It behaves as "module" in every check; it
+ *   is the signal a tool uses to keep a child board whole (a separate PCB)
+ *   rather than open it up like a sub-module. See docs/boards-and-nets.md.
  */
-export type ModuleKind = "module" | "group" | "harness";
+export type ModuleKind = "module" | "group" | "harness" | "board";
 
 /**
  * One end of an interface link: an interface on the module itself (`self`)
@@ -85,13 +90,32 @@ export type EndpointTarget =
  */
 export type LinkComposition = Record<string, string>;
 
-/** A child interface surfaced on this module's boundary. */
+/**
+ * An interface surfaced on this module's boundary: a child's interface, or
+ * (a net port) one of the module's own nets.
+ */
 export interface InterfaceExport {
-  /** Boundary interface id, unique among this module's interfaces and exports. */
+  /**
+   * Boundary interface id, unique among this module's interfaces and
+   * exports. A net port may take the id of the net it exports.
+   */
   id: string;
   name?: string;
-  from: { child: string; interfaceId: string; profileInstanceId?: string };
+  from: ExportSource;
 }
+
+/**
+ * Where an export comes from:
+ * - `{ child, interfaceId }`: an interface on a child's boundary.
+ * - `{ self: true, interfaceId }`: a **net port**, a `Net` declared on this
+ *   module. A parent joins the net itself (a membership link to one of the
+ *   parent's nets, or a pin linked to the port), so a supply or bus that
+ *   runs on both sides of the module's edge is one conductor, and the
+ *   parent's checks see the pins inside. See docs/boards-and-nets.md.
+ */
+export type ExportSource =
+  | { child: string; interfaceId: string; profileInstanceId?: string }
+  | { self: true; interfaceId: string };
 
 /**
  * A stored mapping between child interfaces (slots or leaves) under a

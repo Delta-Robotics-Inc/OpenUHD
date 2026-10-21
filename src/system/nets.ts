@@ -31,7 +31,7 @@ import { isNet, NET_PROTOCOL } from "../protocols/net.js";
 import { passiveInstance, passiveOf } from "../protocols/passive.js";
 import { isConnector } from "../protocols/connector.js";
 import { slotBindings } from "./connectors.js";
-import { formatPath, type LinkResult, type ModuleLookup, type ResolvedEndpoint } from "./index.js";
+import { formatPath, netPortOf, validateLinks, type LinkResult, type ModuleLookup, type ResolvedEndpoint } from "./index.js";
 import type { SystemDiagnostic } from "./checks.js";
 
 // ---------------------------------------------------------------------------
@@ -42,19 +42,30 @@ import type { SystemDiagnostic } from "./checks.js";
  * Validate a stored link with a net at one end: it joins one pin to a net
  * declared on the linking module. Nothing is matched; what the pins on a net
  * carry is checked on the links derived from it.
+ *
+ * A child's net port (a net the child exports) is joined like a pin: to a
+ * net of the linking module, or by a pin linked to the port, which puts the
+ * pin on the child's net. Two net ports join through a net of the linking
+ * module, not to each other.
  */
 export function validateNetLink(link: InterfaceLink, a: ResolvedEndpoint, b: ResolvedEndpoint): LinkResult {
   const diagnostics: Diagnostic[] = [];
-  const netIsA = isNet(a.iface);
+  // a net port is the member of the linking module's own net
+  const netIsA = isNet(a.iface) && !(a.netPort && isNet(b.iface) && "self" in link.b);
   const [net, member] = netIsA ? [a, b] : [b, a];
   const netTarget = netIsA ? link.a : link.b;
   if (isNet(member.iface)) {
-    diagnostics.push({ severity: "error", code: "net_to_net", message: `${a.path} and ${b.path} are both nets; a pin joins a net, and two nets that are one conductor are one net`, refs: [a.path, b.path] });
+    if (!(member.netPort && "self" in netTarget)) {
+      const message = member.netPort && net.netPort
+        ? `${a.path} and ${b.path} are both net ports; join them through a net of this module`
+        : `${a.path} and ${b.path} are both nets; a pin joins a net, and two nets that are one conductor are one net`;
+      diagnostics.push({ severity: "error", code: "net_to_net", message, refs: [a.path, b.path] });
+    }
   } else if (member.iface.slots?.length || isConnector(member.iface)) {
     diagnostics.push({ severity: "error", code: "net_member_composite", message: `${member.path} is a composite interface; a net joins pins, so link its leaves`, refs: [member.path, net.path] });
   }
-  if (!("self" in netTarget)) {
-    diagnostics.push({ severity: "error", code: "net_not_own", message: `${net.path} is a net of a child; nets join pins on the module that declares them`, refs: [net.path] });
+  if (!("self" in netTarget) && !net.netPort) {
+    diagnostics.push({ severity: "error", code: "net_not_own", message: `${net.path} is a net of a child; nets join pins on the module that declares them, or a child exports the net as a net port`, refs: [net.path] });
   }
   return {
     link,
@@ -73,37 +84,195 @@ export function isNetMembership(r: LinkResult): boolean {
   return r.protocol === NET_PROTOCOL;
 }
 
+/**
+ * The ends of a valid membership link: the linking module's own net and its
+ * member (a pin, or a child's net port), or, for a pin linked straight to a
+ * child's net port, that port and the pin.
+ */
+export function membershipEnds(r: LinkResult): { net: ResolvedEndpoint; member: ResolvedEndpoint } | { port: ResolvedEndpoint; member: ResolvedEndpoint } {
+  if (isNet(r.a.iface) && "self" in r.link.a) return { net: r.a, member: r.b };
+  if (isNet(r.b.iface) && "self" in r.link.b) return { net: r.b, member: r.a };
+  return r.a.netPort ? { port: r.a, member: r.b } : { port: r.b, member: r.a };
+}
+
+/** Canonical path of the module instance and interface an endpoint finally resolves to (`sensor/u1:pin_3`). */
+export function physicalPath(end: ResolvedEndpoint): string {
+  return formatPath(end.ownerPath, end.iface.id);
+}
+
 // ---------------------------------------------------------------------------
 // Net index
 // ---------------------------------------------------------------------------
 
 export interface NetMember {
-  /** Canonical path of the pin, e.g. `u2:pin_8`. */
+  /**
+   * Canonical path of the pin, e.g. `u2:pin_8`. A pin reached through a net
+   * port has the path of the part below the linking module, `sensor/u1:pin_7`.
+   */
   path: string;
   end: ResolvedEndpoint;
-  /** The membership link. */
+  /**
+   * The membership link. One stored on a sub-module is prefixed with the
+   * sub-module's instance path, `sensor/vdd.u1.pin_7`.
+   */
   link: string;
+  /**
+   * Set on a pin reached through a net port: the nets of sub-modules it was
+   * reached through, outermost first (`["sensor:vdd"]`). The last is the net
+   * the pin is a member of.
+   */
+  through?: string[];
+}
+
+/** A net of a sub-module on a conductor, reached through a net port. */
+export interface NestedNet {
+  /** Canonical path of the net below the linking module, `sensor:vdd`. */
+  path: string;
+  iface: InterfaceDef;
 }
 
 export interface BoardNet {
   iface: InterfaceDef;
-  /** Canonical path of the net on the module, `:<id>`. */
+  /**
+   * Canonical path of the net on the module, `:<id>`. A conductor with no
+   * net of the module (pins linked straight to a child's net port) is named
+   * by the port's net, `sensor:vdd`, and so is its `iface.id`.
+   */
   path: string;
+  /** The pins on the net; with a lookup, also the pins its net ports reach (`through` set). */
   members: NetMember[];
+  /** Children's net ports joined to the net. Present only when there are any. */
+  ports?: NetMember[];
+  /** Sub-module nets on the conductor through those ports, at any depth. Present only with a lookup and ports. */
+  nested?: NestedNet[];
 }
 
-/** Every net declared on `def`, with the pins its valid membership links join. */
-export function moduleNets(def: ModuleDef, links: LinkResult[]): BoardNet[] {
+type LinkCache = Map<ModuleDef, LinkResult[]>;
+
+function storedLinks(def: ModuleDef, lookup: ModuleLookup, cache: LinkCache): LinkResult[] {
+  let links = cache.get(def);
+  if (!links) {
+    links = validateLinks(def, lookup);
+    cache.set(def, links);
+  }
+  return links;
+}
+
+/**
+ * What a child's net port reaches inside the child: the pins on the net, at
+ * any depth (through the net ports of the child's own children, and pins
+ * the child links straight to them), with canonical paths below the module
+ * that links the port; and the nets passed through, outermost first.
+ */
+export function netPortReach(port: ResolvedEndpoint, lookup: ModuleLookup): { members: NetMember[]; nets: NestedNet[] } {
+  return reachPort(port, lookup, new Map(), 0);
+}
+
+function reachPort(port: ResolvedEndpoint, lookup: ModuleLookup, cache: LinkCache, depth: number): { members: NetMember[]; nets: NestedNet[] } {
+  const base = port.ownerPath;
+  const netPath = physicalPath(port);
+  const out = { members: [] as NetMember[], nets: [{ path: netPath, iface: port.iface }] };
+  if (depth >= 16) return out;
+  const below = (e: ResolvedEndpoint): ResolvedEndpoint => {
+    const ownerPath = [...base, ...e.ownerPath];
+    return { ...e, path: formatPath(ownerPath, e.iface.id), ownerPath };
+  };
+  const linkId = (id: string) => `${base.join("/")}/${id}`;
+  const valid = storedLinks(port.owner, lookup, cache).filter((r) => isNetMembership(r) && r.state !== "incompatible");
+  const inner: ResolvedEndpoint[] = [];
+  for (const r of valid) {
+    const m = membershipEnds(r);
+    if (!("net" in m) || m.net.iface.id !== port.iface.id) continue;
+    if (m.member.netPort) inner.push(m.member);
+    else out.members.push({ path: physicalPath(below(m.member)), end: below(m.member), link: linkId(r.link.id), through: [netPath] });
+  }
+  for (const p of inner) {
+    const deeper = below(p);
+    const innerPath = physicalPath(deeper);
+    // pins the child links straight to its own child's port are on that net too
+    for (const r of valid) {
+      const m = membershipEnds(r);
+      if ("port" in m && physicalPath(m.port) === physicalPath(p)) {
+        out.members.push({ path: physicalPath(below(m.member)), end: below(m.member), link: linkId(r.link.id), through: [netPath, innerPath] });
+      }
+    }
+    const reached = reachPort(deeper, lookup, cache, depth + 1);
+    out.members.push(...reached.members.map((x) => ({ ...x, through: [netPath, ...(x.through ?? [])] })));
+    out.nets.push(...reached.nets);
+  }
+  return out;
+}
+
+/**
+ * Every net declared on `def`, with the pins its valid membership links
+ * join. A child's net port on a net is listed in `ports`; given a lookup,
+ * the pins the port reaches inside the child are members too (with
+ * `through`), and the child's nets are `nested`. Pins linked straight to a
+ * child's net port are members of the net the port is on, or of a net of
+ * their own named by the port when it is on none.
+ */
+export function moduleNets(def: ModuleDef, links: LinkResult[], lookup?: ModuleLookup): BoardNet[] {
   const nets = new Map<string, BoardNet>();
   for (const iface of def.interfaces) {
     if (isNet(iface)) nets.set(iface.id, { iface, path: formatPath([], iface.id), members: [] });
   }
+  const straight: { port: ResolvedEndpoint; member: NetMember }[] = [];
   for (const r of links) {
     if (!isNetMembership(r) || r.state === "incompatible") continue;
-    const [net, member] = isNet(r.a.iface) ? [r.a, r.b] : [r.b, r.a];
-    nets.get(net.iface.id)?.members.push({ path: member.path, end: member, link: r.link.id });
+    const m = membershipEnds(r);
+    const entry: NetMember = { path: m.member.path, end: m.member, link: r.link.id };
+    if ("port" in m) {
+      straight.push({ port: m.port, member: entry });
+      continue;
+    }
+    const net = nets.get(m.net.iface.id);
+    if (!net) continue;
+    if (m.member.netPort) (net.ports ??= []).push(entry);
+    else net.members.push(entry);
+  }
+  for (const { port, member } of straight) {
+    const key = physicalPath(port);
+    const host = [...nets.values()].find((n) => n.ports?.some((p) => physicalPath(p.end) === key));
+    if (host) {
+      host.members.push(member);
+      continue;
+    }
+    const own = nets.get(`port#${key}`) ?? { iface: { ...port.iface, id: key }, path: key, members: [], ports: [{ path: port.path, end: port, link: member.link }] };
+    own.members.push(member);
+    nets.set(`port#${key}`, own);
+  }
+  if (lookup) {
+    const cache: LinkCache = new Map();
+    for (const net of nets.values()) {
+      for (const p of net.ports ?? []) {
+        const reached = reachPort(p.end, lookup, cache, 0);
+        net.members.push(...reached.members);
+        (net.nested ??= []).push(...reached.nets);
+      }
+    }
   }
   return [...nets.values()];
+}
+
+/**
+ * Design voltage of a conductor: its own net's, else the shallowest nested
+ * net that states one (a sub-module's 3V3 joined by a net that states none).
+ */
+export function conductorVoltageRange(net: BoardNet): [number, number] | undefined {
+  const own = netVoltageRange(net.iface);
+  if (own) return own;
+  const nested = [...(net.nested ?? [])].sort((x, y) => x.path.split("/").length - y.path.split("/").length);
+  for (const n of nested) {
+    const r = netVoltageRange(n.iface);
+    if (r) return r;
+  }
+  return undefined;
+}
+
+/** True when every one of `members` is a pin reached through the same sub-module net: that module's own check covers it. */
+function sameNested(members: NetMember[]): boolean {
+  if (!members.length || members.some((m) => !m.through)) return false;
+  return new Set(members.map((m) => m.through![m.through!.length - 1])).size === 1;
 }
 
 function param(iface: InterfaceDef, id: string): Parameter | undefined {
@@ -129,13 +298,19 @@ const fmtRange = (r: [number, number]) => (r[0] === r[1] ? `${r[0]} V` : `${r[0]
 
 /**
  * Paths a module's boundary supplies from outside: its exported child
- * interfaces, the leaves those exports bind, and every pin on a net that
- * carries one of them. A power input here is fed through the board edge, so
+ * interfaces, the leaves those exports bind, every pin on a net it exports
+ * as a net port, and every pin on a net that carries one of them. A power input here is fed through the board edge, so
  * the unpowered rule does not report it when the board is checked alone.
  */
 export function edgeFedPaths(def: ModuleDef, lookup: ModuleLookup, nets: BoardNet[]): Set<string> {
   const fed = new Set<string>();
   for (const ex of def.exports ?? []) {
+    if (!("child" in ex.from)) {
+      // a net port: everything on the net is supplied through it
+      const netId = ex.from.interfaceId;
+      for (const m of nets.find((n) => n.iface.id === netId)?.members ?? []) fed.add(m.path);
+      continue;
+    }
     const { child, interfaceId } = ex.from;
     fed.add(`${child}:${interfaceId}`);
     const ref = def.children?.find((c) => c.id === child);
@@ -152,24 +327,42 @@ export function edgeFedPaths(def: ModuleDef, lookup: ModuleLookup, nets: BoardNe
 // Rules
 // ---------------------------------------------------------------------------
 
-export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[] {
-  const nets = moduleNets(def, links);
+/**
+ * Rules over whole nets. Given a lookup, a net's children's net ports are
+ * followed into the children, so a conductor that runs on both sides of a
+ * module's edge is checked once here: its supplies, its ground, and every
+ * pin on it against one design voltage (`conductorVoltageRange`). What lies
+ * wholly inside one sub-module's net is left to that module's own check.
+ */
+export function netRule(def: ModuleDef, links: LinkResult[], lookup?: ModuleLookup): SystemDiagnostic[] {
+  const nets = moduleNets(def, links, lookup);
   const out: SystemDiagnostic[] = [];
   const netsOf = new Map<string, string[]>();
+  // pins reached through a net port, by where they finally are: net -> the routes (ports, or "direct") reaching them
+  const physical = new Map<string, Map<string, Set<string>>>();
 
   for (const net of nets) {
     const id = net.iface.id;
     const label = net.iface.name && net.iface.name !== id ? `${id} (${net.iface.name})` : id;
     const refs = [net.path, ...net.members.map((m) => m.path)];
-    for (const m of net.members) netsOf.set(m.path, [...(netsOf.get(m.path) ?? []), id]);
+    const direct = net.members.filter((m) => !m.through);
+    for (const m of [...direct, ...(net.ports ?? [])]) netsOf.set(m.path, [...(netsOf.get(m.path) ?? []), id]);
+    for (const m of net.members) {
+      const key = physicalPath(m.end);
+      const byNet = physical.get(key) ?? new Map<string, Set<string>>();
+      byNet.set(id, (byNet.get(id) ?? new Set()).add(m.through ? m.through[0] : "direct"));
+      physical.set(key, byNet);
+    }
 
-    if (net.members.length < 2) {
+    const joined = [...direct, ...(net.ports ?? [])];
+    // a net the module exports as a net port has its other end outside
+    if (joined.length + (netPortOf(def, id) ? 1 : 0) < 2) {
       out.push({
         id: `net:${id}:members`,
         rule: "net",
         severity: "warning",
-        message: net.members.length
-          ? `net ${label} joins only ${net.members[0].path}; nothing else is on it.`
+        message: joined.length
+          ? `net ${label} joins only ${joined[0].path}; nothing else is on it.`
           : `net ${label} joins no pins.`,
         refs,
       });
@@ -178,14 +371,16 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
     // more than one module driving a supply net. A connector or land carries power, it does not make
     // it, and a terminal that both gives and takes it (a cell's +, beside its charger) is storage
     const drivers = new Map<string, string[]>();
+    const driving: NetMember[] = [];
     for (const m of net.members) {
       if (!hasRole(m.end.iface, "power", "output")) continue;
       if (hasRole(m.end.iface, "power", "input")) continue;
       if ((m.end.owner.categories ?? []).some((c) => c === "connector" || c.startsWith("connector."))) continue;
       const owner = m.end.ownerPath.join("/");
       drivers.set(owner, [...(drivers.get(owner) ?? []), m.path]);
+      driving.push(m);
     }
-    if (drivers.size > 1) {
+    if (drivers.size > 1 && !sameNested(driving)) {
       const paths = [...drivers.values()].flat();
       out.push({
         id: `net:${id}:drivers`,
@@ -197,11 +392,11 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
     }
 
     // ground joined to a supply rail
-    const grounds = net.members.filter((m) => hasRole(m.end.iface, "power", "ground")).map((m) => m.path);
-    const rails = net.members
-      .filter((m) => hasRole(m.end.iface, "power", "input") || hasRole(m.end.iface, "power", "output"))
-      .map((m) => m.path);
-    if (grounds.length && rails.length) {
+    const groundMembers = net.members.filter((m) => hasRole(m.end.iface, "power", "ground"));
+    const railMembers = net.members.filter((m) => hasRole(m.end.iface, "power", "input") || hasRole(m.end.iface, "power", "output"));
+    const grounds = groundMembers.map((m) => m.path);
+    const rails = railMembers.map((m) => m.path);
+    if (grounds.length && rails.length && !sameNested([...groundMembers, ...railMembers])) {
       out.push({
         id: `net:${id}:ground`,
         rule: "net",
@@ -217,9 +412,26 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
     // rail on a 3.3 V input is a fault even though 3.0-3.3 V overlaps). A logic
     // or analog pin's range is its signal level: tied to a lower rail (a strap
     // to GND) it is driven low, so only a net above its maximum is reported.
-    const design = netVoltageRange(net.iface);
+    const design = conductorVoltageRange(net);
+    const nestedRange = new Map((net.nested ?? []).map((n) => [n.path, netVoltageRange(n.iface)]));
     if (design) {
+      // one conductor has one voltage: a sub-module's net joined here must state the same
+      for (const n of net.nested ?? []) {
+        const r = nestedRange.get(n.path);
+        if (!r || rangesOverlap(r, design)) continue;
+        out.push({
+          id: `net:${id}:port_voltage:${n.path}`,
+          rule: "net",
+          severity: "error",
+          message: `net ${label} is ${fmtRange(design)}, but ${n.path} (${n.iface.name ?? n.iface.id}), joined to it through a net port, is ${fmtRange(r)}.`,
+          refs: [net.path, n.path],
+          details: { net: design, nested: r },
+        });
+      }
       for (const m of net.members) {
+        // a pin on a sub-module net that states this voltage is checked by that module
+        const local = m.through ? nestedRange.get(m.through[m.through.length - 1]) : undefined;
+        if (local && local[0] === design[0] && local[1] === design[1]) continue;
         const p = param(m.end.iface, "voltage");
         const range = p && getEffectiveRange(p);
         if (!range) continue;
@@ -269,7 +481,7 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
       const supplies = supplyNetsOf(owner);
       if (supplies.length !== 1) continue;
       const supply = nets.find((n) => n.iface.id === supplies[0])!;
-      const level = netVoltageRange(supply.iface)?.[1];
+      const level = conductorVoltageRange(supply)?.[1];
       if (level === undefined) continue;
       for (const m of net.members) {
         if (m === d || m.end.ownerPath.join("/") === owner) continue;
@@ -296,6 +508,20 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
       rule: "net",
       severity: "error",
       message: `${path} is on nets ${ids.join(", ")}, which joins them into one conductor.`,
+      refs: [path, ...ids.map((n) => formatPath([], n))],
+    });
+  }
+  // a pin inside a sub-module reached on two nets by two routes (its net's port on one, an exported pin on the
+  // other); one port on two nets is reported above, by the port
+  for (const [path, byNet] of physical) {
+    const routes = new Set([...byNet.values()].flatMap((r) => [...r]));
+    if (byNet.size < 2 || routes.size < 2) continue;
+    const ids = [...byNet.keys()];
+    out.push({
+      id: `net:short:${path}`,
+      rule: "net",
+      severity: "error",
+      message: `${path} is on nets ${ids.join(", ")} (through a net port and an export), which joins them into one conductor.`,
       refs: [path, ...ids.map((n) => formatPath([], n))],
     });
   }
@@ -327,8 +553,8 @@ export function netRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[]
  *   level follows the signal, whatever pull-up the line has: an IMU's
  *   address strap moved onto SDA.
  */
-export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagnostic[] {
-  const nets = moduleNets(def, links);
+export function partWiringRule(def: ModuleDef, links: LinkResult[], lookup?: ModuleLookup): SystemDiagnostic[] {
+  const nets = moduleNets(def, links, lookup);
   const out: SystemDiagnostic[] = [];
   const ownerKey = (m: NetMember) => m.end.ownerPath.join("/");
   const label = (n: BoardNet) => (n.iface.name && n.iface.name !== n.iface.id ? `${n.iface.id} (${n.iface.name})` : n.iface.id);
@@ -351,7 +577,7 @@ export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagn
   }
   for (const [path, { owner, ownerPath, members }] of passives) {
     const terminals = owner.interfaces.filter(isPassivePin);
-    if (terminals.length < 2) continue;
+    if (terminals.length < 2 || sameNested(members)) continue;
     const netIds = terminals.map((t) => (netsOfPin.get(formatPath(ownerPath, t.id)) ?? []).map((n) => n.iface.id));
     if (netIds.some((ids) => ids.length !== 1) || new Set(netIds.map((ids) => ids[0])).size !== 1) continue;
     const net = nets.find((n) => n.iface.id === netIds[0][0])!;
@@ -388,7 +614,7 @@ export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagn
       if (!outs.length || !ins.length) continue;
       const declared = statesBridges(owner);
       const fed = ins.filter((i) => outs.some((o) => !declared || bridges(owner, i.end.iface.id, o.end.iface.id)));
-      if (!fed.length) continue;
+      if (!fed.length || sameNested([...outs, ...fed])) continue;
       const name = (m: NetMember) => `${m.path} (${m.end.iface.name ?? m.end.iface.id})`;
       out.push({
         id: `net:${n.iface.id}:feedback:${path}`,
@@ -417,7 +643,7 @@ export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagn
       const strap = strapOf(s);
       if (!strap) continue;
       const signals = n.members.filter((m) => m !== s && !isPower(m.end.iface) && !isPassivePin(m.end.iface) && !strapOf(m));
-      if (!signals.length) continue;
+      if (!signals.length || sameNested([s, ...signals])) continue;
       out.push({
         id: `net:${n.iface.id}:strap:${s.path}`,
         rule: "net",
@@ -438,7 +664,7 @@ export function partWiringRule(def: ModuleDef, links: LinkResult[]): SystemDiagn
  * voltage). Parts with internal pull-ups are not modelled, so this warns.
  */
 export function busPullupRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
-  const nets = moduleNets(def, links);
+  const nets = moduleNets(def, links, lookup);
   const byId = new Map(nets.map((n) => [n.iface.id, n]));
   const netsOfPath = new Map<string, string[]>();
   for (const n of nets) for (const m of n.members) netsOfPath.set(m.path, [...(netsOfPath.get(m.path) ?? []), n.iface.id]);
@@ -446,15 +672,21 @@ export function busPullupRule(def: ModuleDef, links: LinkResult[], lookup: Modul
   const isSupply = (n: BoardNet) =>
     n.members.some((m) => hasRole(m.end.iface, "power", "output")) || (netVoltage(n.iface) ?? 0) > 0;
 
+  // the part a member pin is on: a direct child, or a part inside a sub-module reached through a net port
+  const partOf = (m: NetMember): ModuleDef | undefined => {
+    if (m.through) return m.end.owner;
+    if (m.end.ownerPath.length !== 1) return undefined;
+    const ref = def.children?.find((c) => c.id === m.end.ownerPath[0]);
+    return ref ? lookup(ref.moduleDefId) : undefined;
+  };
+
   const pulledUp = (n: BoardNet) =>
     n.members.some((m) => {
-      if (m.end.ownerPath.length !== 1) return false;
-      const ref = def.children?.find((c) => c.id === m.end.ownerPath[0]);
-      const child = ref ? lookup(ref.moduleDefId) : undefined;
+      const child = partOf(m);
       if (!child || passiveOf(child)?.kind !== "resistor") return false;
       return child.interfaces
         .filter((t) => t.id !== m.end.iface.id)
-        .some((t) => (netsOfPath.get(`${ref!.id}:${t.id}`) ?? []).some((other) => {
+        .some((t) => (netsOfPath.get(formatPath(m.end.ownerPath, t.id)) ?? []).some((other) => {
           const on = byId.get(other);
           return on !== undefined && on !== n && isSupply(on);
         }));
@@ -469,9 +701,7 @@ export function busPullupRule(def: ModuleDef, links: LinkResult[], lookup: Modul
     const owners = new Set(n.members.map((m) => m.end.ownerPath.join("/")));
     if (owners.size < 2) continue;
     const device = n.members.find((m) => {
-      if (m.end.ownerPath.length !== 1) return false;
-      const ref = def.children?.find((c) => c.id === m.end.ownerPath[0]);
-      const child = ref ? lookup(ref.moduleDefId) : undefined;
+      const child = partOf(m);
       // a target's (slave's) I2C composite: a controller's composites are pin options, not a bus in use
       return !!child?.interfaces.some((i) => i.protocols.some((p) => p.type === "i2c" && p.roles.length > 0 && p.roles.every((r) => r === "slave" || r === "target")) && i.slots?.length && Object.values(slotBindings(i)).includes(m.end.iface.id));
     });
