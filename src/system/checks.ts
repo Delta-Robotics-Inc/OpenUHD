@@ -29,8 +29,8 @@ import type { Parameter } from "../types/parameter.js";
 import type { SuppliedFromTrait } from "../types/trait.js";
 import {
   boundaryInterfaces,
+  resolveExports,
   formatPath,
-  isNetPort,
   resolveEndpoint,
   type LinkResult,
   type ModuleLookup,
@@ -434,7 +434,11 @@ export function unconnectedOf(ref: { unconnected?: { interfaceId: string; reason
 function unconnectedRule(def: ModuleDef, links: LinkResult[], lookup: ModuleLookup): SystemDiagnostic[] {
   const linkedBy = new Map<string, string[]>();
   for (const r of links) {
-    if (isNetMembership(r)) continue;
+    if (isNetMembership(r)) {
+      // a net membership connects a child only through the child's net port
+      for (const e of [r.a, r.b]) if (e.netPort) linkedBy.set(e.path, [...new Set([...(linkedBy.get(e.path) ?? []), r.link.id])]);
+      continue;
+    }
     const ends = [r.a.path, r.b.path, ...r.children.flatMap((c) => [formatPath(r.a.ownerPath, c.a.leafId), formatPath(r.b.ownerPath, c.b.leafId)])];
     for (const e of ends) linkedBy.set(e, [...new Set([...(linkedBy.get(e) ?? []), r.link.id])]);
   }
@@ -516,23 +520,30 @@ function unpoweredNetPorts(
   lookup: ModuleLookup,
 ): SystemDiagnostic[] {
   const out: SystemDiagnostic[] = [];
-  for (const ex of child.exports ?? []) {
-    if (!isNetPort(ex)) continue;
-    const key = formatPath([ref.id], ex.from.interfaceId);
-    const host = nets.find((n) => n.ports?.some((p) => physicalPath(p.end) === key));
-    let members = host?.members;
-    if (!members) {
-      try {
-        members = netPortReach(resolveEndpoint(def, { child: ref.id, interfaceId: ex.id }, lookup), lookup).members;
-      } catch {
-        continue;
-      }
+  // every export on the child's edge, declared or a group's implicit one, that resolves to a net port:
+  // the child's own, or one it re-exports from a sub-module at any depth
+  let exports: { id: string; name?: string }[];
+  try {
+    exports = resolveExports(child, lookup);
+  } catch {
+    return out;
+  }
+  for (const ex of exports) {
+    let port: ResolvedEndpoint;
+    try {
+      port = resolveEndpoint(def, { child: ref.id, interfaceId: ex.id }, lookup);
+    } catch {
+      continue;
     }
+    if (!port.netPort) continue;
+    const key = physicalPath(port);
+    const host = nets.find((n) => n.ports?.some((p) => physicalPath(p.end) === key));
+    const members = host?.members ?? netPortReach(port, lookup).members;
     const inputs = members.filter((m) => hasRole(m.end.iface, "power", "input") && !hasRole(m.end.iface, "power", "output") && !hasRole(m.end.iface, "power", "ground"));
     if (!inputs.length) continue;
     if (members.some((m) => hasRole(m.end.iface, "power", "output") || fed.has(m.path))) continue;
     const path = `${ref.id}:${ex.id}`;
-    const name = ex.name ?? child.interfaces.find((i) => i.id === ex.from.interfaceId)?.name ?? ex.id;
+    const name = ex.name ?? port.iface.name ?? ex.id;
     if (marks.has(ex.id)) {
       out.push({ id: `unpowered:${path}`, rule: "unpowered", severity: "info", message: `${path} (${name}) is unconnected on purpose: ${marks.get(ex.id)}.`, refs: [path] });
       continue;

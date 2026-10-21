@@ -239,13 +239,18 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
   };
   // a child's net behind its net port: one node, joined to every pin the port reaches inside the child
   const nestedNets = new Map<string, InterfaceDef>();
+  // port nodes whose nested net is a rail (a design voltage or a supply or ground pin inside)
+  const railPorts = new Set<string>();
   const portNode = (port: ResolvedEndpoint) => {
     const node = `net#${physicalPath(port)}`;
     if (edges.has(node)) return node;
     edges.set(node, []);
     const reached = netPortReach(port, lookup);
     for (const n of reached.nets) nestedNets.set(n.path, n.iface);
-    if (reached.nets.some((n) => hasVoltage(n.iface)) || reached.members.some((m) => isPower(m.end.iface))) for (const n of reached.nets) rails.add(n.path);
+    if (reached.nets.some((n) => hasVoltage(n.iface)) || reached.members.some((m) => isPower(m.end.iface))) {
+      railPorts.add(node);
+      for (const n of reached.nets) rails.add(n.path);
+    }
     for (const m of reached.members) addEdge(node, terminalFor(m.end), { link: m.link, net: m.through![m.through!.length - 1], inner: true });
     return node;
   };
@@ -261,8 +266,10 @@ export function deriveLinks(def: ModuleDef, lookup: ModuleLookup, stored: LinkRe
     }
     const { net, member } = ends;
     if (member.netPort) {
-      if (hasVoltage(net.iface)) rails.add(net.iface.id);
-      addEdge(`net#${net.iface.id}`, portNode(member), { link: r.link.id, net: net.iface.id });
+      // the parent's net and the child's net behind the port are one conductor: a rail on either side is a rail on both
+      const node = portNode(member);
+      if (hasVoltage(net.iface) || railPorts.has(node)) rails.add(net.iface.id);
+      addEdge(`net#${net.iface.id}`, node, { link: r.link.id, net: net.iface.id });
       continue;
     }
     if (isPower(member.iface) || hasVoltage(net.iface)) rails.add(net.iface.id);

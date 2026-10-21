@@ -186,6 +186,42 @@ describe("derivation through net ports: across the boundary", () => {
     expect(check(marked).find((x) => x.id === "unpowered:imu:vdd")?.severity).toBe("info");
   });
 
+  it("a board net that states no voltage is a rail when a sub-circuit's supply net is joined to it", () => {
+    // the IMU's VDD (its supply pins inside) on a net of the board that states no voltage,
+    // with the MCU's SDA and a second IMU's SDA on it as well: the logic pins are straps, not a bus
+    const board = variant({
+      nets: [Net({ id: "x", name: "X" })],
+      children: [{ id: "u9", moduleDefId: FIXTURE_IMU.id }],
+      drop: (id) => id === "v3v3.imu.vdd" || id.startsWith("sda."),
+      add: netLinks("x", ["imu:vdd", "u1:pin_2", "u9:pin_1"]),
+    });
+    const r = checkSystem(board, lookup);
+    const across = r.links.filter((x) => x.derived && [x.a.path, x.b.path].some((p) => p.startsWith("u9:")) && x.protocol !== "power");
+    expect(across.map((x) => `${x.a.path}>${x.b.path}`)).toEqual([]);
+  });
+
+  it("a supply net re-exported by a wrapper is unpowered at the board when nothing feeds it", () => {
+    const wrapper = defineModule({
+      id: "imu-passthrough",
+      name: "IMU, re-exported",
+      interfaces: [],
+      children: [{ id: "imu", moduleDefId: IMU_MODULE.id }],
+      links: [],
+      exports: ["vdd", "gnd", "sda", "scl", "int1"].map((id) => ({ id, from: { child: "imu", interfaceId: id } })),
+    });
+    const board = variant({ children: [{ id: "imu", moduleDefId: wrapper.id }], drop: (id) => id === "v3v3.imu.vdd" });
+    const d = check(board, lookupNested(wrapper)).find((x) => x.id === "unpowered:imu:vdd")!;
+    expect(d.severity).toBe("warning");
+    expect(d.message).toMatch(/net port feeding imu\/imu\/u1:pin_7/);
+  });
+
+  it("a net port marked unconnected but joined to a net of the board contradicts the mark", () => {
+    const marked = { ...NESTED_BOARD, children: NESTED_BOARD.children!.map((c) => (c.id === "imu" ? { ...c, unconnected: [{ interfaceId: "vdd", reason: "fitted later" }] } : c)) };
+    const d = check(marked).find((x) => x.id === "unconnected:imu:vdd")!;
+    expect(d.severity).toBe("warning");
+    expect(d.message).toMatch(/marked unconnected \(fitted later\), but link v3v3\.imu\.vdd connects it/);
+  });
+
   it("the sub-circuit's ground on the board's 3V3 is a short", () => {
     const board = variant({ drop: (id) => id === "gnd.imu.gnd", add: netLinks("v3v3", ["imu:gnd"]) });
     const d = check(board).find((x) => x.id === "net:v3v3:ground")!;
