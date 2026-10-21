@@ -27,7 +27,7 @@ export interface ChargePortConfig {
   minus?: SignalRef;
   /** A battery's chemistry, or every chemistry a charger charges. */
   chemistry: BatteryChemistry | BatteryChemistry[];
-  /** Cells in series: a battery's count, or the count or range [min, max] a charger takes. */
+  /** Cells in series: a battery's count (one number), or the count or range [min, max] a charger takes. */
   cells: number | [number, number];
   /**
    * Charge voltage in V, for the whole pack. Charger: the voltage it charges
@@ -66,6 +66,11 @@ export function ChargePort(config: ChargePortConfig): InterfaceDef[] {
   const chemistry = Array.isArray(config.chemistry) ? config.chemistry : [config.chemistry];
   if (!chemistry.length) throw new Error(`ChargePort ${id}: name a chemistry`);
   if (!charger && chemistry.length > 1) throw new Error(`ChargePort ${id}: a battery has one chemistry`);
+  // a battery is one pack: one cell count, which a charger's count or range must cover
+  if (!charger && Array.isArray(config.cells)) throw new Error(`ChargePort ${id}: a battery has one cell count`);
+  const counts = Array.isArray(config.cells) ? config.cells : [config.cells];
+  if (counts.some((n) => !Number.isInteger(n) || n < 1)) throw new Error(`ChargePort ${id}: cells must be whole numbers from 1`);
+  if (counts.length === 2 && counts[0] > counts[1]) throw new Error(`ChargePort ${id}: cells range [min, max] runs from low to high`);
   const side = charger ? "charge" : "battery";
   const signals: LinkSignal[] = [];
   if (config.plus !== undefined) {
