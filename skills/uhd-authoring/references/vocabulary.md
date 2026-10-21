@@ -60,6 +60,8 @@ peer.
 | `InfraredRemote` | `ir_remote: transmitter/receiver` (network domain) | IR remotes and demodulating receivers: carrier kHz, wavelength, coding protocols |
 | `AcPower` | `ac_power: input/output` | Mains inlets and plugs (input), outlets and UPS outputs (output): V RMS, line frequency, current, power, plug, earth |
 | `InductiveLoad` / `InductiveDrive` | `inductive_load: load/driver` | Solenoid, valve, brake and clutch coils (rated voltage, coil current or resistance, suppression) and the channels that switch them (low side, high side, H-bridge, relay; current; flyback) |
+| `PiezoLoad` / `PiezoDrive` | `piezo_terminal` leaves + `piezo_drive: load/driver` | Piezo elements driven with an alternating or pulsed voltage: ultrasonic atomiser discs, ultrasonic transducers, buzzer discs, piezo pump actuators (drive frequency or resonance band, peak-to-peak voltage, power, capacitance; several elements in order) and the outputs that drive them (frequency, peak-to-peak voltage, waveform) |
+| `ChargePort` | `battery_charge: charger/battery` | A charger's battery terminals (charger) and a cell or pack on the terminals it is charged through (battery): chemistry, cells in series, charge voltage, charge current, capacity; beside the part's `PowerOut`, on the same leaves |
 | `Connector` | `connector: mate` + `p1…pN` slots | A physical connector with several positions; binds each position to a pad |
 | `connectorTrait` | trait | Connector detail on an interface that is the only thing a connector carries, or a termination (`solder_pad`) |
 | `pinTable` | `power`, `digital`, `analog`, `passive`, `custom: no_connect` leaves with `pin` | A chip's datasheet pin table (types `power_in`, `power_out`, `ground`, `io`, `input`, `output`, `analog_in`, `analog_out`, `passive`, `nc`) |
@@ -91,14 +93,17 @@ input: the least current its source must be rated for), `lane_count`,
 `head_width` and `head_height` (mm), `face_od`, `face_id` and
 `axial_length` (mm), `wheel_diameter` and `tread_width` (mm),
 `load_rating` (N), `line_frequency` (Hz), `ir_carrier` (kHz),
-`coil_current` (A), `coil_resistance` (Ω).
+`coil_current` (A), `coil_resistance` (Ω), `drive_frequency` (Hz),
+`drive_voltage` (Vpp, peak to peak), `charge_voltage` (V), `charge_current`
+(A).
 
 The drive and signal checks compare their own parameters, so the overlap
 check skips them for those pairs (`driveCheckedParams`,
 `signalCheckedParams`): two gears' modules and tooth counts, a bearing's and
 a seat's diameters, two threads, a track and an insert, two faces, a wheel
 and a surface, PPM channel counts, IR carriers and wavelengths, coil
-currents. `load_rating` and `coil_current` are capacities.
+currents, piezo drive voltages, charge voltages and charge currents.
+`load_rating` and `coil_current` are capacities.
 
 `link_speed`, `lane_rate`, `bus_width`, `poe_power` and `wavelength` are
 not range-checked either: `checkPairLinks` compares them (see below).
@@ -134,7 +139,10 @@ compare `min_supply_current` with the source's `max_current`, and a load's
   or crossed by sub-role); `swd` probe ↔ target (generic fallback kept for
   older target leaves); `ppm` output ↔ input; `ir_remote` transmitter ↔
   receiver; `ac_power` input ↔ output; `inductive_load` driver ↔ load
-  (`drive_plus` ↔ `coil_plus`, `drive_minus` ↔ `coil_minus`). Each composite's slots carry per-conductor
+  (`drive_plus` ↔ `coil_plus`, `drive_minus` ↔ `coil_minus`); `piezo_drive`
+  driver ↔ load (`drive_plus` ↔ `element_plus`, `drive_minus` ↔
+  `element_minus`); `battery_charge` charger ↔ battery (`charge_plus` ↔
+  `battery_plus`, `charge_minus` ↔ `battery_minus`). Each composite's slots carry per-conductor
   sub-roles (`tx_p` ↔ `rx_p`, `bclk_out` ↔ `bclk_in`, `data_out` ↔
   `data_in`). None of these fall back to the generic pairs.
 
@@ -145,7 +153,7 @@ compare `min_supply_current` with the source's `max_current`, and a load's
 `pcie`, `m2`, `mipi_csi2`, `mipi_dsi`, `ethernet`, `sfp`, `dvp`, `sd_card`,
 `led_drive`, `ieee802154`, `gear_mesh`, `bearing_fit`, `thread`, `t_slot`,
 `axial_stop`, `rolling_contact`, `rs485`, `rs232`, `ppm`, `ir_remote`,
-`ac_power`, `inductive_load`,
+`ac_power`, `inductive_load`, `piezo_drive`, `battery_charge`,
 `mechanical_connection`, `mechanical_drive`, `mechanical_mount`,
 `threaded_connection`, `thermal_connection`, `custom`, and a
 few part-specific types. The older mechanical types
@@ -163,7 +171,8 @@ bore), `linear_motion_capacity` and `supply_current_rating`.
 `bearing_fit`, `thread_fit`, `t_slot_fit`, `axial_face` and
 `rolling_contact`. `checkPairSignals` (`src/drc/signal-check.ts`) reports
 `rs485_duplex`, `rs232_null_modem`, `ppm_channels`, `ppm_polarity`,
-`ir_link`, `ac_power` and `inductive_load`. See
+`ir_link`, `ac_power`, `inductive_load`, `piezo_drive` and
+`battery_charge`. See
 [mechanical interfaces](../../../docs/mechanical-interfaces.md) and
 [fluid ports](../../../docs/fluid-ports.md).
 
@@ -189,9 +198,10 @@ Use `custom` with a trait, and log a `vocabulary` gap, for:
 - Ethernet MAC-to-PHY buses (RMII, RGMII, MDIO) and NFC antennas;
 - I3C, 3-wire SPI, PIO and peripherals routed through a GPIO matrix (no
   per-instance pin assignment);
-- buzzers, speakers and other transducer drives; keypad matrices; push,
-  slide and thumbstick actuators; optical apertures and gas inlets; seals and
-  gaskets; battery charge ports (charge output on the cell's terminal);
+- magnetic buzzers, speakers and other transducer drives that are not
+  piezo (`PiezoLoad` covers piezo elements); keypad matrices; push, slide
+  and thumbstick actuators; optical apertures and gas inlets; seals and
+  gaskets; a battery's thermistor lead and a charger's input for it;
 - crystals as a `Passive` kind (use passive terminals and a `performance`
   trait);
 - a part that holds two mated connectors together (a cable clip), strap and

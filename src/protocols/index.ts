@@ -41,6 +41,7 @@ export * from "./mechanical.js";
 export * from "./drive.js";
 export * from "./serial.js";
 export * from "./actuation.js";
+export * from "./battery.js";
 export * from "./define-module.js";
 export * from "./net.js";
 export * from "./passive.js";
