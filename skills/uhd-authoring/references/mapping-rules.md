@@ -55,6 +55,8 @@
 | An IR remote or IR receiver | `InfraredRemote({ role, carrierKHz, protocols, wavelengthNm })`; the receiver's output pin is a `Pin`. |
 | A mains inlet, plug or outlet | `AcPower({ role, voltageV, frequencyHz, maxCurrentA, plug, earth })`, not `PowerIn`. |
 | A solenoid or valve coil, or the channel that drives one | `InductiveLoad({ kind, ratedVoltageV, coilCurrentA, suppression })` and `InductiveDrive({ switching, voltageV, maxCurrentA, flyback })`. |
+| A piezo disc, transducer or pump actuator, or the output that drives one | `PiezoLoad({ kind, frequencyHz, driveVoltageVpp, powerW })` and `PiezoDrive({ frequencyHz, driveVoltageVpp })`; a part with several elements lists their terminals in order. Voltages are peak to peak across the element. |
+| A charger's battery pins, or a battery | `ChargePort({ role, chemistry, cells, chargeVoltageV, chargeCurrentA })` on the same leaves as the `PowerOut`, which stays for the loads. |
 | Pneumatic or hydraulic port | `FluidPort({ medium, role, joint, pressureBar })`; one per physical port, with the thread or tube size as the source prints it. |
 | Dimensions, mass | `domains[].dimensions_mm` (overall, leads included), `domains[].weight_g` (mechanical). |
 | Operating temperature | A `thermal` domain entry, plus an `operating_conditions` trait. |

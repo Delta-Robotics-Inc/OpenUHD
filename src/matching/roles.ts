@@ -371,6 +371,29 @@ const PROTOCOL_ROLE_PAIRS: Record<string, Record<string, string[]>> = {
   inductive_terminal: {
     terminal: [],
   },
+  // Piezo loads (PiezoLoad, PiezoDrive): a driver output with the element it
+  // drives, terminal by terminal; outputs and elements pair in order.
+  piezo_drive: {
+    driver: ["load"],
+    load: ["driver"],
+    drive_plus: ["element_plus"],
+    element_plus: ["drive_plus"],
+    drive_minus: ["element_minus"],
+    element_minus: ["drive_minus"],
+  },
+  piezo_terminal: {
+    terminal: [],
+  },
+  // Battery charge ports (ChargePort): a charger's battery terminals with
+  // the battery it charges. Separate from `power`, where two outputs never pair.
+  battery_charge: {
+    charger: ["battery"],
+    battery: ["charger"],
+    charge_plus: ["battery_plus"],
+    battery_plus: ["charge_plus"],
+    charge_minus: ["battery_minus"],
+    battery_minus: ["charge_minus"],
+  },
 };
 
 /**
@@ -413,6 +436,9 @@ const NO_GENERIC_FALLBACK = new Set([
   "ac_terminal",
   "inductive_load",
   "inductive_terminal",
+  "piezo_drive",
+  "piezo_terminal",
+  "battery_charge",
 ]);
 
 /**

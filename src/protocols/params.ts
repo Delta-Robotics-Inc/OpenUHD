@@ -447,3 +447,23 @@ export function coilCurrentA(value: number): Parameter {
 export function coilResistanceOhm(value: number): Parameter {
   return { id: "coil_resistance", unit: "Ω", value };
 }
+
+/** Frequency a piezo element is driven at, in Hz: a transducer's resonance band ([105e3, 121e3]), a pump's operating range, or what a driver puts out (fixed, or the range it can be set to). */
+export function driveFrequencyHz(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "drive_frequency", unit: "Hz", range: value } : { id: "drive_frequency", unit: "Hz", value };
+}
+
+/** Peak-to-peak drive voltage across a piezo element: the most a load takes, or what a driver puts out (fixed, or the range it can be set to). Compared by `piezo_drive`, not by overlap. */
+export function driveVoltageVpp(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "drive_voltage", unit: "Vpp", range: value } : { id: "drive_voltage", unit: "Vpp", value };
+}
+
+/** Charge voltage of a battery charge port, in V for the whole pack: what a charger charges to (a range when it can be set), or the charge voltage a battery states. Compared by `battery_charge`, not by overlap. */
+export function chargeVoltageV(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "charge_voltage", unit: "V", range: value } : { id: "charge_voltage", unit: "V", value };
+}
+
+/** Charge current of a battery charge port, in A: what a charger charges at (a range when it can be set), or the most a battery accepts. Compared by `battery_charge`, not by overlap. */
+export function chargeCurrentA(value: number | [number, number]): Parameter {
+  return Array.isArray(value) ? { id: "charge_current", unit: "A", range: value } : { id: "charge_current", unit: "A", value };
+}
