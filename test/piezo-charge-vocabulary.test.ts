@@ -173,6 +173,10 @@ describe("battery charge ports", () => {
   it("checks what the builder is given", () => {
     expect(() => ChargePort({ role: "charger", plus: "bat", chemistry: "li_ion", cells: 1, chargeVoltageV: 4.2 })).toThrow(/give both terminals/);
     expect(() => ChargePort({ role: "charger", chemistry: "li_ion", cells: 1, chargeVoltageV: 4.2, capacitymAh: 500 })).toThrow(/capacitymAh is a battery's/);
+    expect(() => ChargePort({ role: "battery", chemistry: "li_ion", cells: [1, 2], chargeVoltageV: 4.2 })).toThrow(/a battery has one cell count/);
+    expect(() => ChargePort({ role: "charger", chemistry: "li_ion", cells: 0, chargeVoltageV: 4.2 })).toThrow(/whole numbers from 1/);
+    expect(() => ChargePort({ role: "charger", chemistry: "li_ion", cells: [3, 1], chargeVoltageV: 4.2 })).toThrow(/low to high/);
+    expect(() => ChargePort({ role: "charger", chemistry: "li_ion", cells: [1, 3], chargeVoltageV: 12.6 })).not.toThrow();
     expect(() => ChargePort({ role: "battery", chemistry: ["li_ion", "nimh"], cells: 1, chargeVoltageV: 4.2 })).toThrow(/one chemistry/);
     expect(() => ChargePort({ role: "charger", chemistry: [], cells: 1, chargeVoltageV: 4.2 })).toThrow(/name a chemistry/);
   });

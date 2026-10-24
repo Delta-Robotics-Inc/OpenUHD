@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `ChargePort` refuses a battery that states a range of cell counts (`cells: [1, 2]`); a battery is one pack with one count, and only a charger takes a range. Cell counts must be whole numbers from 1, and a range must run from low to high.
+
 ## [0.3.0] — 2026-10-21
 
 A minor version: `InterfaceExport.from` widens to `ExportSource` (a module may export its own net as a net port), a change to the schema's types.
