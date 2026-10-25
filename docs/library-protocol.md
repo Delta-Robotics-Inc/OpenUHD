@@ -292,7 +292,8 @@ The JSON Schema is `#/$defs/envelope` in `schemas/uhd-library-v1.schema.json`.
 - **`missingArtifacts`**: every file the definition references (an
   `ArtifactDef.filePath` on the module or one of its harnesses) is either
   carried in `artifacts` or listed here with the reason, never silently
-  absent.
+  absent. A `path` here is normalised like a carried one; an envelope with
+  any other path is invalid (`PATH_INVALID`).
 - **`evidence`**: what the definition's facts rest on, each a carried file
   (`path`, `sha256`, `size`, `mediaType`) or an `http(s)` `url`. Kinds:
   `sources`, `verification`, `datasheet`, `document`, `other`.

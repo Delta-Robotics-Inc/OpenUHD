@@ -133,7 +133,11 @@ export async function envelopeProblems(env: PartRevisionEnvelope, options: { sch
   for (const { path, artifactId } of referencedFiles(env.definition as { artifacts?: unknown[] })) {
     if (!carried.has(path) && !declared.has(path)) add("ARTIFACT_UNACCOUNTED", `artifact ${artifactId} references ${path}, neither carried nor listed missing`, "artifacts");
   }
-  env.missingArtifacts.forEach((m, i) => carried.has(m.path) && add("MISSING_ARTIFACT_CARRIED", `${m.path} is carried and listed missing`, `missingArtifacts[${i}]`));
+  env.missingArtifacts.forEach((m, i) => {
+    // a consumer joins these to its artifact base too (to say why a file is absent), so they follow the same rule as carried paths
+    if (!isSafePath(m.path)) add("PATH_INVALID", `${m.path} is not a normalised relative path`, `missingArtifacts[${i}].path`);
+    else if (carried.has(m.path)) add("MISSING_ARTIFACT_CARRIED", `${m.path} is carried and listed missing`, `missingArtifacts[${i}]`);
+  });
   const termed: [{ terms?: { licensePath?: string } }, string][] = [...env.artifacts.map((a, i) => [a, `artifacts[${i}]`] as [EnvelopeArtifact, string]), ...env.evidence.map((e, i) => [e, `evidence[${i}]`] as [EvidenceRef, string])];
   for (const [f, at] of termed) {
     const lp = f.terms?.licensePath;

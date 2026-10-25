@@ -113,6 +113,10 @@ describe("envelope rules", () => {
     expect(await codes(await sealEnvelope({ ...env, derivedFrom: null }))).toEqual(["DERIVED_FROM_REQUIRED"]);
     expect(await codes(await sealEnvelope({ ...env, derivedFrom: { partId: "acme-gimbal", revision: 2 } }))).toEqual(["DERIVED_FROM_ORDER"]);
     expect(await codes(await sealEnvelope({ ...env, artifacts: [...env.artifacts, { ...env.artifacts[0], path: "../escape.glb" }] }))).toEqual(["PATH_INVALID"]);
+    for (const path of ["../escape.step", "/etc/passwd", "a\\b.step", "a//b.step", "./a.step", "a\0.step"]) {
+      const problems = await envelopeProblems(await sealEnvelope({ ...env, missingArtifacts: [...env.missingArtifacts, { path, artifactId: "x", reason: "not cleared" }] }));
+      expect(problems.map((p) => [p.code, p.at])).toEqual([["PATH_INVALID", `missingArtifacts[${env.missingArtifacts.length}].path`]]);
+    }
     // another identifier is accepted only when the library lists it
     const legacy = await sealEnvelope({ ...env, schema: "acme.part-revision/v1" });
     expect(await codes(legacy)).toEqual(["ENVELOPE_SCHEMA"]);
