@@ -37,7 +37,7 @@ import {
   sourceProblems,
   type PartRevisionEnvelope,
 } from "../src/library/index.js";
-import { evaluateSourceConfined } from "../src/library/confined.js";
+import { evaluateSourceConfined, permissionFlag } from "../src/library/confined.js";
 import ts from "typescript";
 import { fakeLibrary, gimbalSource, type Fault } from "./fixtures/fake-library.js";
 
@@ -411,7 +411,17 @@ describe("definition source (§ 4.6)", () => {
   });
 });
 
+// what the permission model says when it refuses: newer Node.js names the flag that would allow it, Node.js
+// before 22.13 says only that the API is restricted
+const REFUSED_READ = /--allow-fs-read|Access to this API has been restricted/;
+const REFUSED_WRITE = /--allow-fs-write|Access to this API has been restricted/;
+
 describe("confined evaluation (§ 4.6.3)", () => {
+  it("turns the permission model on with the flag this Node.js knows", () => {
+    expect(["22.11.0", "22.12.0", "23.4.0", "20.18.0"].map((v) => permissionFlag(v))).toEqual(Array(4).fill("--experimental-permission"));
+    expect(["22.13.0", "22.22.1", "23.5.0", "24.14.1", "25.0.0"].map((v) => permissionFlag(v))).toEqual(Array(5).fill("--permission"));
+  });
+
   const transpile = tsTranspile;
   const gimbal = (o?: { drift?: boolean }) => Object.entries(gimbalSource(o)).map(([path, text]) => ({ path, text }));
   /** A one-file closure whose definition carries `value`, after `pre`. Lint-clean or not, it is evaluated as given. */
@@ -462,10 +472,10 @@ describe("confined evaluation (§ 4.6.3)", () => {
       expect(by.fn).toMatch(/Code generation from strings disallowed/);
       expect(by.reflect).toMatch(/Code generation from strings disallowed/);
       expect(by.env).toBe("none");
-      expect(by.read).toMatch(/--allow-fs-read/);
-      expect(by.uhd).toMatch(/--allow-fs-read/);
-      expect(by.write).toMatch(/--allow-fs-write/);
-      expect(by.spawn).toMatch(/--allow-child-process/);
+      expect(by.read).toMatch(REFUSED_READ);
+      expect(by.uhd).toMatch(REFUSED_READ);
+      expect(by.write).toMatch(REFUSED_WRITE);
+      expect(by.spawn).toMatch(/--allow-child-process|Access to this API has been restricted/);
       expect(by.loop).toMatch(/took longer than 4000 ms/);
       expect(by.exit).toMatch(/stopped: exit code 3/);
       // one closure that hangs or exits fails alone
@@ -492,7 +502,7 @@ describe("confined evaluation (§ 4.6.3)", () => {
       { transpile, concurrency: 1 },
     );
     expect(results.map((r) => r.key)).toEqual(["forger", "polluter", "victim", "reader"]);
-    expect(results[3]).toMatchObject({ key: "reader", error: expect.stringMatching(/--allow-fs-read/) });
+    expect(results[3]).toMatchObject({ key: "reader", error: expect.stringMatching(REFUSED_READ) });
     expect(results[2]).toMatchObject({ key: "victim", definition: { id: "p", v: "real" } });
     // what a closure does to its own result is its own: the digest comparison judges it
     expect(results[0]).toMatchObject({ key: "forger", definition: forged });

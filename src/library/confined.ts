@@ -33,7 +33,7 @@
  * stops a child that writes more.
  */
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -121,7 +121,9 @@ export async function evaluateSourceConfined(sources: ConfinedSource[], options:
   try {
     writeFileSync(join(work, "package.json"), JSON.stringify({ private: true, type: "module" }) + "\n");
     mkdirSync(join(work, "node_modules", "@deltarobotics"), { recursive: true });
-    symlinkSync(uhd, join(work, "node_modules", ...SOURCE_PACKAGE.split("/")), "dir");
+    // Windows lets only an elevated process (or one in Developer Mode) make a symbolic link; a junction
+    // needs no privilege and resolves the same for a directory on the same machine
+    symlinkSync(uhd, join(work, "node_modules", ...SOURCE_PACKAGE.split("/")), process.platform === "win32" ? "junction" : "dir");
     const jobs: Job[] = [];
     const early: ConfinedResult[] = [];
     for (const [i, s] of sources.entries()) {
@@ -163,19 +165,42 @@ export async function evaluateSourceConfined(sources: ConfinedSource[], options:
     }
     return sources.map((s) => byKey.get(s.key)!);
   } finally {
-    rmSync(work, { recursive: true, force: true });
+    // the link goes first, by itself: some runtimes (the Node.js inside an editor, on Windows) follow a junction
+    // when a folder is cleared, and would empty the UHD package it points to. Neither call here can remove a
+    // folder that has anything in it
+    const link = join(work, "node_modules", ...SOURCE_PACKAGE.split("/"));
+    try {
+      unlinkSync(link);
+    } catch {
+      try {
+        rmdirSync(link);
+      } catch {
+        // not made, or already gone
+      }
+    }
+    // with the link still there (it could not be removed), nothing is cleared through it: the folder is left
+    if (!existsSync(link)) rmSync(work, { recursive: true, force: true });
   }
 }
 
 /** What is kept of a child's error output: enough for the line that says why it stopped. */
 const STDERR_KEPT = 64 * 1024;
 
+/**
+ * The flag that turns the permission model on. Node.js named it `--experimental-permission` until 22.13 and
+ * 23.5, and refuses `--permission` before them (the child exits with code 9, and nothing is evaluated).
+ */
+export function permissionFlag(version: string = process.versions.node): string {
+  const [major = 0, minor = 0] = version.split(".").map(Number);
+  return major > 23 || (major === 23 && minor >= 5) || (major === 22 && minor >= 13) ? "--permission" : "--experimental-permission";
+}
+
 /** One closure in a child process of its own: the result its runner wrote, or why there is none. */
 function runChild(work: string, uhd: string, job: Job, options: ConfinedOptions): Promise<Raw> {
   const limit = options.timeoutMs ?? 60_000;
   const maxOutput = options.maxOutputBytes ?? 16 * 1024 * 1024;
   const args = [
-    "--permission",
+    permissionFlag(),
     // of the work folder, this closure and what resolves the runner and UHD: not the other closures
     `--allow-fs-read=${job.dir}`,
     `--allow-fs-read=${join(work, "runner.mjs")}`,
@@ -193,6 +218,9 @@ function runChild(work: string, uhd: string, job: Job, options: ConfinedOptions)
   ];
   // nothing of the caller's environment: no credentials reach the source
   const env: Record<string, string> = process.platform === "win32" && process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {};
+  // an editor's built-in runtime is Node.js only while this is set: without it the child would start the editor
+  // itself, which evaluates nothing. It carries no information of the caller's
+  if (process.versions.electron) env.ELECTRON_RUN_AS_NODE = "1";
   return new Promise((resolveRun) => {
     const child = spawn(process.execPath, args, { cwd: work, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
     const stdout: Buffer[] = [];
