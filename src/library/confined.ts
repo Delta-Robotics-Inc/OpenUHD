@@ -121,7 +121,9 @@ export async function evaluateSourceConfined(sources: ConfinedSource[], options:
   try {
     writeFileSync(join(work, "package.json"), JSON.stringify({ private: true, type: "module" }) + "\n");
     mkdirSync(join(work, "node_modules", "@deltarobotics"), { recursive: true });
-    symlinkSync(uhd, join(work, "node_modules", ...SOURCE_PACKAGE.split("/")), "dir");
+    // Windows lets only an elevated process (or one in Developer Mode) make a symbolic link; a junction
+    // needs no privilege and resolves the same for a directory on the same machine
+    symlinkSync(uhd, join(work, "node_modules", ...SOURCE_PACKAGE.split("/")), process.platform === "win32" ? "junction" : "dir");
     const jobs: Job[] = [];
     const early: ConfinedResult[] = [];
     for (const [i, s] of sources.entries()) {
