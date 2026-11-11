@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - `evaluateSourceConfined` works on Windows without elevation or Developer Mode: its work folder links the UHD package with a junction, not a symbolic link, which Windows refuses to an ordinary process (`EPERM: operation not permitted, symlink`). A project whose parts carry their own source could not be built there.
+- `evaluateSourceConfined` works on Node.js 22.0 to 22.12: it turns the permission model on with `--experimental-permission` there, the name those versions know. With `--permission` the child exited with code 9 and every closure failed.
+- `evaluateSourceConfined` removes its link to the UHD package before it clears its work folder, and never clears the folder through the link. A runtime that follows a junction when clearing a folder (seen with an editor's built-in Node.js on Windows) emptied the UHD package itself.
 - `envelopeProblems` checks `missingArtifacts[].path` like the carried paths: a path that is absolute, has `..`, `.` or empty segments, a backslash or a NUL is `PATH_INVALID`, so a consumer never joins it to its artifact base.
 - `ChargePort` refuses a battery that states a range of cell counts (`cells: [1, 2]`); a battery is one pack with one count, and only a charger takes a range. Cell counts must be whole numbers from 1, and a range must run from low to high.
 
