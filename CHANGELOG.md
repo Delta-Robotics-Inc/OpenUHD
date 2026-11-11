@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-11-11
+
 ### Fixed
 
 - `evaluateSourceConfined` works on Windows without elevation or Developer Mode: its work folder links the UHD package with a junction, not a symbolic link, which Windows refuses to an ordinary process (`EPERM: operation not permitted, symlink`). A project whose parts carry their own source could not be built there.
