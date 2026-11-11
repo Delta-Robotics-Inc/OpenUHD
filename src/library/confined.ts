@@ -218,6 +218,9 @@ function runChild(work: string, uhd: string, job: Job, options: ConfinedOptions)
   ];
   // nothing of the caller's environment: no credentials reach the source
   const env: Record<string, string> = process.platform === "win32" && process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {};
+  // an editor's built-in runtime is Node.js only while this is set: without it the child would start the editor
+  // itself, which evaluates nothing. It carries no information of the caller's
+  if (process.versions.electron) env.ELECTRON_RUN_AS_NODE = "1";
   return new Promise((resolveRun) => {
     const child = spawn(process.execPath, args, { cwd: work, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
     const stdout: Buffer[] = [];
